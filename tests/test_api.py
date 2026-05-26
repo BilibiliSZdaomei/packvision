@@ -119,3 +119,60 @@ def test_depth_measure_roi_endpoint_accepts_synthetic_frame():
     assert response.status_code == 200
     assert body["dimensions"]["length_mm"] == pytest.approx(32.0)
     assert body["dimensions"]["height_mm"] == pytest.approx(200.0)
+
+
+def test_depth_measure_object_endpoint_accepts_synthetic_frame():
+    client = TestClient(create_app())
+    depth = [[1000.0 for _ in range(10)] for _ in range(10)]
+    for y in range(3, 7):
+        for x in range(2, 8):
+            depth[y][x] = 760.0
+
+    response = client.post(
+        "/api/depth/measure-object",
+        json={
+            "depth_frame": depth,
+            "intrinsics": {
+                "fx": 100.0,
+                "fy": 100.0,
+                "cx": 5.0,
+                "cy": 5.0,
+                "width": 10,
+                "height": 10,
+            },
+            "roi": [1, 2, 9, 8],
+            "background_roi": [0, 0, 2, 2],
+            "object_min_height_mm": 50,
+            "trim_quantile": 0,
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["dimensions"]["height_mm"] == pytest.approx(240.0)
+    assert body["depth"]["object_pixel_count"] == 24
+    assert "depth_object_mask_used" in body["quality_flags"]
+
+
+def test_industry_profile_endpoint_classifies_auto_parts_package():
+    client = TestClient(create_app())
+    response = client.post(
+        "/api/industry/profile",
+        json={
+            "dimensions": {
+                "length_mm": 1300,
+                "width_mm": 180,
+                "height_mm": 120,
+                "volume_l": 28.08,
+            },
+            "part_category": "shock_absorber",
+            "package_hint": "long_part",
+            "actual_weight_kg": 4.1,
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["package_class"] == "long_part"
+    assert body["recommended_capture_mode"] == "depth_roi_long_item"
+    assert "oversize_length" in body["handling_flags"]

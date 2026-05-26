@@ -27,6 +27,17 @@ class DepthMeasurementConfig:
     trim_ratio: float = 0.08
 
 
+@dataclass(frozen=True)
+class DepthObjectConfig:
+    roi: list[int]
+    background_roi: list[int] | None = None
+    table_depth_mm: float | None = None
+    min_valid_depth_mm: float = 50.0
+    max_valid_depth_mm: float = 6000.0
+    object_min_height_mm: float = 30.0
+    trim_quantile: float = 0.02
+
+
 class DepthMeasurementError(RuntimeError):
     pass
 
@@ -129,6 +140,109 @@ def measure_depth_roi(
     }
 
 
+def measure_depth_object_mask(
+    depth_frame: Any,
+    intrinsics: DepthIntrinsics,
+    config: DepthObjectConfig,
+) -> dict[str, Any]:
+    depth_mm = _normalize_depth_frame(depth_frame, intrinsics.depth_scale)
+    roi = _clip_roi(config.roi, intrinsics.width, intrinsics.height, "roi")
+    table_depth_mm = config.table_depth_mm
+    if table_depth_mm is None and config.background_roi:
+        background_roi = _clip_roi(
+            config.background_roi,
+            intrinsics.width,
+            intrinsics.height,
+            "background_roi",
+        )
+        background_values = _valid_depth_values(
+            depth_mm,
+            background_roi,
+            config.min_valid_depth_mm,
+            config.max_valid_depth_mm,
+        )
+        if background_values.size:
+            table_depth_mm = _robust_depth(background_values, 0.08)
+
+    if table_depth_mm is None:
+        raise DepthMeasurementError("table_depth_mm or background_roi is required for object mask measurement.")
+
+    x1, y1, x2, y2 = roi
+    roi_depth = depth_mm[y1:y2, x1:x2]
+    valid_mask = (
+        np.isfinite(roi_depth)
+        & (roi_depth >= config.min_valid_depth_mm)
+        & (roi_depth <= config.max_valid_depth_mm)
+    )
+    object_mask = valid_mask & (roi_depth <= (table_depth_mm - config.object_min_height_mm))
+    ys, xs = np.nonzero(object_mask)
+    if xs.size == 0:
+        raise DepthMeasurementError("No object pixels found above the table depth.")
+
+    image_x = xs.astype(np.float32) + x1
+    image_y = ys.astype(np.float32) + y1
+    z = roi_depth[ys, xs].astype(np.float32)
+    world_x = (image_x - float(intrinsics.cx)) * z / float(intrinsics.fx)
+    world_y = (image_y - float(intrinsics.cy)) * z / float(intrinsics.fy)
+
+    x_extent = _trimmed_extent(world_x, config.trim_quantile)
+    y_extent = _trimmed_extent(world_y, config.trim_quantile)
+    height_mm = max(0.0, float(table_depth_mm) - _robust_depth(z, 0.08))
+    length_mm = max(x_extent, y_extent)
+    width_mm = min(x_extent, y_extent)
+    volume_l = length_mm * width_mm * height_mm / 1_000_000
+
+    object_pixel_count = int(xs.size)
+    roi_pixel_count = max(1, (x2 - x1) * (y2 - y1))
+    object_ratio = object_pixel_count / roi_pixel_count
+    flags = ["depth_camera_measurement", "depth_object_mask_used", "background_depth_used"]
+    if object_ratio < 0.08:
+        flags.append("small_object_mask")
+    if config.trim_quantile:
+        flags.append("point_cloud_extent_trimmed")
+
+    confidence = 0.82 * min(1.0, max(0.35, object_ratio * 4.0))
+
+    return {
+        "status": "measured",
+        "confidence": round(float(confidence), 2),
+        "dimensions": {
+            "length_mm": round(float(length_mm), 1),
+            "width_mm": round(float(width_mm), 1),
+            "height_mm": round(float(height_mm), 1),
+            "volume_l": round(float(volume_l), 3),
+        },
+        "depth": {
+            "table_depth_mm": round(float(table_depth_mm), 1),
+            "object_depth_mm": round(float(np.median(z)), 1),
+            "object_pixel_count": object_pixel_count,
+            "object_pixel_ratio": round(float(object_ratio), 3),
+            "roi": roi,
+            "background_roi": config.background_roi,
+            "x_extent_mm": round(float(x_extent), 1),
+            "y_extent_mm": round(float(y_extent), 1),
+            "intrinsics": {
+                "fx": intrinsics.fx,
+                "fy": intrinsics.fy,
+                "cx": intrinsics.cx,
+                "cy": intrinsics.cy,
+                "width": intrinsics.width,
+                "height": intrinsics.height,
+                "depth_scale": intrinsics.depth_scale,
+            },
+        },
+        "quality_flags": sorted(set(flags)),
+        "method": {
+            "name": "depth_object_mask_projection",
+            "notes": [
+                "Object pixels are separated by table depth and projected with camera intrinsics.",
+                "Footprint uses the point-cloud extent instead of the full rectangular ROI.",
+                "This is the preferred path for soft, wrapped, or irregular automotive spare parts.",
+            ],
+        },
+    }
+
+
 def _normalize_depth_frame(depth_frame: Any, depth_scale: float) -> np.ndarray:
     depth = np.asarray(depth_frame, dtype=np.float32)
     if depth.ndim != 2:
@@ -177,3 +291,15 @@ def _robust_depth(values: np.ndarray, trim_ratio: float) -> float:
     if trimmed.size == 0:
         trimmed = values
     return float(np.median(trimmed))
+
+
+def _trimmed_extent(values: np.ndarray, trim_quantile: float) -> float:
+    if values.size == 0:
+        raise DepthMeasurementError("No points available for extent measurement.")
+    if trim_quantile <= 0:
+        return float(values.max() - values.min())
+    lower_q = min(0.45, trim_quantile)
+    upper_q = max(0.55, 1.0 - trim_quantile)
+    lower = float(np.quantile(values, lower_q))
+    upper = float(np.quantile(values, upper_q))
+    return max(0.0, upper - lower)

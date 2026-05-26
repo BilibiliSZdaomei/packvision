@@ -89,5 +89,8 @@ D:\BaiduNetdiskDownload\奥比中光Astra Pro
 
 - `GET /api/depth/status`：检查 Astra Pro 教程资料、OpenNI2 运行时、Windows 驱动和可选 `pyorbbecsdk`。
 - `POST /api/depth/measure-roi`：用深度图、相机内参、ROI 和桌面深度计算真实长宽高。
+- `POST /api/depth/measure-object`：用桌面深度分离物体 mask，再用点云范围测异形件。
+- `POST /api/industry/profile`：按汽车备件场景判断标准纸箱、长条件、软包/异形件和计费重。
 - `scripts\check_astra_depth_status.ps1`：本地检查深度相机资料和 SDK 状态。
 - `docs_cn\08_Astra_Pro_深度相机分支计划.md`：到货后的驱动、上位机、SDK、实测清单。
+- `docs_cn\09_汽车备件测量落地方案.md`：汽车备件仓库的普通包装、异形包装和异常材质落地流程。

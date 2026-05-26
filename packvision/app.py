@@ -16,12 +16,15 @@ from packvision import __version__
 from packvision.services.barcode import detect_codes
 from packvision.services.depth_camera import depth_camera_status
 from packvision.services.depth_geometry import (
+    DepthObjectConfig,
     DepthIntrinsics,
     DepthMeasurementConfig,
     DepthMeasurementError,
+    measure_depth_object_mask,
     measure_depth_roi,
 )
 from packvision.services.history import get_measurement, init_db, list_measurements, save_measurement
+from packvision.services.industry import build_packaging_profile
 from packvision.services.measurement import (
     MeasurementConfig,
     MeasurementError,
@@ -61,6 +64,25 @@ class DepthMeasurePayload(BaseModel):
     min_valid_depth_mm: float = 50.0
     max_valid_depth_mm: float = 6000.0
     trim_ratio: float = 0.08
+
+
+class DepthObjectMeasurePayload(BaseModel):
+    depth_frame: list[list[float]]
+    intrinsics: DepthIntrinsicsPayload
+    roi: list[int]
+    background_roi: list[int] | None = None
+    table_depth_mm: float | None = None
+    min_valid_depth_mm: float = 50.0
+    max_valid_depth_mm: float = 6000.0
+    object_min_height_mm: float = 30.0
+    trim_quantile: float = 0.02
+
+
+class IndustryProfilePayload(BaseModel):
+    dimensions: dict[str, Any]
+    part_category: str | None = None
+    package_hint: str | None = None
+    actual_weight_kg: float | None = None
 
 
 def create_app() -> FastAPI:
@@ -225,6 +247,34 @@ def create_app() -> FastAPI:
             )
         except DepthMeasurementError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post("/api/depth/measure-object")
+    def depth_measure_object(payload: DepthObjectMeasurePayload) -> dict[str, object]:
+        try:
+            return measure_depth_object_mask(
+                payload.depth_frame,
+                DepthIntrinsics(**payload.intrinsics.model_dump()),
+                DepthObjectConfig(
+                    roi=payload.roi,
+                    background_roi=payload.background_roi,
+                    table_depth_mm=payload.table_depth_mm,
+                    min_valid_depth_mm=payload.min_valid_depth_mm,
+                    max_valid_depth_mm=payload.max_valid_depth_mm,
+                    object_min_height_mm=payload.object_min_height_mm,
+                    trim_quantile=payload.trim_quantile,
+                ),
+            )
+        except DepthMeasurementError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post("/api/industry/profile")
+    def industry_profile(payload: IndustryProfilePayload) -> dict[str, object]:
+        return build_packaging_profile(
+            payload.dimensions,
+            part_category=payload.part_category,
+            package_hint=payload.package_hint,
+            actual_weight_kg=payload.actual_weight_kg,
+        )
 
     return app
 
