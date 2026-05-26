@@ -79,6 +79,7 @@ const translations = {
     exportCsv: "导出 CSV",
     depthTitle: "Astra Pro 深度相机工作区",
     refreshDepth: "刷新状态",
+    probeDepthCapture: "采集探测",
     runDepthDemo: "运行深度演示",
     saveDepthDemo: "保存演示记录",
     savedToHistory: "已保存到历史",
@@ -86,6 +87,10 @@ const translations = {
     depthDriver: "驱动状态",
     depthOpenNi: "OpenNI2",
     depthPyorbbec: "pyorbbecsdk",
+    captureProbe: "采集探测",
+    captureStatus: "采集状态",
+    selectedBackend: "选中后端",
+    nextAction: "下一步",
     depthDemo: "深度演示",
     demoObject: "异形件样本",
     ready: "可用",
@@ -173,6 +178,7 @@ const translations = {
     exportCsv: "Export CSV",
     depthTitle: "Astra Pro depth camera workspace",
     refreshDepth: "Refresh status",
+    probeDepthCapture: "Probe capture",
     runDepthDemo: "Run depth demo",
     saveDepthDemo: "Save demo record",
     savedToHistory: "Saved to history",
@@ -180,6 +186,10 @@ const translations = {
     depthDriver: "Driver status",
     depthOpenNi: "OpenNI2",
     depthPyorbbec: "pyorbbecsdk",
+    captureProbe: "Capture probe",
+    captureStatus: "Capture status",
+    selectedBackend: "Selected backend",
+    nextAction: "Next action",
     depthDemo: "Depth demo",
     demoObject: "Irregular sample",
     ready: "Ready",
@@ -267,6 +277,7 @@ const translations = {
     exportCsv: "Експорт CSV",
     depthTitle: "Робоча зона Astra Pro",
     refreshDepth: "Оновити статус",
+    probeDepthCapture: "Перевірити збір",
     runDepthDemo: "Запустити демо",
     saveDepthDemo: "Зберегти демо",
     savedToHistory: "Збережено в історії",
@@ -274,6 +285,10 @@ const translations = {
     depthDriver: "Стан драйвера",
     depthOpenNi: "OpenNI2",
     depthPyorbbec: "pyorbbecsdk",
+    captureProbe: "Перевірка збору",
+    captureStatus: "Стан збору",
+    selectedBackend: "Обраний бекенд",
+    nextAction: "Наступний крок",
     depthDemo: "Демо глибини",
     demoObject: "Нерівний зразок",
     ready: "Готово",
@@ -442,6 +457,72 @@ const captureModeLabels = {
   },
 };
 
+const probeStatusLabels = {
+  zh: {
+    ready_for_capture: "可采集",
+    driver_ready_capture_backend_missing: "驱动就绪，采集后端待接入",
+    capture_backend_missing: "采集后端未就绪",
+    hardware_validation_required: "需要连接相机验证",
+  },
+  en: {
+    ready_for_capture: "Ready for capture",
+    driver_ready_capture_backend_missing: "Driver ready, capture backend pending",
+    capture_backend_missing: "Capture backend missing",
+    hardware_validation_required: "Hardware validation required",
+  },
+  uk: {
+    ready_for_capture: "Готово до збору",
+    driver_ready_capture_backend_missing: "Драйвер готовий, бекенд очікує",
+    capture_backend_missing: "Бекенд збору відсутній",
+    hardware_validation_required: "Потрібна перевірка камери",
+  },
+};
+
+const probeActionLabels = {
+  zh: {
+    connect_camera_driver: "连接 Astra Pro，并确认 Windows 驱动已安装。",
+    confirm_vendor_viewer_streams: "先打开上位机，确认 RGB 和 Depth 都有画面。",
+    validate_known_carton_history: "用已知尺寸纸箱试测，并保存到历史记录。",
+    confirm_vendor_viewer_depth: "连接 Astra Pro，并确认上位机能看到深度画面。",
+    rerun_probe_connected: "相机连接后再次运行采集探测。",
+    install_pyorbbec_if_unstable: "如果 OpenNI2 采集不稳定，再安装 pyorbbecsdk。",
+    use_depth_frame_apis: "继续用现有 depth_frame 接口导入深度帧测量。",
+    install_pyorbbec_hardware_build: "相机到货后再做包含 pyorbbecsdk 的硬件版构建。",
+    run_status_script: "运行 scripts\\check_astra_depth_status.ps1 复核资料和驱动。",
+    install_windows_driver: "先安装店铺教程里的 Astra Pro Windows 驱动。",
+    set_astra_root: "如果资料目录变了，设置 PACKVISION_ASTRA_ROOT。",
+    confirm_vendor_viewer: "先用上位机确认相机能正常出图。",
+  },
+  en: {
+    connect_camera_driver: "Connect Astra Pro and confirm the Windows driver is installed.",
+    confirm_vendor_viewer_streams: "Open the vendor viewer and confirm both RGB and Depth streams.",
+    validate_known_carton_history: "Test a known carton and save the result to history.",
+    confirm_vendor_viewer_depth: "Connect Astra Pro and confirm the vendor viewer can see depth frames.",
+    rerun_probe_connected: "Run the capture probe again with the camera connected.",
+    install_pyorbbec_if_unstable: "Install pyorbbecsdk later if OpenNI2 capture is unstable.",
+    use_depth_frame_apis: "Keep using the current depth_frame APIs for imported depth frames.",
+    install_pyorbbec_hardware_build: "Build a hardware edition with pyorbbecsdk after the camera arrives.",
+    run_status_script: "Run scripts\\check_astra_depth_status.ps1 to recheck files and drivers.",
+    install_windows_driver: "Install the Astra Pro Windows driver from the seller tutorial folder.",
+    set_astra_root: "Set PACKVISION_ASTRA_ROOT if the tutorial folder moved.",
+    confirm_vendor_viewer: "Confirm the camera streams in the vendor viewer first.",
+  },
+  uk: {
+    connect_camera_driver: "Підключіть Astra Pro і перевірте драйвер Windows.",
+    confirm_vendor_viewer_streams: "Відкрийте переглядач постачальника і перевірте RGB та Depth.",
+    validate_known_carton_history: "Перевірте коробку відомого розміру і збережіть в історію.",
+    confirm_vendor_viewer_depth: "Підключіть Astra Pro і перевірте глибину у переглядачі.",
+    rerun_probe_connected: "Запустіть перевірку ще раз з підключеною камерою.",
+    install_pyorbbec_if_unstable: "Встановіть pyorbbecsdk, якщо OpenNI2 працює нестабільно.",
+    use_depth_frame_apis: "Використовуйте поточні depth_frame API для імпортованих кадрів.",
+    install_pyorbbec_hardware_build: "Після прибуття камери зробіть збірку з pyorbbecsdk.",
+    run_status_script: "Запустіть scripts\\check_astra_depth_status.ps1 для повторної перевірки.",
+    install_windows_driver: "Встановіть драйвер Astra Pro Windows з матеріалів продавця.",
+    set_astra_root: "Задайте PACKVISION_ASTRA_ROOT, якщо папку матеріалів перенесено.",
+    confirm_vendor_viewer: "Спершу перевірте потоки камери у переглядачі.",
+  },
+};
+
 const localeMap = { zh: "zh-CN", en: "en-US", uk: "uk-UA" };
 
 const state = {
@@ -449,6 +530,7 @@ const state = {
   theme: localStorage.getItem("packvision.theme") || "light",
   lastResult: null,
   depthStatus: null,
+  depthProbe: null,
   lastDepthDemo: null,
   activeView: "top",
   previewUrls: { top: null, side: null },
@@ -489,8 +571,10 @@ const sideSummary = document.querySelector("#sideSummary");
 const industrySummary = document.querySelector("#industrySummary");
 const depthStatusGrid = document.querySelector("#depthStatusGrid");
 const refreshDepthStatusButton = document.querySelector("#refreshDepthStatusButton");
+const probeDepthCaptureButton = document.querySelector("#probeDepthCaptureButton");
 const runDepthDemoButton = document.querySelector("#runDepthDemoButton");
 const saveDepthDemoButton = document.querySelector("#saveDepthDemoButton");
+const depthProbeSummary = document.querySelector("#depthProbeSummary");
 const depthDemoSummary = document.querySelector("#depthDemoSummary");
 const historySearch = document.querySelector("#historySearch");
 const historyList = document.querySelector("#historyList");
@@ -531,6 +615,9 @@ function applyLanguage() {
   }
   if (state.depthStatus) {
     renderDepthStatus(state.depthStatus);
+  }
+  if (state.depthProbe) {
+    renderDepthProbe(state.depthProbe);
   }
   if (state.lastDepthDemo) {
     renderDepthDemo(state.lastDepthDemo);
@@ -923,6 +1010,51 @@ function appendDepthPill(parent, label, value, isReady) {
   parent.appendChild(pill);
 }
 
+async function probeDepthCapture() {
+  probeDepthCaptureButton.disabled = true;
+  try {
+    const response = await fetch("/api/depth/capture/probe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ backend: "auto" }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.detail || response.statusText);
+    }
+    state.depthProbe = data;
+    renderDepthProbe(data);
+  } catch (error) {
+    depthProbeSummary.innerHTML = "";
+    const item = document.createElement("div");
+    item.className = "recommendation";
+    item.textContent = String(error.message || error);
+    depthProbeSummary.appendChild(item);
+  } finally {
+    probeDepthCaptureButton.disabled = false;
+  }
+}
+
+function renderDepthProbe(data) {
+  depthProbeSummary.innerHTML = "";
+  const card = document.createElement("div");
+  card.className = "depth-demo-card depth-probe-card";
+  appendSummaryCell(card, t("captureProbe"), data.ready ? t("ready") : t("missing"));
+  appendSummaryCell(card, t("captureStatus"), labelFrom(probeStatusLabels, data.status));
+  appendSummaryCell(card, t("selectedBackend"), data.backend_selected || "--");
+  depthProbeSummary.appendChild(card);
+
+  const actionKeys = data.next_action_keys || [];
+  const actions = actionKeys.length ? actionKeys : data.next_actions || [];
+  actions.forEach((action, index) => {
+    const item = document.createElement("div");
+    item.className = "recommendation";
+    const fallback = data.next_actions?.[index] || action;
+    item.textContent = `${t("nextAction")}: ${labelFrom(probeActionLabels, action) || fallback}`;
+    depthProbeSummary.appendChild(item);
+  });
+}
+
 async function runDepthDemo() {
   runDepthDemoButton.disabled = true;
   try {
@@ -1236,6 +1368,7 @@ decodeBarcodeButton.addEventListener("click", () => orderImage.click());
 orderImage.addEventListener("change", decodeBarcodeImage);
 refreshHistoryButton.addEventListener("click", loadHistory);
 refreshDepthStatusButton.addEventListener("click", loadDepthStatus);
+probeDepthCaptureButton.addEventListener("click", probeDepthCapture);
 runDepthDemoButton.addEventListener("click", runDepthDemo);
 saveDepthDemoButton.addEventListener("click", saveDepthDemo);
 historySearch.addEventListener("keydown", (event) => {

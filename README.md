@@ -89,6 +89,8 @@ D:\BaiduNetdiskDownload\奥比中光Astra Pro
 本分支新增：
 
 - `GET /api/depth/status`：检查 Astra Pro 教程资料、OpenNI2 运行时、Windows 驱动和可选 `pyorbbecsdk`。
+- `GET /api/depth/capture/capabilities`：报告可选采集后端、OpenNI2/OpenCV 探测能力和当前推荐路径。
+- `POST /api/depth/capture/probe`：到货前后都可运行的采集探测接口，返回状态、选中后端和下一步动作。
 - `GET /api/depth/demo-object`：无硬件时运行合成异形件深度测量演示。
 - `POST /api/depth/demo-object/save`：把深度演示按单号保存到历史记录，方便验证追溯流程。
 - `POST /api/depth/measure-roi`：用深度图、相机内参、ROI 和桌面深度计算真实长宽高。

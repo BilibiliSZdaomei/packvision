@@ -14,6 +14,13 @@ def test_health_endpoint_reports_runtime():
     assert "depth_camera" in response.json()
 
 
+def test_favicon_endpoint_does_not_404():
+    client = TestClient(create_app())
+    response = client.get("/favicon.ico")
+
+    assert response.status_code == 204
+
+
 @pytest.mark.skipif(not opencv_ready(), reason="OpenCV ArUco is unavailable")
 def test_demo_image_endpoint_returns_jpeg():
     client = TestClient(create_app())
@@ -102,6 +109,40 @@ def test_depth_status_endpoint_reports_vendor_assets():
     assert response.status_code == 200
     assert "recommended_backend" in body
     assert "openni2" in body
+
+
+def test_depth_capture_capabilities_endpoint_reports_optional_backends():
+    client = TestClient(create_app())
+    response = client.get("/api/depth/capture/capabilities")
+
+    body = response.json()
+    assert response.status_code == 200
+    assert "capture_backends" in body
+    assert "pyorbbecsdk" in body["capture_backends"]
+    assert "openni2_runtime_probe" in body["capture_backends"]
+    assert body["recommended_capture_backend"] in {
+        "pyorbbecsdk",
+        "openni2_runtime_probe",
+        "not_ready",
+    }
+
+
+def test_depth_capture_probe_endpoint_is_actionable_without_required_hardware():
+    client = TestClient(create_app())
+    response = client.post("/api/depth/capture/probe", json={"backend": "auto"})
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["backend_requested"] == "auto"
+    assert body["status"] in {
+        "ready_for_capture",
+        "driver_ready_capture_backend_missing",
+        "capture_backend_missing",
+        "hardware_validation_required",
+    }
+    assert isinstance(body["ready"], bool)
+    assert body["next_actions"]
+    assert body["next_action_keys"]
 
 
 def test_depth_demo_object_endpoint_returns_measurement():

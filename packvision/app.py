@@ -15,6 +15,12 @@ from pydantic import BaseModel
 from packvision import __version__
 from packvision.services.barcode import detect_codes
 from packvision.services.depth_camera import depth_camera_status
+from packvision.services.depth_capture import (
+    DepthCaptureConfig,
+    DepthCaptureError,
+    depth_capture_capabilities,
+    probe_depth_capture,
+)
 from packvision.services.depth_geometry import (
     DepthObjectConfig,
     DepthIntrinsics,
@@ -93,6 +99,11 @@ class DepthObjectMeasurePayload(DepthTraceabilityPayload):
     trim_quantile: float = 0.02
 
 
+class DepthCaptureProbePayload(BaseModel):
+    backend: str = "auto"
+    timeout_ms: int = 1500
+
+
 class IndustryProfilePayload(BaseModel):
     dimensions: dict[str, Any]
     part_category: str | None = None
@@ -110,6 +121,10 @@ def create_app() -> FastAPI:
     @app.get("/", include_in_schema=False)
     def index() -> FileResponse:
         return FileResponse(STATIC_DIR / "index.html")
+
+    @app.get("/favicon.ico", include_in_schema=False)
+    def favicon() -> Response:
+        return Response(status_code=204)
 
     @app.get("/api/health")
     def health() -> dict[str, object]:
@@ -265,6 +280,22 @@ def create_app() -> FastAPI:
     @app.get("/api/depth/status")
     def depth_status() -> dict[str, object]:
         return depth_camera_status()
+
+    @app.get("/api/depth/capture/capabilities")
+    def depth_capture_capability_report() -> dict[str, object]:
+        return depth_capture_capabilities()
+
+    @app.post("/api/depth/capture/probe")
+    def depth_capture_probe(payload: DepthCaptureProbePayload) -> dict[str, object]:
+        try:
+            return probe_depth_capture(
+                DepthCaptureConfig(
+                    backend=payload.backend,
+                    timeout_ms=payload.timeout_ms,
+                )
+            )
+        except DepthCaptureError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     @app.get("/api/depth/demo-object")
     def depth_demo_object() -> dict[str, object]:

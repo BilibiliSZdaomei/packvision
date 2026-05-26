@@ -596,6 +596,7 @@ input {
 }
 
 .industry-summary,
+.depth-probe-summary,
 .depth-demo-summary {
   display: grid;
   gap: 8px;
