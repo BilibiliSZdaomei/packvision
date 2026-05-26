@@ -14,6 +14,13 @@ from pydantic import BaseModel
 
 from packvision import __version__
 from packvision.services.barcode import detect_codes
+from packvision.services.depth_camera import depth_camera_status
+from packvision.services.depth_geometry import (
+    DepthIntrinsics,
+    DepthMeasurementConfig,
+    DepthMeasurementError,
+    measure_depth_roi,
+)
 from packvision.services.history import get_measurement, init_db, list_measurements, save_measurement
 from packvision.services.measurement import (
     MeasurementConfig,
@@ -35,6 +42,27 @@ class ScanPayload(BaseModel):
     barcode_text: str | None = None
 
 
+class DepthIntrinsicsPayload(BaseModel):
+    fx: float
+    fy: float
+    cx: float
+    cy: float
+    width: int
+    height: int
+    depth_scale: float = 1.0
+
+
+class DepthMeasurePayload(BaseModel):
+    depth_frame: list[list[float]]
+    intrinsics: DepthIntrinsicsPayload
+    roi: list[int]
+    background_roi: list[int] | None = None
+    table_depth_mm: float | None = None
+    min_valid_depth_mm: float = 50.0
+    max_valid_depth_mm: float = 6000.0
+    trim_ratio: float = 0.08
+
+
 def create_app() -> FastAPI:
     app = FastAPI(title="PackVision Local", version=__version__)
     dirs = ensure_data_dirs()
@@ -53,6 +81,7 @@ def create_app() -> FastAPI:
             "version": __version__,
             "opencv_aruco": opencv_ready(),
             "history_db": True,
+            "depth_camera": depth_camera_status(),
         }
 
     @app.get("/api/calibration-card.svg", response_class=HTMLResponse)
@@ -174,6 +203,28 @@ def create_app() -> FastAPI:
         if len(content) > MAX_UPLOAD_BYTES:
             raise HTTPException(status_code=413, detail="Image must be 15 MB or smaller.")
         return detect_codes(content)
+
+    @app.get("/api/depth/status")
+    def depth_status() -> dict[str, object]:
+        return depth_camera_status()
+
+    @app.post("/api/depth/measure-roi")
+    def depth_measure_roi(payload: DepthMeasurePayload) -> dict[str, object]:
+        try:
+            return measure_depth_roi(
+                payload.depth_frame,
+                DepthIntrinsics(**payload.intrinsics.model_dump()),
+                DepthMeasurementConfig(
+                    roi=payload.roi,
+                    background_roi=payload.background_roi,
+                    table_depth_mm=payload.table_depth_mm,
+                    min_valid_depth_mm=payload.min_valid_depth_mm,
+                    max_valid_depth_mm=payload.max_valid_depth_mm,
+                    trim_ratio=payload.trim_ratio,
+                ),
+            )
+        except DepthMeasurementError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     return app
 

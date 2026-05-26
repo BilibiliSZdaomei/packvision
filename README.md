@@ -70,3 +70,24 @@ D:\Documents\包装尺寸检测\docs_cn\02_对标开源方案与本地落地.md
 3. 有侧面照片：补充高度候选。
 4. 识别不准：用手动框修正并重新测量。
 5. 异形件：先支持手动框选，后续可接 YOLO/分割模型。
+
+## Astra Pro 深度相机分支
+
+深度相机开发在分支：
+
+```text
+codex/astra-pro-depth-camera
+```
+
+店铺附赠教程资料默认读取：
+
+```text
+D:\BaiduNetdiskDownload\奥比中光Astra Pro
+```
+
+本分支新增：
+
+- `GET /api/depth/status`：检查 Astra Pro 教程资料、OpenNI2 运行时、Windows 驱动和可选 `pyorbbecsdk`。
+- `POST /api/depth/measure-roi`：用深度图、相机内参、ROI 和桌面深度计算真实长宽高。
+- `scripts\check_astra_depth_status.ps1`：本地检查深度相机资料和 SDK 状态。
+- `docs_cn\08_Astra_Pro_深度相机分支计划.md`：到货后的驱动、上位机、SDK、实测清单。

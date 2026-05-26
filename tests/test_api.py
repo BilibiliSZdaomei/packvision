@@ -11,6 +11,7 @@ def test_health_endpoint_reports_runtime():
 
     assert response.status_code == 200
     assert response.json()["ok"] is True
+    assert "depth_camera" in response.json()
 
 
 @pytest.mark.skipif(not opencv_ready(), reason="OpenCV ArUco is unavailable")
@@ -78,3 +79,43 @@ def test_decode_order_image_endpoint_accepts_image():
 
     assert response.status_code == 200
     assert "codes" in response.json()
+
+
+def test_depth_status_endpoint_reports_vendor_assets():
+    client = TestClient(create_app())
+    response = client.get("/api/depth/status")
+
+    body = response.json()
+    assert response.status_code == 200
+    assert "recommended_backend" in body
+    assert "openni2" in body
+
+
+def test_depth_measure_roi_endpoint_accepts_synthetic_frame():
+    client = TestClient(create_app())
+    depth = [[1000.0 for _ in range(8)] for _ in range(8)]
+    for y in range(2, 6):
+        for x in range(2, 6):
+            depth[y][x] = 800.0
+
+    response = client.post(
+        "/api/depth/measure-roi",
+        json={
+            "depth_frame": depth,
+            "intrinsics": {
+                "fx": 100.0,
+                "fy": 100.0,
+                "cx": 4.0,
+                "cy": 4.0,
+                "width": 8,
+                "height": 8,
+            },
+            "roi": [2, 2, 6, 6],
+            "background_roi": [0, 0, 2, 2],
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["dimensions"]["length_mm"] == pytest.approx(32.0)
+    assert body["dimensions"]["height_mm"] == pytest.approx(200.0)
