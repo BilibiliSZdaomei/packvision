@@ -596,6 +596,7 @@ input {
 }
 
 .industry-summary,
+.validation-plan-summary,
 .depth-probe-summary,
 .depth-demo-summary {
   display: grid;
@@ -604,6 +605,7 @@ input {
 }
 
 .industry-card,
+.validation-plan-card,
 .depth-demo-card {
   display: grid;
   gap: 10px;
@@ -621,19 +623,35 @@ input {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.validation-plan-card {
+  grid-template-columns: minmax(0, 1.25fr) minmax(96px, 0.55fr) minmax(0, 1.2fr);
+}
+
+.validation-plan-card.is-total {
+  grid-template-columns: minmax(0, 1fr) minmax(96px, 0.45fr);
+  border-color: color-mix(in srgb, var(--accent) 52%, var(--line));
+}
+
+.validation-plan-card.is-material {
+  border-color: color-mix(in srgb, var(--accent-2) 56%, var(--line));
+}
+
 .industry-card div,
+.validation-plan-card div,
 .depth-demo-card div {
   display: grid;
   gap: 4px;
 }
 
 .industry-card span,
+.validation-plan-card span,
 .depth-demo-card span {
   color: var(--muted);
   font-size: 0.76rem;
 }
 
 .industry-card strong,
+.validation-plan-card strong,
 .depth-demo-card strong {
   font-size: 0.94rem;
   overflow-wrap: anywhere;
@@ -901,6 +919,7 @@ input {
   .metrics,
   .depth-status-grid,
   .industry-card,
+  .validation-plan-card,
   .depth-demo-card,
   .order-card,
   .parts-card,

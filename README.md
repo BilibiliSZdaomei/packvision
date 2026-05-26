@@ -97,6 +97,8 @@ D:\BaiduNetdiskDownload\奥比中光Astra Pro
 - `POST /api/depth/measure-object`：用桌面深度分离物体 mask，再用点云范围测异形件。
 - `POST /api/depth/measure-roi` 和 `POST /api/depth/measure-object` 支持 `order_id`、`barcode_text`、`part_category`、`package_hint`、`material_hint`、`actual_weight_kg`、`save_to_history`，真实相机接入后可直接进入同一套历史追溯和 CSV 导出。
 - `POST /api/industry/profile`：按汽车备件场景判断标准纸箱、长条件、软包/异形件、异常材质风险和计费重。
+- `GET /api/validation/trial-plan`：返回 Astra Pro 到货后普通纸箱、长条件、异形件和异常材质的最小抽检计划。
+- `POST /api/validation/evaluate`：输入人工真值和系统测量值，输出误差、失败样本、复核样本和是否可进入现场试运行。
 - `scripts\check_astra_depth_status.ps1`：本地检查深度相机资料和 SDK 状态。
 - `docs_cn\08_Astra_Pro_深度相机分支计划.md`：到货后的驱动、上位机、SDK、实测清单。
 - `docs_cn\09_汽车备件测量落地方案.md`：汽车备件仓库的普通包装、异形包装和异常材质落地流程。

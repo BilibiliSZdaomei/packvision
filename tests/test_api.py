@@ -299,3 +299,36 @@ def test_industry_profile_endpoint_reports_abnormal_material_flow():
     assert body["material_risk_level"] == "high"
     assert "transparent_depth_dropout_risk" in body["handling_flags"]
     assert "material_surface_check" in body["workflow"]
+
+
+def test_validation_trial_plan_endpoint_returns_site_plan():
+    client = TestClient(create_app())
+    response = client.get("/api/validation/trial-plan")
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["minimum_total_samples"] >= 28
+    assert any(item["id"] == "long_part" for item in body["scenarios"])
+
+
+def test_validation_evaluate_endpoint_flags_failed_material_sample():
+    client = TestClient(create_app())
+    response = client.post(
+        "/api/validation/evaluate",
+        json={
+            "samples": [
+                {
+                    "sample_id": "MAT-API-001",
+                    "package_class": "standard_carton",
+                    "material_class": "reflective",
+                    "measured": {"length_mm": 450, "width_mm": 280, "height_mm": 160},
+                    "truth": {"length_mm": 400, "width_mm": 280, "height_mm": 160},
+                }
+            ]
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["summary"]["failed_samples"] == 1
+    assert "manual_review_required" in body["samples"][0]["flags"]

@@ -87,6 +87,11 @@ const translations = {
     depthTitle: "Astra Pro 深度相机工作区",
     refreshDepth: "刷新状态",
     probeDepthCapture: "采集探测",
+    validationPlan: "验收计划",
+    minSamples: "最少样本",
+    tolerance: "容差",
+    toleranceTemplate: "≤ {mm} mm 或 ≤ {pct}% 最大尺寸误差",
+    totalSamples: "总样本",
     runDepthDemo: "运行深度演示",
     saveDepthDemo: "保存演示记录",
     savedToHistory: "已保存到历史",
@@ -193,6 +198,11 @@ const translations = {
     depthTitle: "Astra Pro depth camera workspace",
     refreshDepth: "Refresh status",
     probeDepthCapture: "Probe capture",
+    validationPlan: "Trial plan",
+    minSamples: "Min samples",
+    tolerance: "Tolerance",
+    toleranceTemplate: "≤ {mm} mm or ≤ {pct}% max dimension error",
+    totalSamples: "Total samples",
     runDepthDemo: "Run depth demo",
     saveDepthDemo: "Save demo record",
     savedToHistory: "Saved to history",
@@ -299,6 +309,11 @@ const translations = {
     depthTitle: "Робоча зона Astra Pro",
     refreshDepth: "Оновити статус",
     probeDepthCapture: "Перевірити збір",
+    validationPlan: "План приймання",
+    minSamples: "Мін. зразків",
+    tolerance: "Допуск",
+    toleranceTemplate: "≤ {mm} мм або ≤ {pct}% макс. похибка",
+    totalSamples: "Усього зразків",
     runDepthDemo: "Запустити демо",
     saveDepthDemo: "Зберегти демо",
     savedToHistory: "Збережено в історії",
@@ -472,6 +487,39 @@ const packageClassLabels = {
   },
 };
 
+const scenarioLabels = {
+  zh: {
+    standard_carton: "标准纸箱",
+    long_part: "长条件",
+    irregular_or_soft_pack: "异形/软包",
+    bulky_irregular: "大件异形",
+    reflective: "反光材质",
+    transparent: "透明材质",
+    dark_absorbing: "深黑吸光",
+    deformable: "易变形材质",
+  },
+  en: {
+    standard_carton: "Standard carton",
+    long_part: "Long part",
+    irregular_or_soft_pack: "Irregular / soft pack",
+    bulky_irregular: "Bulky irregular",
+    reflective: "Reflective material",
+    transparent: "Transparent material",
+    dark_absorbing: "Dark absorbing",
+    deformable: "Deformable material",
+  },
+  uk: {
+    standard_carton: "Стандартна коробка",
+    long_part: "Довга деталь",
+    irregular_or_soft_pack: "Нерівне / м'яке",
+    bulky_irregular: "Габаритне нерівне",
+    reflective: "Відбивний матеріал",
+    transparent: "Прозорий матеріал",
+    dark_absorbing: "Темний поглинаючий",
+    deformable: "Деформівний матеріал",
+  },
+};
+
 const materialClassLabels = {
   zh: {
     normal: "普通材质",
@@ -591,6 +639,7 @@ const state = {
   lastResult: null,
   depthStatus: null,
   depthProbe: null,
+  validationPlan: null,
   lastDepthDemo: null,
   activeView: "top",
   previewUrls: { top: null, side: null },
@@ -632,8 +681,10 @@ const industrySummary = document.querySelector("#industrySummary");
 const depthStatusGrid = document.querySelector("#depthStatusGrid");
 const refreshDepthStatusButton = document.querySelector("#refreshDepthStatusButton");
 const probeDepthCaptureButton = document.querySelector("#probeDepthCaptureButton");
+const loadValidationPlanButton = document.querySelector("#loadValidationPlanButton");
 const runDepthDemoButton = document.querySelector("#runDepthDemoButton");
 const saveDepthDemoButton = document.querySelector("#saveDepthDemoButton");
+const validationPlanSummary = document.querySelector("#validationPlanSummary");
 const depthProbeSummary = document.querySelector("#depthProbeSummary");
 const depthDemoSummary = document.querySelector("#depthDemoSummary");
 const historySearch = document.querySelector("#historySearch");
@@ -678,6 +729,9 @@ function applyLanguage() {
   }
   if (state.depthProbe) {
     renderDepthProbe(state.depthProbe);
+  }
+  if (state.validationPlan) {
+    renderValidationPlan(state.validationPlan);
   }
   if (state.lastDepthDemo) {
     renderDepthDemo(state.lastDepthDemo);
@@ -1117,6 +1171,63 @@ function renderDepthProbe(data) {
   });
 }
 
+async function loadValidationPlan() {
+  loadValidationPlanButton.disabled = true;
+  try {
+    const response = await fetch("/api/validation/trial-plan");
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.detail || response.statusText);
+    }
+    state.validationPlan = data;
+    renderValidationPlan(data);
+  } catch (error) {
+    validationPlanSummary.innerHTML = "";
+    const item = document.createElement("div");
+    item.className = "recommendation";
+    item.textContent = String(error.message || error);
+    validationPlanSummary.appendChild(item);
+  } finally {
+    loadValidationPlanButton.disabled = false;
+  }
+}
+
+function renderValidationPlan(data) {
+  validationPlanSummary.innerHTML = "";
+  const lead = document.createElement("div");
+  lead.className = "validation-plan-card is-total";
+  appendSummaryCell(lead, t("validationPlan"), t("totalSamples"));
+  appendSummaryCell(lead, t("totalSamples"), String(data.minimum_total_samples || "--"));
+  validationPlanSummary.appendChild(lead);
+
+  for (const scenario of data.scenarios || []) {
+    const card = document.createElement("div");
+    card.className = "validation-plan-card";
+    appendSummaryCell(card, labelFrom(scenarioLabels, scenario.id), scenario.required_capture_mode || "--");
+    appendSummaryCell(card, t("minSamples"), String(scenario.minimum_samples || "--"));
+    appendSummaryCell(card, t("tolerance"), formatTolerance(scenario));
+    validationPlanSummary.appendChild(card);
+  }
+
+  for (const material of data.material_scenarios || []) {
+    const card = document.createElement("div");
+    card.className = "validation-plan-card is-material";
+    appendSummaryCell(card, labelFrom(scenarioLabels, material.id), material.risk_level || "--");
+    appendSummaryCell(card, t("minSamples"), String(material.minimum_samples || "--"));
+    appendSummaryCell(card, t("captureMode"), labelFrom(flagLabels, material.flags?.[0]) || "--");
+    validationPlanSummary.appendChild(card);
+  }
+}
+
+function formatTolerance(scenario) {
+  if (!scenario?.abs_tolerance_mm || !scenario?.relative_tolerance_pct) {
+    return scenario?.acceptance || "--";
+  }
+  return t("toleranceTemplate")
+    .replace("{mm}", String(scenario.abs_tolerance_mm))
+    .replace("{pct}", String(scenario.relative_tolerance_pct));
+}
+
 async function runDepthDemo() {
   runDepthDemoButton.disabled = true;
   try {
@@ -1432,6 +1543,7 @@ orderImage.addEventListener("change", decodeBarcodeImage);
 refreshHistoryButton.addEventListener("click", loadHistory);
 refreshDepthStatusButton.addEventListener("click", loadDepthStatus);
 probeDepthCaptureButton.addEventListener("click", probeDepthCapture);
+loadValidationPlanButton.addEventListener("click", loadValidationPlan);
 runDepthDemoButton.addEventListener("click", runDepthDemo);
 saveDepthDemoButton.addEventListener("click", saveDepthDemo);
 historySearch.addEventListener("keydown", (event) => {

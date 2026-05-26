@@ -46,6 +46,7 @@ from packvision.services.measurement import (
     opencv_ready,
 )
 from packvision.services.storage import ensure_data_dirs, resource_path, write_bytes
+from packvision.services.validation import build_trial_plan, evaluate_trial_run
 
 
 STATIC_DIR = resource_path("static")
@@ -111,6 +112,10 @@ class IndustryProfilePayload(BaseModel):
     package_hint: str | None = None
     material_hint: str | None = None
     actual_weight_kg: float | None = None
+
+
+class TrialRunEvaluationPayload(BaseModel):
+    samples: list[dict[str, Any]]
 
 
 def create_app() -> FastAPI:
@@ -379,6 +384,14 @@ def create_app() -> FastAPI:
             material_hint=payload.material_hint,
             actual_weight_kg=payload.actual_weight_kg,
         )
+
+    @app.get("/api/validation/trial-plan")
+    def validation_trial_plan() -> dict[str, object]:
+        return build_trial_plan()
+
+    @app.post("/api/validation/evaluate")
+    def validation_evaluate(payload: TrialRunEvaluationPayload) -> dict[str, object]:
+        return evaluate_trial_run(payload.samples)
 
     return app
 
