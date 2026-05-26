@@ -2,6 +2,7 @@ const translations = {
   zh: {
     localLab: "本地仓库测量台",
     measure: "测量",
+    depth: "深度",
     history: "历史",
     calibration: "校准卡",
     localApi: "本地 API",
@@ -71,10 +72,29 @@ const translations = {
     noHistory: "还没有匹配的历史记录",
     manualBoxReady: "手动框已应用",
     sideSummary: "侧面高度候选",
+    industrySummary: "行业摘要",
+    packageClass: "包装分类",
+    captureMode: "推荐采集",
+    chargeableWeight: "计费重量",
+    exportCsv: "导出 CSV",
+    depthTitle: "Astra Pro 深度相机工作区",
+    refreshDepth: "刷新状态",
+    runDepthDemo: "运行深度演示",
+    depthBackend: "推荐后端",
+    depthDriver: "驱动状态",
+    depthOpenNi: "OpenNI2",
+    depthPyorbbec: "pyorbbecsdk",
+    depthDemo: "深度演示",
+    demoObject: "异形件样本",
+    ready: "可用",
+    missing: "未就绪",
+    installed: "已安装",
+    unavailable: "不可用",
   },
   en: {
     localLab: "Local warehouse station",
     measure: "Measure",
+    depth: "Depth",
     history: "History",
     calibration: "Calibration",
     localApi: "Local API",
@@ -144,10 +164,29 @@ const translations = {
     noHistory: "No matching history yet",
     manualBoxReady: "Manual box applied",
     sideSummary: "Side height candidate",
+    industrySummary: "Industry summary",
+    packageClass: "Package class",
+    captureMode: "Capture mode",
+    chargeableWeight: "Chargeable weight",
+    exportCsv: "Export CSV",
+    depthTitle: "Astra Pro depth camera workspace",
+    refreshDepth: "Refresh status",
+    runDepthDemo: "Run depth demo",
+    depthBackend: "Recommended backend",
+    depthDriver: "Driver status",
+    depthOpenNi: "OpenNI2",
+    depthPyorbbec: "pyorbbecsdk",
+    depthDemo: "Depth demo",
+    demoObject: "Irregular sample",
+    ready: "Ready",
+    missing: "Missing",
+    installed: "Installed",
+    unavailable: "Unavailable",
   },
   uk: {
     localLab: "Локальна станція складу",
     measure: "Вимір",
+    depth: "Глибина",
     history: "Історія",
     calibration: "Калібрування",
     localApi: "Локальний API",
@@ -217,6 +256,24 @@ const translations = {
     noHistory: "Записів ще немає",
     manualBoxReady: "Рамку застосовано",
     sideSummary: "Кандидат висоти збоку",
+    industrySummary: "Галузевий підсумок",
+    packageClass: "Клас пакування",
+    captureMode: "Режим зйомки",
+    chargeableWeight: "Платна вага",
+    exportCsv: "Експорт CSV",
+    depthTitle: "Робоча зона Astra Pro",
+    refreshDepth: "Оновити статус",
+    runDepthDemo: "Запустити демо",
+    depthBackend: "Рекомендований бекенд",
+    depthDriver: "Стан драйвера",
+    depthOpenNi: "OpenNI2",
+    depthPyorbbec: "pyorbbecsdk",
+    depthDemo: "Демо глибини",
+    demoObject: "Нерівний зразок",
+    ready: "Готово",
+    missing: "Немає",
+    installed: "Встановлено",
+    unavailable: "Недоступно",
   },
 };
 
@@ -240,6 +297,14 @@ const flagLabels = {
     side_camera_distance_manual_focal_scale_used: "侧面使用距离和焦距估算",
     side_view_height_estimated: "使用侧面图估算高度",
     single_camera_perspective_limited: "单目照片存在透视限制",
+    depth_camera_measurement: "深度相机测量",
+    depth_roi_used: "深度 ROI 测量",
+    depth_object_mask_used: "深度异形掩膜",
+    background_depth_used: "使用台面深度",
+    background_depth_missing: "缺少台面深度",
+    depth_outliers_trimmed: "深度离群点已裁剪",
+    point_cloud_extent_trimmed: "点云范围已裁剪",
+    small_object_mask: "目标掩膜偏小",
   },
   en: {
     aruco_marker_scale_used: "ArUco scale used",
@@ -260,6 +325,14 @@ const flagLabels = {
     side_camera_distance_manual_focal_scale_used: "Side distance estimate used",
     side_view_height_estimated: "Height estimated from side view",
     single_camera_perspective_limited: "Single-camera perspective limit",
+    depth_camera_measurement: "Depth camera measurement",
+    depth_roi_used: "Depth ROI used",
+    depth_object_mask_used: "Depth object mask",
+    background_depth_used: "Table depth used",
+    background_depth_missing: "Table depth missing",
+    depth_outliers_trimmed: "Depth outliers trimmed",
+    point_cloud_extent_trimmed: "Point-cloud extent trimmed",
+    small_object_mask: "Small object mask",
   },
   uk: {
     aruco_marker_scale_used: "Масштаб ArUco",
@@ -280,6 +353,14 @@ const flagLabels = {
     side_camera_distance_manual_focal_scale_used: "Бічна оцінка відстані",
     side_view_height_estimated: "Висота з бічного фото",
     single_camera_perspective_limited: "Обмеження однієї камери",
+    depth_camera_measurement: "Вимір камерою глибини",
+    depth_roi_used: "ROI глибини",
+    depth_object_mask_used: "Маска об'єкта",
+    background_depth_used: "Глибина столу",
+    background_depth_missing: "Немає глибини столу",
+    depth_outliers_trimmed: "Викиди глибини обрізано",
+    point_cloud_extent_trimmed: "Хмару точок обрізано",
+    small_object_mask: "Мала маска об'єкта",
   },
 };
 
@@ -313,12 +394,56 @@ const recommendationLabels = {
   },
 };
 
+const packageClassLabels = {
+  zh: {
+    standard_carton: "标准纸箱",
+    long_part: "长条件",
+    irregular_or_soft_pack: "异形/软包",
+    bulky_irregular: "大件异形",
+  },
+  en: {
+    standard_carton: "Standard carton",
+    long_part: "Long part",
+    irregular_or_soft_pack: "Irregular / soft pack",
+    bulky_irregular: "Bulky irregular",
+  },
+  uk: {
+    standard_carton: "Стандартна коробка",
+    long_part: "Довга деталь",
+    irregular_or_soft_pack: "Нерівне / м'яке",
+    bulky_irregular: "Габаритне нерівне",
+  },
+};
+
+const captureModeLabels = {
+  zh: {
+    top_plus_side_or_depth_roi: "顶部+侧面或深度 ROI",
+    depth_roi_long_item: "长条件深度 ROI",
+    depth_object_mask: "深度异形掩膜",
+    manual_review: "人工复核",
+  },
+  en: {
+    top_plus_side_or_depth_roi: "Top + side or depth ROI",
+    depth_roi_long_item: "Long-item depth ROI",
+    depth_object_mask: "Depth object mask",
+    manual_review: "Manual review",
+  },
+  uk: {
+    top_plus_side_or_depth_roi: "Верх + бік або ROI",
+    depth_roi_long_item: "ROI довгої деталі",
+    depth_object_mask: "Маска глибини",
+    manual_review: "Ручна перевірка",
+  },
+};
+
 const localeMap = { zh: "zh-CN", en: "en-US", uk: "uk-UA" };
 
 const state = {
   lang: localStorage.getItem("packvision.lang") || "zh",
   theme: localStorage.getItem("packvision.theme") || "light",
   lastResult: null,
+  depthStatus: null,
+  lastDepthDemo: null,
   activeView: "top",
   previewUrls: { top: null, side: null },
   drawing: { active: false, start: null, current: null },
@@ -355,9 +480,15 @@ const adjustTopButton = document.querySelector("#adjustTopButton");
 const showTopViewButton = document.querySelector("#showTopViewButton");
 const showSideViewButton = document.querySelector("#showSideViewButton");
 const sideSummary = document.querySelector("#sideSummary");
+const industrySummary = document.querySelector("#industrySummary");
+const depthStatusGrid = document.querySelector("#depthStatusGrid");
+const refreshDepthStatusButton = document.querySelector("#refreshDepthStatusButton");
+const runDepthDemoButton = document.querySelector("#runDepthDemoButton");
+const depthDemoSummary = document.querySelector("#depthDemoSummary");
 const historySearch = document.querySelector("#historySearch");
 const historyList = document.querySelector("#historyList");
 const refreshHistoryButton = document.querySelector("#refreshHistoryButton");
+const exportHistoryLink = document.querySelector("#exportHistoryLink");
 
 const metricEls = {
   length_mm: document.querySelector("#lengthValue"),
@@ -371,6 +502,9 @@ function t(key) {
 }
 
 function labelFrom(dictionary, key) {
+  if (!key) {
+    return "--";
+  }
   return dictionary[state.lang]?.[key] || dictionary.en[key] || key.replaceAll("_", " ");
 }
 
@@ -388,6 +522,12 @@ function applyLanguage() {
   } else {
     loadHistory();
   }
+  if (state.depthStatus) {
+    renderDepthStatus(state.depthStatus);
+  }
+  if (state.lastDepthDemo) {
+    renderDepthDemo(state.lastDepthDemo);
+  }
 }
 
 function applyTheme() {
@@ -404,6 +544,10 @@ function formatMm(value) {
 
 function formatVolume(value) {
   return Number.isFinite(Number(value)) ? `${Number(value).toFixed(3)} L` : "--";
+}
+
+function formatKg(value) {
+  return Number.isFinite(Number(value)) ? `${Number(value).toFixed(3)} kg` : "--";
 }
 
 function formatDate(value) {
@@ -551,6 +695,7 @@ function showError(error) {
   recommendations.innerHTML = "";
   qualityFlags.innerHTML = "";
   sideSummary.textContent = "";
+  industrySummary.innerHTML = "";
   const badge = document.createElement("span");
   badge.className = "flag";
   badge.textContent = String(error.message || error);
@@ -577,6 +722,7 @@ function renderResult(data, options = {}) {
   showSideViewButton.classList.toggle("is-active", state.activeView === "side");
   renderStageImage();
   renderSideSummary(data);
+  renderIndustrySummary(data.industry_profile);
   renderFlags(data);
 }
 
@@ -608,6 +754,29 @@ function renderSideSummary(data) {
   }
   const side = data.side_measurement;
   sideSummary.textContent = `${t("sideSummary")}: ${formatMm(side.height_candidate_mm)} (${side.scale_source})`;
+}
+
+function renderIndustrySummary(profile) {
+  industrySummary.innerHTML = "";
+  if (!profile) {
+    return;
+  }
+  const card = document.createElement("div");
+  card.className = "industry-card";
+  appendSummaryCell(card, t("packageClass"), labelFrom(packageClassLabels, profile.package_class));
+  appendSummaryCell(card, t("captureMode"), labelFrom(captureModeLabels, profile.recommended_capture_mode));
+  appendSummaryCell(card, t("chargeableWeight"), formatKg(profile.chargeable_weight_kg));
+  industrySummary.appendChild(card);
+}
+
+function appendSummaryCell(parent, label, value) {
+  const item = document.createElement("div");
+  const labelEl = document.createElement("span");
+  const valueEl = document.createElement("strong");
+  labelEl.textContent = label;
+  valueEl.textContent = value || "--";
+  item.append(labelEl, valueEl);
+  parent.appendChild(item);
 }
 
 function renderFlags(data) {
@@ -711,18 +880,94 @@ async function decodeBarcodeImage() {
   }
 }
 
+async function loadDepthStatus() {
+  if (!depthStatusGrid) {
+    return;
+  }
+  const response = await fetch("/api/depth/status");
+  if (!response.ok) {
+    return;
+  }
+  const data = await response.json();
+  state.depthStatus = data;
+  renderDepthStatus(data);
+}
+
+function renderDepthStatus(data) {
+  depthStatusGrid.innerHTML = "";
+  const openNiReady = Boolean(data.openni2?.openni_dll_found && data.openni2?.orbbec_driver_found);
+  const pyorbbecReady = Boolean(data.pyorbbecsdk_available);
+  const driverReady = Boolean(data.windows_driver?.found);
+  appendDepthPill(depthStatusGrid, t("depthBackend"), data.recommended_backend || "--", Boolean(data.ready_for_hardware_trial));
+  appendDepthPill(depthStatusGrid, t("depthOpenNi"), openNiReady ? t("ready") : t("missing"), openNiReady);
+  appendDepthPill(depthStatusGrid, t("depthPyorbbec"), pyorbbecReady ? t("installed") : t("unavailable"), pyorbbecReady);
+  appendDepthPill(depthStatusGrid, t("depthDriver"), driverReady ? t("installed") : t("missing"), driverReady);
+}
+
+function appendDepthPill(parent, label, value, isReady) {
+  const pill = document.createElement("div");
+  pill.className = `depth-pill ${isReady ? "is-ready" : "is-warning"}`;
+  const labelEl = document.createElement("span");
+  const valueEl = document.createElement("strong");
+  labelEl.textContent = label;
+  valueEl.textContent = value || "--";
+  pill.append(labelEl, valueEl);
+  parent.appendChild(pill);
+}
+
+async function runDepthDemo() {
+  runDepthDemoButton.disabled = true;
+  try {
+    const response = await fetch("/api/depth/demo-object");
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.detail || response.statusText);
+    }
+    state.lastDepthDemo = data;
+    renderDepthDemo(data);
+  } catch (error) {
+    depthDemoSummary.innerHTML = "";
+    const item = document.createElement("div");
+    item.className = "recommendation";
+    item.textContent = String(error.message || error);
+    depthDemoSummary.appendChild(item);
+  } finally {
+    runDepthDemoButton.disabled = false;
+  }
+}
+
+function renderDepthDemo(data) {
+  depthDemoSummary.innerHTML = "";
+  const card = document.createElement("div");
+  card.className = "depth-demo-card";
+  appendSummaryCell(card, t("depthDemo"), data.sample?.name || t("demoObject"));
+  appendSummaryCell(card, t("length"), formatMm(data.dimensions?.length_mm));
+  appendSummaryCell(card, t("height"), formatMm(data.dimensions?.height_mm));
+  depthDemoSummary.appendChild(card);
+}
+
 async function loadHistory() {
   const params = new URLSearchParams();
   if (historySearch.value.trim()) {
     params.set("order_id", historySearch.value.trim());
   }
   params.set("limit", "30");
+  updateHistoryExportLink(params);
   const response = await fetch(`/api/history?${params}`);
   if (!response.ok) {
     return;
   }
   const data = await response.json();
   renderHistory(data.items || []);
+}
+
+function updateHistoryExportLink(params) {
+  if (!exportHistoryLink) {
+    return;
+  }
+  const exportParams = new URLSearchParams(params);
+  exportParams.set("limit", "500");
+  exportHistoryLink.href = `/api/history/export.csv?${exportParams}`;
 }
 
 function renderHistory(items) {
@@ -741,10 +986,11 @@ function renderHistory(items) {
     row.addEventListener("click", () => openHistoryItem(item.measurement_id));
     appendHistoryCell(row, item.order_id || item.barcode_text || item.measurement_id, formatDate(item.created_at), true);
     appendHistoryCell(row, item.status, `${Math.round((item.confidence || 0) * 100)}%`, false);
+    appendHistoryCell(row, labelFrom(packageClassLabels, item.package_class), labelFrom(captureModeLabels, item.recommended_capture_mode), false);
     appendHistoryCell(row, formatMm(item.length_mm), t("length"), false);
     appendHistoryCell(row, formatMm(item.width_mm), t("width"), false);
     appendHistoryCell(row, formatMm(item.height_mm), t("height"), false);
-    appendHistoryCell(row, formatVolume(item.volume_l), t("volume"), false);
+    appendHistoryCell(row, formatKg(item.chargeable_weight_kg), t("chargeableWeight"), false);
     historyList.appendChild(row);
   }
 }
@@ -937,6 +1183,8 @@ copyJsonButton.addEventListener("click", copyResultJson);
 decodeBarcodeButton.addEventListener("click", () => orderImage.click());
 orderImage.addEventListener("change", decodeBarcodeImage);
 refreshHistoryButton.addEventListener("click", loadHistory);
+refreshDepthStatusButton.addEventListener("click", loadDepthStatus);
+runDepthDemoButton.addEventListener("click", runDepthDemo);
 historySearch.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
     event.preventDefault();
@@ -986,4 +1234,5 @@ annotationCanvas.addEventListener("pointercancel", () => stopDrawing());
 
 applyLanguage();
 applyTheme();
+loadDepthStatus();
 loadHistory();

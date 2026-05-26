@@ -57,6 +57,14 @@ def test_measure_endpoint_accepts_demo_image():
     history = client.get("/api/history", params={"order_id": "SO-20260526"})
     assert history.status_code == 200
     assert any(item["measurement_id"] == body["measurement_id"] for item in history.json()["items"])
+    saved = next(item for item in history.json()["items"] if item["measurement_id"] == body["measurement_id"])
+    assert saved["package_class"] == "standard_carton"
+    assert saved["chargeable_weight_kg"] >= 3.2
+
+    export = client.get("/api/history/export.csv", params={"order_id": "SO-20260526-001"})
+    assert export.status_code == 200
+    assert "package_class" in export.text
+    assert "standard_carton" in export.text
 
     detail = client.get(f"/api/history/{body['measurement_id']}")
     assert detail.status_code == 200
@@ -94,6 +102,17 @@ def test_depth_status_endpoint_reports_vendor_assets():
     assert response.status_code == 200
     assert "recommended_backend" in body
     assert "openni2" in body
+
+
+def test_depth_demo_object_endpoint_returns_measurement():
+    client = TestClient(create_app())
+    response = client.get("/api/depth/demo-object")
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["status"] == "measured"
+    assert body["industry_profile"]["package_class"] == "irregular_or_soft_pack"
+    assert "depth_object_mask_used" in body["quality_flags"]
 
 
 def test_depth_measure_roi_endpoint_accepts_synthetic_frame():

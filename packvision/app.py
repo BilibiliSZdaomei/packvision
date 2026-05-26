@@ -23,7 +23,13 @@ from packvision.services.depth_geometry import (
     measure_depth_object_mask,
     measure_depth_roi,
 )
-from packvision.services.history import get_measurement, init_db, list_measurements, save_measurement
+from packvision.services.history import (
+    export_measurements_csv,
+    get_measurement,
+    init_db,
+    list_measurements,
+    save_measurement,
+)
 from packvision.services.industry import build_packaging_profile
 from packvision.services.measurement import (
     MeasurementConfig,
@@ -210,6 +216,15 @@ def create_app() -> FastAPI:
     def history(limit: int = 50, order_id: str | None = None) -> dict[str, object]:
         return {"items": list_measurements(limit=limit, order_id=_clean_text(order_id))}
 
+    @app.get("/api/history/export.csv")
+    def history_export(limit: int = 500, order_id: str | None = None) -> Response:
+        csv_text = export_measurements_csv(limit=limit, order_id=_clean_text(order_id))
+        return Response(
+            content=csv_text,
+            media_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": 'attachment; filename="packvision-history.csv"'},
+        )
+
     @app.get("/api/history/{measurement_id}")
     def history_detail(measurement_id: str) -> dict[str, object]:
         result = get_measurement(measurement_id)
@@ -241,6 +256,37 @@ def create_app() -> FastAPI:
     @app.get("/api/depth/status")
     def depth_status() -> dict[str, object]:
         return depth_camera_status()
+
+    @app.get("/api/depth/demo-object")
+    def depth_demo_object() -> dict[str, object]:
+        depth_frame = [[1200.0 for _ in range(24)] for _ in range(18)]
+        for y in range(4, 15):
+            for x in range(4, 21):
+                core = abs(x - 12) * 0.75 + abs(y - 9) * 1.35
+                if core < 8.2 and not (x < 8 and y < 7):
+                    depth_frame[y][x] = 820.0 + ((x + y) % 3) * 5.0
+
+        result = measure_depth_object_mask(
+            depth_frame,
+            DepthIntrinsics(fx=60.0, fy=60.0, cx=12.0, cy=9.0, width=24, height=18),
+            DepthObjectConfig(
+                roi=[3, 3, 22, 16],
+                background_roi=[0, 0, 3, 3],
+                object_min_height_mm=80.0,
+                trim_quantile=0.01,
+            ),
+        )
+        result["industry_profile"] = build_packaging_profile(
+            result["dimensions"],
+            part_category="bumper_trim",
+            package_hint="irregular",
+            actual_weight_kg=4.6,
+        )
+        result["sample"] = {
+            "name": "synthetic_irregular_auto_part",
+            "purpose": "Validate object-mask depth measurement before Astra Pro hardware arrives.",
+        }
+        return result
 
     @app.post("/api/depth/measure-roi")
     def depth_measure_roi(payload: DepthMeasurePayload) -> dict[str, object]:

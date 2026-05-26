@@ -18,6 +18,7 @@
         </div>
         <nav class="rail-nav" aria-label="Primary">
           <a class="nav-item is-active" href="#measure" data-i18n="measure">测量</a>
+          <a class="nav-item" href="#depth" data-i18n="depth">深度</a>
           <a class="nav-item" href="#history" data-i18n="history">历史</a>
           <a class="nav-item" href="/api/calibration-card.svg" target="_blank" rel="noopener" data-i18n="calibration">校准卡</a>
         </nav>
@@ -207,6 +208,7 @@
             </div>
 
             <div class="side-summary" id="sideSummary"></div>
+            <div class="industry-summary" id="industrySummary"></div>
 
             <div class="image-stage" id="imageStage">
               <img id="annotatedImage" alt="Annotated package result" />
@@ -220,6 +222,21 @@
           </section>
         </section>
 
+        <section id="depth" class="depth-panel">
+          <div class="panel-head">
+            <div>
+              <p class="section-label" data-i18n="depth">深度</p>
+              <h3 data-i18n="depthTitle">Astra Pro 深度相机工作区</h3>
+            </div>
+            <div class="result-tools">
+              <button class="tool-button" type="button" id="refreshDepthStatusButton" data-i18n="refreshDepth">刷新状态</button>
+              <button class="tool-button" type="button" id="runDepthDemoButton" data-i18n="runDepthDemo">运行深度演示</button>
+            </div>
+          </div>
+          <div class="depth-status-grid" id="depthStatusGrid"></div>
+          <div class="depth-demo-summary" id="depthDemoSummary"></div>
+        </section>
+
         <section id="history" class="history-panel">
           <div class="panel-head">
             <div>
@@ -229,6 +246,7 @@
             <div class="history-tools">
               <input id="historySearch" type="search" placeholder="Order ID" />
               <button class="tool-button" type="button" id="refreshHistoryButton" data-i18n="refresh">刷新</button>
+              <a class="tool-button" id="exportHistoryLink" href="/api/history/export.csv" target="_blank" rel="noopener" data-i18n="exportCsv">导出 CSV</a>
             </div>
           </div>
           <div class="history-list" id="historyList"></div>
@@ -239,7 +257,7 @@
             <p class="section-label" data-i18n="api">API</p>
             <h3>POST /api/measure</h3>
           </div>
-          <code>order_id, barcode_text, top_image, side_image?, marker_size_mm, manual_height_mm?, camera_distance_mm?, focal_length_35mm?, top_box_json?</code>
+          <code>order_id, barcode_text, top_image, side_image?, marker_size_mm, manual_height_mm?, camera_distance_mm?, focal_length_35mm?, top_box_json?, GET /api/depth/status, GET /api/history/export.csv</code>
         </section>
       </main>
     </div>
