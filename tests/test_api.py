@@ -37,6 +37,9 @@ def test_measure_endpoint_accepts_demo_image():
             "manual_height_mm": "120",
             "order_id": "SO-20260526-001",
             "barcode_text": "SO-20260526-001",
+            "part_category": "filter",
+            "package_hint": "carton",
+            "actual_weight_kg": "3.2",
         },
     )
 
@@ -45,6 +48,8 @@ def test_measure_endpoint_accepts_demo_image():
     assert body["status"] == "measured"
     assert body["measurement_id"]
     assert body["order_id"] == "SO-20260526-001"
+    assert body["industry_profile"]["package_class"] == "standard_carton"
+    assert body["industry_profile"]["chargeable_weight_kg"] >= 3.2
     assert body["created_at"]
     assert body["top_view"]["annotated_image_url"].startswith("/results/")
     assert "manual_height_used" in body["quality_flags"]

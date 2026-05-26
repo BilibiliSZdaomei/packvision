@@ -134,6 +134,9 @@ def create_app() -> FastAPI:
         side_box_json: Annotated[str | None, Form()] = None,
         order_id: Annotated[str | None, Form()] = None,
         barcode_text: Annotated[str | None, Form()] = None,
+        part_category: Annotated[str | None, Form()] = None,
+        package_hint: Annotated[str | None, Form()] = None,
+        actual_weight_kg: Annotated[float | None, Form()] = None,
     ) -> dict[str, object]:
         if marker_size_mm <= 0:
             raise HTTPException(status_code=422, detail="marker_size_mm must be positive.")
@@ -187,6 +190,15 @@ def create_app() -> FastAPI:
         result["created_at"] = datetime.now(timezone.utc).isoformat()
         result["order_id"] = _clean_text(order_id)
         result["barcode_text"] = _clean_text(barcode_text)
+        result["part_category"] = _clean_text(part_category)
+        result["package_hint"] = _clean_text(package_hint)
+        result["actual_weight_kg"] = actual_weight_kg if actual_weight_kg and actual_weight_kg > 0 else None
+        result["industry_profile"] = build_packaging_profile(
+            result["dimensions"],
+            part_category=result["part_category"],
+            package_hint=result["package_hint"],
+            actual_weight_kg=result["actual_weight_kg"],
+        )
         result["artifacts"] = {
             "top_upload": str(top_path),
             "side_upload": str(side_path) if side_path else None,

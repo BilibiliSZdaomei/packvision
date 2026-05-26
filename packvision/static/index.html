@@ -99,6 +99,27 @@
               </div>
             </div>
 
+            <div class="parts-card">
+              <label>
+                <span data-i18n="partCategory">备件类型</span>
+                <input name="part_category" type="text" autocomplete="off" placeholder="filter / bumper / shock" />
+              </label>
+              <label>
+                <span data-i18n="packageHint">包装类型</span>
+                <select name="package_hint">
+                  <option value="" data-i18n="autoPackage">自动判断</option>
+                  <option value="carton" data-i18n="carton">标准纸箱</option>
+                  <option value="long_part" data-i18n="longPart">长条件</option>
+                  <option value="irregular" data-i18n="irregular">异形件</option>
+                  <option value="soft" data-i18n="softPack">软包</option>
+                </select>
+              </label>
+              <label>
+                <span data-i18n="actualWeight">实重，kg</span>
+                <input name="actual_weight_kg" type="number" min="0" step="0.01" placeholder="0" />
+              </label>
+            </div>
+
             <div class="drop-grid">
               <label class="drop-zone" for="topImage" data-drop-zone="top">
                 <input id="topImage" name="top_image" type="file" accept="image/*" required />

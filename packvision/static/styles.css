@@ -329,6 +329,7 @@ input {
 }
 
 .order-card,
+.parts-card,
 .mode-block {
   display: grid;
   gap: 14px;
@@ -344,7 +345,13 @@ input {
   align-items: end;
 }
 
+.parts-card {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr);
+  align-items: end;
+}
+
 .order-card label,
+.parts-card label,
 .mode-block label {
   display: grid;
   gap: 8px;
@@ -809,6 +816,7 @@ input {
   .field-grid,
   .metrics,
   .order-card,
+  .parts-card,
   .history-row {
     grid-template-columns: 1fr;
   }
