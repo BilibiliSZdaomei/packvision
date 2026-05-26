@@ -16,6 +16,7 @@ EXTRA_COLUMNS = {
     "package_class": "TEXT",
     "recommended_capture_mode": "TEXT",
     "chargeable_weight_kg": "REAL",
+    "measurement_method": "TEXT",
 }
 
 HISTORY_COLUMNS = (
@@ -29,6 +30,7 @@ HISTORY_COLUMNS = (
     "recommended_capture_mode",
     "status",
     "confidence",
+    "measurement_method",
     "length_mm",
     "width_mm",
     "height_mm",
@@ -81,6 +83,7 @@ def save_measurement(result: dict[str, Any]) -> None:
     top_view = result.get("top_view") or {}
     side_view = result.get("side_view") or {}
     industry_profile = result.get("industry_profile") or {}
+    method = result.get("method") or {}
     with _connect() as conn:
         conn.execute(
             """
@@ -88,9 +91,9 @@ def save_measurement(result: dict[str, Any]) -> None:
                 measurement_id, created_at, order_id, barcode_text, status, confidence,
                 length_mm, width_mm, height_mm, volume_l, top_upload, side_upload,
                 top_result_url, side_result_url, result_json, part_category, package_hint,
-                package_class, recommended_capture_mode, chargeable_weight_kg
+                package_class, recommended_capture_mode, chargeable_weight_kg, measurement_method
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 result["measurement_id"],
@@ -113,6 +116,7 @@ def save_measurement(result: dict[str, Any]) -> None:
                 industry_profile.get("package_class"),
                 industry_profile.get("recommended_capture_mode"),
                 industry_profile.get("chargeable_weight_kg"),
+                method.get("name") or result.get("measurement_method"),
             ),
         )
 
@@ -124,6 +128,7 @@ def list_measurements(limit: int = 50, order_id: str | None = None) -> list[dict
         SELECT measurement_id, created_at, order_id, barcode_text, status, confidence,
                part_category, package_hint, package_class, recommended_capture_mode,
                length_mm, width_mm, height_mm, volume_l, chargeable_weight_kg,
+               measurement_method,
                top_result_url, side_result_url
         FROM measurements
     """

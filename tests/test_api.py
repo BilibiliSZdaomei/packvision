@@ -112,7 +112,35 @@ def test_depth_demo_object_endpoint_returns_measurement():
     assert response.status_code == 200
     assert body["status"] == "measured"
     assert body["industry_profile"]["package_class"] == "irregular_or_soft_pack"
+    assert body["history_saved"] is False
+    assert body["measurement_id"]
     assert "depth_object_mask_used" in body["quality_flags"]
+
+
+def test_depth_demo_object_save_persists_to_history():
+    client = TestClient(create_app())
+    response = client.post(
+        "/api/depth/demo-object/save",
+        json={
+            "order_id": "DEPTH-DEMO-001",
+            "barcode_text": "DEPTH-DEMO-001",
+            "part_category": "bumper",
+            "package_hint": "irregular",
+            "actual_weight_kg": 5.2,
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["history_saved"] is True
+    assert body["order_id"] == "DEPTH-DEMO-001"
+    assert body["industry_profile"]["recommended_capture_mode"] == "depth_object_mask"
+
+    history = client.get("/api/history", params={"order_id": "DEPTH-DEMO-001"})
+    assert history.status_code == 200
+    saved = next(item for item in history.json()["items"] if item["measurement_id"] == body["measurement_id"])
+    assert saved["measurement_method"] == "depth_object_mask_projection"
+    assert saved["package_class"] == "irregular_or_soft_pack"
 
 
 def test_depth_measure_roi_endpoint_accepts_synthetic_frame():
@@ -136,11 +164,16 @@ def test_depth_measure_roi_endpoint_accepts_synthetic_frame():
             },
             "roi": [2, 2, 6, 6],
             "background_roi": [0, 0, 2, 2],
+            "save_to_history": True,
+            "order_id": "DEPTH-ROI-001",
+            "package_hint": "carton",
         },
     )
 
     body = response.json()
     assert response.status_code == 200
+    assert body["history_saved"] is True
+    assert body["order_id"] == "DEPTH-ROI-001"
     assert body["dimensions"]["length_mm"] == pytest.approx(32.0)
     assert body["dimensions"]["height_mm"] == pytest.approx(200.0)
 

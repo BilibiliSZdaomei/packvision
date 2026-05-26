@@ -80,6 +80,8 @@ const translations = {
     depthTitle: "Astra Pro 深度相机工作区",
     refreshDepth: "刷新状态",
     runDepthDemo: "运行深度演示",
+    saveDepthDemo: "保存演示记录",
+    savedToHistory: "已保存到历史",
     depthBackend: "推荐后端",
     depthDriver: "驱动状态",
     depthOpenNi: "OpenNI2",
@@ -172,6 +174,8 @@ const translations = {
     depthTitle: "Astra Pro depth camera workspace",
     refreshDepth: "Refresh status",
     runDepthDemo: "Run depth demo",
+    saveDepthDemo: "Save demo record",
+    savedToHistory: "Saved to history",
     depthBackend: "Recommended backend",
     depthDriver: "Driver status",
     depthOpenNi: "OpenNI2",
@@ -264,6 +268,8 @@ const translations = {
     depthTitle: "Робоча зона Astra Pro",
     refreshDepth: "Оновити статус",
     runDepthDemo: "Запустити демо",
+    saveDepthDemo: "Зберегти демо",
+    savedToHistory: "Збережено в історії",
     depthBackend: "Рекомендований бекенд",
     depthDriver: "Стан драйвера",
     depthOpenNi: "OpenNI2",
@@ -484,6 +490,7 @@ const industrySummary = document.querySelector("#industrySummary");
 const depthStatusGrid = document.querySelector("#depthStatusGrid");
 const refreshDepthStatusButton = document.querySelector("#refreshDepthStatusButton");
 const runDepthDemoButton = document.querySelector("#runDepthDemoButton");
+const saveDepthDemoButton = document.querySelector("#saveDepthDemoButton");
 const depthDemoSummary = document.querySelector("#depthDemoSummary");
 const historySearch = document.querySelector("#historySearch");
 const historyList = document.querySelector("#historyList");
@@ -714,9 +721,10 @@ function renderResult(data, options = {}) {
   metricEls.height_mm.textContent = formatMm(data.dimensions.height_mm);
   metricEls.volume_l.textContent = formatVolume(data.dimensions.volume_l);
 
+  const hasTopImage = Boolean(data.top_view?.annotated_image_url);
   copyJsonButton.disabled = false;
-  adjustTopButton.disabled = false;
-  showTopViewButton.disabled = false;
+  adjustTopButton.disabled = !hasTopImage;
+  showTopViewButton.disabled = !hasTopImage;
   showSideViewButton.disabled = !data.side_view?.annotated_image_url;
   showTopViewButton.classList.toggle("is-active", state.activeView === "top");
   showSideViewButton.classList.toggle("is-active", state.activeView === "side");
@@ -936,6 +944,43 @@ async function runDepthDemo() {
   }
 }
 
+async function saveDepthDemo() {
+  saveDepthDemoButton.disabled = true;
+  try {
+    const response = await fetch("/api/depth/demo-object/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(currentTraceabilityPayload()),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.detail || response.statusText);
+    }
+    state.lastDepthDemo = data;
+    renderDepthDemo(data);
+    renderResult(data);
+    await loadHistory();
+  } catch (error) {
+    depthDemoSummary.innerHTML = "";
+    const item = document.createElement("div");
+    item.className = "recommendation";
+    item.textContent = String(error.message || error);
+    depthDemoSummary.appendChild(item);
+  } finally {
+    saveDepthDemoButton.disabled = false;
+  }
+}
+
+function currentTraceabilityPayload() {
+  return {
+    order_id: orderIdInput.value || `DEPTH-${Date.now().toString().slice(-6)}`,
+    barcode_text: barcodeTextInput.value || orderIdInput.value || "",
+    part_category: form.elements.part_category?.value || "",
+    package_hint: form.elements.package_hint?.value || "irregular",
+    actual_weight_kg: Number(form.elements.actual_weight_kg?.value || 0) || null,
+  };
+}
+
 function renderDepthDemo(data) {
   depthDemoSummary.innerHTML = "";
   const card = document.createElement("div");
@@ -943,6 +988,7 @@ function renderDepthDemo(data) {
   appendSummaryCell(card, t("depthDemo"), data.sample?.name || t("demoObject"));
   appendSummaryCell(card, t("length"), formatMm(data.dimensions?.length_mm));
   appendSummaryCell(card, t("height"), formatMm(data.dimensions?.height_mm));
+  appendSummaryCell(card, t("history"), data.history_saved ? t("savedToHistory") : "--");
   depthDemoSummary.appendChild(card);
 }
 
@@ -985,7 +1031,7 @@ function renderHistory(items) {
     row.className = "history-row";
     row.addEventListener("click", () => openHistoryItem(item.measurement_id));
     appendHistoryCell(row, item.order_id || item.barcode_text || item.measurement_id, formatDate(item.created_at), true);
-    appendHistoryCell(row, item.status, `${Math.round((item.confidence || 0) * 100)}%`, false);
+    appendHistoryCell(row, item.status, historyStatusMeta(item), false);
     appendHistoryCell(row, labelFrom(packageClassLabels, item.package_class), labelFrom(captureModeLabels, item.recommended_capture_mode), false);
     appendHistoryCell(row, formatMm(item.length_mm), t("length"), false);
     appendHistoryCell(row, formatMm(item.width_mm), t("width"), false);
@@ -993,6 +1039,12 @@ function renderHistory(items) {
     appendHistoryCell(row, formatKg(item.chargeable_weight_kg), t("chargeableWeight"), false);
     historyList.appendChild(row);
   }
+}
+
+function historyStatusMeta(item) {
+  const confidence = `${Math.round((item.confidence || 0) * 100)}%`;
+  const method = item.measurement_method ? item.measurement_method.replaceAll("_", " ") : "";
+  return method ? `${confidence} | ${method}` : confidence;
 }
 
 function appendHistoryCell(row, main, sub, strongMain) {
@@ -1185,6 +1237,7 @@ orderImage.addEventListener("change", decodeBarcodeImage);
 refreshHistoryButton.addEventListener("click", loadHistory);
 refreshDepthStatusButton.addEventListener("click", loadDepthStatus);
 runDepthDemoButton.addEventListener("click", runDepthDemo);
+saveDepthDemoButton.addEventListener("click", saveDepthDemo);
 historySearch.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
     event.preventDefault();

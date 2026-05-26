@@ -47,6 +47,7 @@ D:\Documents\包装尺寸检测\dist\PackVision.exe
 - `GET /api/calibration-card.svg`：A4 ArUco 校准卡。
 - `POST /api/measure`：测量图片。
 - `GET /api/history`：历史记录列表。
+- `GET /api/history/export.csv`：按单号筛选导出 CSV。
 - `GET /api/history/{measurement_id}`：单条记录详情。
 - `POST /api/orders/scan`：扫码枪/手工单号标准化接口。
 - `POST /api/orders/decode-image`：上传条码或二维码图片识别单号。
@@ -88,9 +89,13 @@ D:\BaiduNetdiskDownload\奥比中光Astra Pro
 本分支新增：
 
 - `GET /api/depth/status`：检查 Astra Pro 教程资料、OpenNI2 运行时、Windows 驱动和可选 `pyorbbecsdk`。
+- `GET /api/depth/demo-object`：无硬件时运行合成异形件深度测量演示。
+- `POST /api/depth/demo-object/save`：把深度演示按单号保存到历史记录，方便验证追溯流程。
 - `POST /api/depth/measure-roi`：用深度图、相机内参、ROI 和桌面深度计算真实长宽高。
 - `POST /api/depth/measure-object`：用桌面深度分离物体 mask，再用点云范围测异形件。
+- `POST /api/depth/measure-roi` 和 `POST /api/depth/measure-object` 支持 `order_id`、`barcode_text`、`part_category`、`package_hint`、`actual_weight_kg`、`save_to_history`，真实相机接入后可直接进入同一套历史追溯和 CSV 导出。
 - `POST /api/industry/profile`：按汽车备件场景判断标准纸箱、长条件、软包/异形件和计费重。
 - `scripts\check_astra_depth_status.ps1`：本地检查深度相机资料和 SDK 状态。
 - `docs_cn\08_Astra_Pro_深度相机分支计划.md`：到货后的驱动、上位机、SDK、实测清单。
 - `docs_cn\09_汽车备件测量落地方案.md`：汽车备件仓库的普通包装、异形包装和异常材质落地流程。
+- `docs_cn\10_Astra_Pro_到货验收与现场试运行.md`：两台 Astra Pro 到货后的第一小时验收、标准纸箱/长条件/异形件试运行流程。

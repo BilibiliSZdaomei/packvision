@@ -61,7 +61,16 @@ class DepthIntrinsicsPayload(BaseModel):
     depth_scale: float = 1.0
 
 
-class DepthMeasurePayload(BaseModel):
+class DepthTraceabilityPayload(BaseModel):
+    order_id: str | None = None
+    barcode_text: str | None = None
+    part_category: str | None = None
+    package_hint: str | None = None
+    actual_weight_kg: float | None = None
+    save_to_history: bool = False
+
+
+class DepthMeasurePayload(DepthTraceabilityPayload):
     depth_frame: list[list[float]]
     intrinsics: DepthIntrinsicsPayload
     roi: list[int]
@@ -72,7 +81,7 @@ class DepthMeasurePayload(BaseModel):
     trim_ratio: float = 0.08
 
 
-class DepthObjectMeasurePayload(BaseModel):
+class DepthObjectMeasurePayload(DepthTraceabilityPayload):
     depth_frame: list[list[float]]
     intrinsics: DepthIntrinsicsPayload
     roi: list[int]
@@ -259,39 +268,36 @@ def create_app() -> FastAPI:
 
     @app.get("/api/depth/demo-object")
     def depth_demo_object() -> dict[str, object]:
-        depth_frame = [[1200.0 for _ in range(24)] for _ in range(18)]
-        for y in range(4, 15):
-            for x in range(4, 21):
-                core = abs(x - 12) * 0.75 + abs(y - 9) * 1.35
-                if core < 8.2 and not (x < 8 and y < 7):
-                    depth_frame[y][x] = 820.0 + ((x + y) % 3) * 5.0
-
-        result = measure_depth_object_mask(
-            depth_frame,
-            DepthIntrinsics(fx=60.0, fy=60.0, cx=12.0, cy=9.0, width=24, height=18),
-            DepthObjectConfig(
-                roi=[3, 3, 22, 16],
-                background_roi=[0, 0, 3, 3],
-                object_min_height_mm=80.0,
-                trim_quantile=0.01,
+        return _finalize_depth_result(
+            _depth_demo_object_result(),
+            DepthTraceabilityPayload(
+                part_category="bumper_trim",
+                package_hint="irregular",
+                actual_weight_kg=4.6,
             ),
+            measurement_source="depth_demo_object",
         )
-        result["industry_profile"] = build_packaging_profile(
-            result["dimensions"],
-            part_category="bumper_trim",
-            package_hint="irregular",
-            actual_weight_kg=4.6,
+
+    @app.post("/api/depth/demo-object/save")
+    def save_depth_demo_object(payload: DepthTraceabilityPayload) -> dict[str, object]:
+        return _finalize_depth_result(
+            _depth_demo_object_result(),
+            DepthTraceabilityPayload(
+                order_id=payload.order_id,
+                barcode_text=payload.barcode_text,
+                part_category=payload.part_category or "bumper_trim",
+                package_hint=payload.package_hint or "irregular",
+                actual_weight_kg=payload.actual_weight_kg or 4.6,
+                save_to_history=True,
+            ),
+            measurement_source="depth_demo_object",
+            save_to_history=True,
         )
-        result["sample"] = {
-            "name": "synthetic_irregular_auto_part",
-            "purpose": "Validate object-mask depth measurement before Astra Pro hardware arrives.",
-        }
-        return result
 
     @app.post("/api/depth/measure-roi")
     def depth_measure_roi(payload: DepthMeasurePayload) -> dict[str, object]:
         try:
-            return measure_depth_roi(
+            result = measure_depth_roi(
                 payload.depth_frame,
                 DepthIntrinsics(**payload.intrinsics.model_dump()),
                 DepthMeasurementConfig(
@@ -303,13 +309,14 @@ def create_app() -> FastAPI:
                     trim_ratio=payload.trim_ratio,
                 ),
             )
+            return _finalize_depth_result(result, payload, measurement_source="depth_roi_api")
         except DepthMeasurementError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     @app.post("/api/depth/measure-object")
     def depth_measure_object(payload: DepthObjectMeasurePayload) -> dict[str, object]:
         try:
-            return measure_depth_object_mask(
+            result = measure_depth_object_mask(
                 payload.depth_frame,
                 DepthIntrinsics(**payload.intrinsics.model_dump()),
                 DepthObjectConfig(
@@ -322,6 +329,7 @@ def create_app() -> FastAPI:
                     trim_quantile=payload.trim_quantile,
                 ),
             )
+            return _finalize_depth_result(result, payload, measurement_source="depth_object_api")
         except DepthMeasurementError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
@@ -372,3 +380,58 @@ def _suffix(filename: str | None) -> str:
         return ".jpg"
     suffix = Path(filename).suffix.lower()
     return suffix if suffix in {".jpg", ".jpeg", ".png", ".webp", ".bmp"} else ".jpg"
+
+
+def _depth_demo_object_result() -> dict[str, object]:
+    depth_frame = [[1200.0 for _ in range(24)] for _ in range(18)]
+    for y in range(4, 15):
+        for x in range(4, 21):
+            core = abs(x - 12) * 0.75 + abs(y - 9) * 1.35
+            if core < 8.2 and not (x < 8 and y < 7):
+                depth_frame[y][x] = 820.0 + ((x + y) % 3) * 5.0
+
+    result = measure_depth_object_mask(
+        depth_frame,
+        DepthIntrinsics(fx=60.0, fy=60.0, cx=12.0, cy=9.0, width=24, height=18),
+        DepthObjectConfig(
+            roi=[3, 3, 22, 16],
+            background_roi=[0, 0, 3, 3],
+            object_min_height_mm=80.0,
+            trim_quantile=0.01,
+        ),
+    )
+    result["sample"] = {
+        "name": "synthetic_irregular_auto_part",
+        "purpose": "Validate object-mask depth measurement before Astra Pro hardware arrives.",
+    }
+    return result
+
+
+def _finalize_depth_result(
+    result: dict[str, object],
+    payload: DepthTraceabilityPayload,
+    *,
+    measurement_source: str,
+    save_to_history: bool | None = None,
+) -> dict[str, object]:
+    actual_weight = payload.actual_weight_kg if payload.actual_weight_kg and payload.actual_weight_kg > 0 else None
+    result["measurement_id"] = uuid4().hex[:12]
+    result["created_at"] = datetime.now(timezone.utc).isoformat()
+    result["order_id"] = _clean_text(payload.order_id)
+    result["barcode_text"] = _clean_text(payload.barcode_text)
+    result["part_category"] = _clean_text(payload.part_category)
+    result["package_hint"] = _clean_text(payload.package_hint)
+    result["actual_weight_kg"] = actual_weight
+    result["measurement_source"] = measurement_source
+    result["artifacts"] = {"depth_source": measurement_source}
+    result["industry_profile"] = build_packaging_profile(
+        result.get("dimensions") or {},
+        part_category=result["part_category"],
+        package_hint=result["package_hint"],
+        actual_weight_kg=actual_weight,
+    )
+    should_save = payload.save_to_history if save_to_history is None else save_to_history
+    result["history_saved"] = bool(should_save)
+    if should_save:
+        save_measurement(result)
+    return result
