@@ -46,7 +46,12 @@ from packvision.services.measurement import (
     opencv_ready,
 )
 from packvision.services.storage import ensure_data_dirs, resource_path, write_bytes
-from packvision.services.validation import build_trial_plan, evaluate_trial_run
+from packvision.services.validation import (
+    build_trial_plan,
+    build_trial_template_csv,
+    evaluate_trial_csv,
+    evaluate_trial_run,
+)
 
 
 STATIC_DIR = resource_path("static")
@@ -389,9 +394,30 @@ def create_app() -> FastAPI:
     def validation_trial_plan() -> dict[str, object]:
         return build_trial_plan()
 
+    @app.get("/api/validation/trial-template.csv")
+    def validation_trial_template_csv() -> Response:
+        return Response(
+            content=build_trial_template_csv(),
+            media_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": 'attachment; filename="packvision-trial-template.csv"'},
+        )
+
     @app.post("/api/validation/evaluate")
     def validation_evaluate(payload: TrialRunEvaluationPayload) -> dict[str, object]:
         return evaluate_trial_run(payload.samples)
+
+    @app.post("/api/validation/evaluate-csv")
+    async def validation_evaluate_csv(trial_csv: Annotated[UploadFile, File()]) -> dict[str, object]:
+        data = await trial_csv.read()
+        if not data:
+            raise HTTPException(status_code=400, detail="trial_csv is empty.")
+        if len(data) > MAX_UPLOAD_BYTES:
+            raise HTTPException(status_code=413, detail="trial_csv is too large.")
+        try:
+            csv_text = data.decode("utf-8-sig")
+        except UnicodeDecodeError as exc:
+            raise HTTPException(status_code=400, detail="trial_csv must be UTF-8 CSV.") from exc
+        return evaluate_trial_csv(csv_text)
 
     return app
 

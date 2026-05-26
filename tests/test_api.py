@@ -332,3 +332,32 @@ def test_validation_evaluate_endpoint_flags_failed_material_sample():
     assert response.status_code == 200
     assert body["summary"]["failed_samples"] == 1
     assert "manual_review_required" in body["samples"][0]["flags"]
+
+
+def test_validation_trial_template_csv_endpoint_is_excel_ready():
+    client = TestClient(create_app())
+    response = client.get("/api/validation/trial-template.csv")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/csv")
+    assert "sample_id" in response.text
+    assert "truth_length_mm" in response.text
+
+
+def test_validation_evaluate_csv_endpoint_accepts_uploaded_csv():
+    client = TestClient(create_app())
+    csv_text = (
+        "sample_id,order_id,package_class,material_class,measured_length_mm,measured_width_mm,"
+        "measured_height_mm,truth_length_mm,truth_width_mm,truth_height_mm\n"
+        "MAT-CSV-001,SO-CSV-001,standard_carton,transparent,450,300,170,400,300,200\n"
+    )
+    response = client.post(
+        "/api/validation/evaluate-csv",
+        files={"trial_csv": ("trial.csv", csv_text.encode("utf-8"), "text/csv")},
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["summary"]["failed_samples"] == 1
+    assert body["samples"][0]["sample_id"] == "MAT-CSV-001"
+    assert body["samples"][0]["order_id"] == "SO-CSV-001"

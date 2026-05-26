@@ -1,6 +1,14 @@
+import csv
+import io
+
 import pytest
 
-from packvision.services.validation import build_trial_plan, evaluate_trial_run
+from packvision.services.validation import (
+    build_trial_plan,
+    build_trial_template_csv,
+    evaluate_trial_csv,
+    evaluate_trial_run,
+)
 
 
 def test_trial_plan_covers_auto_parts_package_scenarios():
@@ -48,3 +56,27 @@ def test_evaluate_trial_run_rejects_transparent_material_large_error():
     assert sample["status"] == "fail"
     assert "manual_review_required" in sample["flags"]
     assert result["summary"]["ready_for_site_rollout"] is False
+
+
+def test_trial_template_csv_contains_truth_and_measured_columns():
+    csv_text = build_trial_template_csv()
+    rows = list(csv.DictReader(io.StringIO(csv_text.lstrip("\ufeff"))))
+
+    assert csv_text.startswith("\ufeff")
+    assert rows
+    assert "measured_length_mm" in rows[0]
+    assert "truth_length_mm" in rows[0]
+    assert any(row["package_class"] == "long_part" for row in rows)
+    assert any(row["material_class"] == "reflective" for row in rows)
+
+
+def test_evaluate_trial_csv_parses_wps_ready_rows_with_order_traceability():
+    csv_text = """sample_id,order_id,package_class,material_class,measured_length_mm,measured_width_mm,measured_height_mm,truth_length_mm,truth_width_mm,truth_height_mm
+STD-CSV-001,SO-20260527-001,standard_carton,,402,299,201,400,300,200
+"""
+
+    result = evaluate_trial_csv(csv_text)
+
+    assert result["samples"][0]["sample_id"] == "STD-CSV-001"
+    assert result["samples"][0]["order_id"] == "SO-20260527-001"
+    assert result["samples"][0]["status"] == "pass"

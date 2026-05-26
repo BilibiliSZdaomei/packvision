@@ -99,6 +99,8 @@ D:\BaiduNetdiskDownload\奥比中光Astra Pro
 - `POST /api/industry/profile`：按汽车备件场景判断标准纸箱、长条件、软包/异形件、异常材质风险和计费重。
 - `GET /api/validation/trial-plan`：返回 Astra Pro 到货后普通纸箱、长条件、异形件和异常材质的最小抽检计划。
 - `POST /api/validation/evaluate`：输入人工真值和系统测量值，输出误差、失败样本、复核样本和是否可进入现场试运行。
+- `GET /api/validation/trial-template.csv`：下载 WPS/Excel 可直接填写的现场验收模板，覆盖普通包装、长条件、异形件和异常材质样本。
+- `POST /api/validation/evaluate-csv`：上传填写后的 CSV，批量计算误差、复核项和现场试运行结论。
 - `scripts\check_astra_depth_status.ps1`：本地检查深度相机资料和 SDK 状态。
 - `docs_cn\08_Astra_Pro_深度相机分支计划.md`：到货后的驱动、上位机、SDK、实测清单。
 - `docs_cn\09_汽车备件测量落地方案.md`：汽车备件仓库的普通包装、异形包装和异常材质落地流程。

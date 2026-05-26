@@ -73,6 +73,8 @@
 ```text
 GET /api/validation/trial-plan
 POST /api/validation/evaluate
+GET /api/validation/trial-template.csv
+POST /api/validation/evaluate-csv
 ```
 
 默认最小抽检：
@@ -84,3 +86,5 @@ POST /api/validation/evaluate
 - 反光、透明、深黑吸光、易变形材质：每类至少 2 件，并保留人工复核。
 
 `POST /api/validation/evaluate` 输入每件的 `measured` 和人工真值 `truth`，会返回每件误差、失败样本、复核样本和是否可以进入现场试运行。
+
+如果现场人员习惯用 WPS/Excel，可以先下载 `GET /api/validation/trial-template.csv`。模板已经按普通纸箱、长条件、异形/软包、大件异形，以及反光、透明、深黑吸光、易变形材质预留样本行。现场只需要填写单号、系统测量值、卷尺/卡尺真值和备注，再把 CSV 上传到 `POST /api/validation/evaluate-csv`，系统会复用同一套容差规则给出批量验收结论。

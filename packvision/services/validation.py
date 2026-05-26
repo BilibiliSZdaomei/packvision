@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import csv
+import io
 from typing import Any
 
 
@@ -59,6 +61,35 @@ ABNORMAL_MATERIAL_RULES = {
     },
 }
 
+TRIAL_TEMPLATE_COLUMNS = (
+    "sample_id",
+    "order_id",
+    "package_class",
+    "material_class",
+    "measured_length_mm",
+    "measured_width_mm",
+    "measured_height_mm",
+    "truth_length_mm",
+    "truth_width_mm",
+    "truth_height_mm",
+    "actual_weight_kg",
+    "notes",
+)
+
+_SCENARIO_SAMPLE_PREFIXES = {
+    "standard_carton": "STD",
+    "long_part": "LONG",
+    "irregular_or_soft_pack": "IRR",
+    "bulky_irregular": "BULK",
+}
+
+_MATERIAL_SAMPLE_PREFIXES = {
+    "reflective": "REF",
+    "transparent": "TRA",
+    "dark_absorbing": "DARK",
+    "deformable": "DEF",
+}
+
 
 def build_trial_plan() -> dict[str, Any]:
     scenarios = [
@@ -109,6 +140,45 @@ def evaluate_trial_run(samples: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def build_trial_template_csv() -> str:
+    output = io.StringIO()
+    output.write("\ufeff")
+    writer = csv.DictWriter(output, fieldnames=TRIAL_TEMPLATE_COLUMNS, lineterminator="\n")
+    writer.writeheader()
+
+    for scenario_id, rule in SCENARIO_RULES.items():
+        prefix = _SCENARIO_SAMPLE_PREFIXES.get(scenario_id, scenario_id.upper())
+        for index in range(1, int(rule["minimum_samples"]) + 1):
+            writer.writerow(
+                {
+                    "sample_id": f"{prefix}-{index:03d}",
+                    "package_class": scenario_id,
+                }
+            )
+
+    for material_id, rule in ABNORMAL_MATERIAL_RULES.items():
+        prefix = _MATERIAL_SAMPLE_PREFIXES.get(material_id, material_id.upper())
+        for index in range(1, int(rule["minimum_samples"]) + 1):
+            writer.writerow(
+                {
+                    "sample_id": f"MAT-{prefix}-{index:03d}",
+                    "package_class": "standard_carton",
+                    "material_class": material_id,
+                }
+            )
+
+    return output.getvalue()
+
+
+def evaluate_trial_csv(csv_text: str) -> dict[str, Any]:
+    reader = csv.DictReader(io.StringIO(csv_text.lstrip("\ufeff")))
+    samples = [_sample_from_csv_row(row) for row in reader if _row_has_content(row)]
+    result = evaluate_trial_run(samples)
+    result["source"] = "csv"
+    result["parsed_rows"] = len(samples)
+    return result
+
+
 def _evaluate_sample(sample: dict[str, Any]) -> dict[str, Any]:
     package_class = str(sample.get("package_class") or "standard_carton")
     material_class = _clean_optional(sample.get("material_class"))
@@ -133,8 +203,10 @@ def _evaluate_sample(sample: dict[str, Any]) -> dict[str, Any]:
 
     return {
         "sample_id": sample.get("sample_id"),
+        "order_id": sample.get("order_id"),
         "package_class": package_class,
         "material_class": material_class,
+        "actual_weight_kg": _round(_number(sample.get("actual_weight_kg")), 3),
         "status": "pass" if passed else "fail",
         "max_abs_error_mm": _round(max_abs_error, 3),
         "max_relative_error_pct": _round(max_relative_error, 3),
@@ -144,7 +216,42 @@ def _evaluate_sample(sample: dict[str, Any]) -> dict[str, Any]:
             "relative_tolerance_pct": rule["relative_tolerance_pct"],
         },
         "flags": sorted(set(flags)),
+        "notes": sample.get("notes"),
     }
+
+
+def _sample_from_csv_row(row: dict[str | None, Any]) -> dict[str, Any]:
+    return {
+        "sample_id": _row_text(row, "sample_id"),
+        "order_id": _row_text(row, "order_id"),
+        "package_class": _row_text(row, "package_class") or "standard_carton",
+        "material_class": _row_text(row, "material_class"),
+        "actual_weight_kg": _number(_row_text(row, "actual_weight_kg")),
+        "measured": _dimension_map_from_row(row, "measured"),
+        "truth": _dimension_map_from_row(row, "truth"),
+        "notes": _row_text(row, "notes"),
+    }
+
+
+def _dimension_map_from_row(row: dict[str | None, Any], prefix: str) -> dict[str, float]:
+    dimensions: dict[str, float] = {}
+    for key in DIMENSION_KEYS:
+        value = _number(_row_text(row, f"{prefix}_{key}"))
+        if value is not None:
+            dimensions[key] = value
+    return dimensions
+
+
+def _row_has_content(row: dict[str | None, Any]) -> bool:
+    return any(str(value).strip() for key, value in row.items() if key is not None and value is not None)
+
+
+def _row_text(row: dict[str | None, Any], key: str) -> str | None:
+    value = row.get(key)
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
 
 
 def _dimension_errors(measured: dict[str, Any], truth: dict[str, Any]) -> dict[str, dict[str, float]]:
