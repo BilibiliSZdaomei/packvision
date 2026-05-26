@@ -26,11 +26,17 @@ const translations = {
     decodeBarcode: "识别条码图片",
     partCategory: "备件类型",
     packageHint: "包装类型",
+    materialHint: "材质/表面",
     autoPackage: "自动判断",
+    autoMaterial: "自动/普通",
     carton: "标准纸箱",
     longPart: "长条件",
     irregular: "异形件",
     softPack: "软包",
+    reflectiveMaterial: "反光/金属",
+    transparentMaterial: "透明/灯罩",
+    darkMaterial: "深黑吸光",
+    deformableMaterial: "易变形软材",
     actualWeight: "实重，kg",
     decoding: "识别中",
     barcodeFound: "已识别单号",
@@ -74,6 +80,7 @@ const translations = {
     sideSummary: "侧面高度候选",
     industrySummary: "行业摘要",
     packageClass: "包装分类",
+    materialClass: "材质风险",
     captureMode: "推荐采集",
     chargeableWeight: "计费重量",
     exportCsv: "导出 CSV",
@@ -125,11 +132,17 @@ const translations = {
     decodeBarcode: "Decode barcode image",
     partCategory: "Part category",
     packageHint: "Package type",
+    materialHint: "Material",
     autoPackage: "Auto",
+    autoMaterial: "Auto / normal",
     carton: "Carton",
     longPart: "Long part",
     irregular: "Irregular",
     softPack: "Soft pack",
+    reflectiveMaterial: "Reflective / metal",
+    transparentMaterial: "Transparent / lens",
+    darkMaterial: "Dark absorbing",
+    deformableMaterial: "Deformable",
     actualWeight: "Weight, kg",
     decoding: "Decoding",
     barcodeFound: "Order detected",
@@ -173,6 +186,7 @@ const translations = {
     sideSummary: "Side height candidate",
     industrySummary: "Industry summary",
     packageClass: "Package class",
+    materialClass: "Material risk",
     captureMode: "Capture mode",
     chargeableWeight: "Chargeable weight",
     exportCsv: "Export CSV",
@@ -224,11 +238,17 @@ const translations = {
     decodeBarcode: "Зчитати штрихкод",
     partCategory: "Тип деталі",
     packageHint: "Тип пакування",
+    materialHint: "Матеріал",
     autoPackage: "Авто",
+    autoMaterial: "Авто / звичайний",
     carton: "Коробка",
     longPart: "Довга деталь",
     irregular: "Нерівна",
     softPack: "М'який пак",
+    reflectiveMaterial: "Відбивний / метал",
+    transparentMaterial: "Прозорий / лінза",
+    darkMaterial: "Темний поглинаючий",
+    deformableMaterial: "Деформівний",
     actualWeight: "Вага, кг",
     decoding: "Зчитування",
     barcodeFound: "Номер знайдено",
@@ -272,6 +292,7 @@ const translations = {
     sideSummary: "Кандидат висоти збоку",
     industrySummary: "Галузевий підсумок",
     packageClass: "Клас пакування",
+    materialClass: "Ризик матеріалу",
     captureMode: "Режим зйомки",
     chargeableWeight: "Платна вага",
     exportCsv: "Експорт CSV",
@@ -326,6 +347,11 @@ const flagLabels = {
     depth_outliers_trimmed: "深度离群点已裁剪",
     point_cloud_extent_trimmed: "点云范围已裁剪",
     small_object_mask: "目标掩膜偏小",
+    reflective_depth_noise_risk: "反光材质深度噪声风险",
+    transparent_depth_dropout_risk: "透明材质深度丢失风险",
+    dark_surface_depth_dropout_risk: "深黑材质深度丢失风险",
+    deformable_shape_drift_risk: "软材形变风险",
+    manual_review_recommended: "建议人工复核",
   },
   en: {
     aruco_marker_scale_used: "ArUco scale used",
@@ -354,6 +380,11 @@ const flagLabels = {
     depth_outliers_trimmed: "Depth outliers trimmed",
     point_cloud_extent_trimmed: "Point-cloud extent trimmed",
     small_object_mask: "Small object mask",
+    reflective_depth_noise_risk: "Reflective depth-noise risk",
+    transparent_depth_dropout_risk: "Transparent depth-dropout risk",
+    dark_surface_depth_dropout_risk: "Dark-surface dropout risk",
+    deformable_shape_drift_risk: "Deformable-shape drift risk",
+    manual_review_recommended: "Manual review recommended",
   },
   uk: {
     aruco_marker_scale_used: "Масштаб ArUco",
@@ -382,6 +413,11 @@ const flagLabels = {
     depth_outliers_trimmed: "Викиди глибини обрізано",
     point_cloud_extent_trimmed: "Хмару точок обрізано",
     small_object_mask: "Мала маска об'єкта",
+    reflective_depth_noise_risk: "Ризик шуму від відблиску",
+    transparent_depth_dropout_risk: "Ризик втрати глибини прозорого",
+    dark_surface_depth_dropout_risk: "Ризик втрати темної поверхні",
+    deformable_shape_drift_risk: "Ризик деформації форми",
+    manual_review_recommended: "Потрібна ручна перевірка",
   },
 };
 
@@ -433,6 +469,30 @@ const packageClassLabels = {
     long_part: "Довга деталь",
     irregular_or_soft_pack: "Нерівне / м'яке",
     bulky_irregular: "Габаритне нерівне",
+  },
+};
+
+const materialClassLabels = {
+  zh: {
+    normal: "普通材质",
+    reflective: "高风险：反光",
+    transparent: "高风险：透明",
+    dark_absorbing: "中风险：深黑吸光",
+    deformable: "中风险：易变形",
+  },
+  en: {
+    normal: "Normal",
+    reflective: "High risk: reflective",
+    transparent: "High risk: transparent",
+    dark_absorbing: "Medium risk: dark absorbing",
+    deformable: "Medium risk: deformable",
+  },
+  uk: {
+    normal: "Звичайний",
+    reflective: "Високий ризик: відбивний",
+    transparent: "Високий ризик: прозорий",
+    dark_absorbing: "Середній ризик: темний",
+    deformable: "Середній ризик: деформівний",
   },
 };
 
@@ -711,6 +771,7 @@ function cleanPayload(payload) {
     "barcode_text",
     "part_category",
     "package_hint",
+    "material_hint",
     "actual_weight_kg",
   ]) {
     if (!payload.get(key)) {
@@ -859,6 +920,7 @@ function renderIndustrySummary(profile) {
   const card = document.createElement("div");
   card.className = "industry-card";
   appendSummaryCell(card, t("packageClass"), labelFrom(packageClassLabels, profile.package_class));
+  appendSummaryCell(card, t("materialClass"), labelFrom(materialClassLabels, profile.material_class) || "--");
   appendSummaryCell(card, t("captureMode"), labelFrom(captureModeLabels, profile.recommended_capture_mode));
   appendSummaryCell(card, t("chargeableWeight"), formatKg(profile.chargeable_weight_kg));
   industrySummary.appendChild(card);
@@ -1109,6 +1171,7 @@ function currentTraceabilityPayload() {
     barcode_text: barcodeTextInput.value || orderIdInput.value || "",
     part_category: form.elements.part_category?.value || "",
     package_hint: form.elements.package_hint?.value || "irregular",
+    material_hint: form.elements.material_hint?.value || "",
     actual_weight_kg: Number(form.elements.actual_weight_kg?.value || 0) || null,
   };
 }

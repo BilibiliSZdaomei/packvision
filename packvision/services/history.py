@@ -13,6 +13,7 @@ from packvision.services.storage import app_data_dir
 EXTRA_COLUMNS = {
     "part_category": "TEXT",
     "package_hint": "TEXT",
+    "material_hint": "TEXT",
     "package_class": "TEXT",
     "recommended_capture_mode": "TEXT",
     "chargeable_weight_kg": "REAL",
@@ -26,6 +27,7 @@ HISTORY_COLUMNS = (
     "barcode_text",
     "part_category",
     "package_hint",
+    "material_hint",
     "package_class",
     "recommended_capture_mode",
     "status",
@@ -91,9 +93,9 @@ def save_measurement(result: dict[str, Any]) -> None:
                 measurement_id, created_at, order_id, barcode_text, status, confidence,
                 length_mm, width_mm, height_mm, volume_l, top_upload, side_upload,
                 top_result_url, side_result_url, result_json, part_category, package_hint,
-                package_class, recommended_capture_mode, chargeable_weight_kg, measurement_method
+                material_hint, package_class, recommended_capture_mode, chargeable_weight_kg, measurement_method
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 result["measurement_id"],
@@ -113,6 +115,7 @@ def save_measurement(result: dict[str, Any]) -> None:
                 json.dumps(result, ensure_ascii=False),
                 result.get("part_category"),
                 result.get("package_hint"),
+                result.get("material_hint"),
                 industry_profile.get("package_class"),
                 industry_profile.get("recommended_capture_mode"),
                 industry_profile.get("chargeable_weight_kg"),
@@ -126,7 +129,7 @@ def list_measurements(limit: int = 50, order_id: str | None = None) -> list[dict
     limit = max(1, min(limit, 500))
     query = """
         SELECT measurement_id, created_at, order_id, barcode_text, status, confidence,
-               part_category, package_hint, package_class, recommended_capture_mode,
+               part_category, package_hint, material_hint, package_class, recommended_capture_mode,
                length_mm, width_mm, height_mm, volume_l, chargeable_weight_kg,
                measurement_method,
                top_result_url, side_result_url

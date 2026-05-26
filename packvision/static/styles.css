@@ -348,7 +348,7 @@ input {
 }
 
 .parts-card {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: end;
 }
 
@@ -606,12 +606,19 @@ input {
 .industry-card,
 .depth-demo-card {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface-2);
+}
+
+.industry-card {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.depth-demo-card {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .industry-card div,

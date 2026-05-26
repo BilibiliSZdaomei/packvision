@@ -54,6 +54,7 @@
 - `barcode_text`
 - `part_category`
 - `package_hint`
+- `material_hint`
 - `actual_weight_kg`
 - `save_to_history`
 
@@ -61,6 +62,7 @@
 
 ## 7. 现场风险
 
-- 反光膜、透明袋、黑色吸光材质会降低深度质量。
+- 反光膜、透明袋、黑色吸光材质会降低深度质量。录入 `material_hint` 后，系统会在行业画像中标出材质风险，并把流程切到“表面检查 + 重拍或人工复核”。
+- 建议到货第一天专门抽检 `reflective`、`transparent`、`dark_absorbing`、`deformable` 四类异常材质，每类至少 2 件。
 - 相机倾斜和桌面不平会影响高度，第一版先用背景 ROI 估计桌面深度。
 - 深度相机到货前不要把 `pyorbbecsdk` 做成强依赖，否则 EXE 会变重且更难部署。

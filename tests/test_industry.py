@@ -50,3 +50,19 @@ def test_bulky_irregular_profile_when_sides_are_unbalanced():
     assert profile["package_class"] == "bulky_irregular"
     assert profile["chargeable_weight_kg"] > 2.5
     assert "manual_review_recommended" in profile["handling_flags"]
+
+
+def test_reflective_material_profile_adds_surface_check_flow():
+    profile = build_packaging_profile(
+        {"length_mm": 420, "width_mm": 280, "height_mm": 160, "volume_l": 18.816},
+        part_category="trim",
+        package_hint="carton",
+        material_hint="reflective",
+    )
+
+    assert profile["package_class"] == "standard_carton"
+    assert profile["material_class"] == "reflective"
+    assert profile["material_risk_level"] == "high"
+    assert "reflective_depth_noise_risk" in profile["handling_flags"]
+    assert "material_surface_check" in profile["workflow"]
+    assert "retake_or_manual_verify" in profile["workflow"]

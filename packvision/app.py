@@ -72,6 +72,7 @@ class DepthTraceabilityPayload(BaseModel):
     barcode_text: str | None = None
     part_category: str | None = None
     package_hint: str | None = None
+    material_hint: str | None = None
     actual_weight_kg: float | None = None
     save_to_history: bool = False
 
@@ -108,6 +109,7 @@ class IndustryProfilePayload(BaseModel):
     dimensions: dict[str, Any]
     part_category: str | None = None
     package_hint: str | None = None
+    material_hint: str | None = None
     actual_weight_kg: float | None = None
 
 
@@ -166,6 +168,7 @@ def create_app() -> FastAPI:
         barcode_text: Annotated[str | None, Form()] = None,
         part_category: Annotated[str | None, Form()] = None,
         package_hint: Annotated[str | None, Form()] = None,
+        material_hint: Annotated[str | None, Form()] = None,
         actual_weight_kg: Annotated[float | None, Form()] = None,
     ) -> dict[str, object]:
         if marker_size_mm <= 0:
@@ -222,11 +225,13 @@ def create_app() -> FastAPI:
         result["barcode_text"] = _clean_text(barcode_text)
         result["part_category"] = _clean_text(part_category)
         result["package_hint"] = _clean_text(package_hint)
+        result["material_hint"] = _clean_text(material_hint)
         result["actual_weight_kg"] = actual_weight_kg if actual_weight_kg and actual_weight_kg > 0 else None
         result["industry_profile"] = build_packaging_profile(
             result["dimensions"],
             part_category=result["part_category"],
             package_hint=result["package_hint"],
+            material_hint=result["material_hint"],
             actual_weight_kg=result["actual_weight_kg"],
         )
         result["artifacts"] = {
@@ -318,6 +323,7 @@ def create_app() -> FastAPI:
                 barcode_text=payload.barcode_text,
                 part_category=payload.part_category or "bumper_trim",
                 package_hint=payload.package_hint or "irregular",
+                material_hint=payload.material_hint,
                 actual_weight_kg=payload.actual_weight_kg or 4.6,
                 save_to_history=True,
             ),
@@ -370,6 +376,7 @@ def create_app() -> FastAPI:
             payload.dimensions,
             part_category=payload.part_category,
             package_hint=payload.package_hint,
+            material_hint=payload.material_hint,
             actual_weight_kg=payload.actual_weight_kg,
         )
 
@@ -452,6 +459,7 @@ def _finalize_depth_result(
     result["barcode_text"] = _clean_text(payload.barcode_text)
     result["part_category"] = _clean_text(payload.part_category)
     result["package_hint"] = _clean_text(payload.package_hint)
+    result["material_hint"] = _clean_text(payload.material_hint)
     result["actual_weight_kg"] = actual_weight
     result["measurement_source"] = measurement_source
     result["artifacts"] = {"depth_source": measurement_source}
@@ -459,6 +467,7 @@ def _finalize_depth_result(
         result.get("dimensions") or {},
         part_category=result["part_category"],
         package_hint=result["package_hint"],
+        material_hint=result["material_hint"],
         actual_weight_kg=actual_weight,
     )
     should_save = payload.save_to_history if save_to_history is None else save_to_history

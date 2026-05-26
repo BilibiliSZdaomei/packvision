@@ -13,6 +13,7 @@ def build_packaging_profile(
     *,
     part_category: str | None = None,
     package_hint: str | None = None,
+    material_hint: str | None = None,
     actual_weight_kg: float | None = None,
 ) -> dict[str, Any]:
     length = _number(dimensions.get("length_mm"))
@@ -21,6 +22,8 @@ def build_packaging_profile(
     volume_l = _number(dimensions.get("volume_l"))
     hint = (package_hint or "").strip().lower()
     category = (part_category or "").strip().lower() or None
+    material = _material_class(material_hint)
+    material_risk = _material_risk(material)
 
     sides = [value for value in [length, width, height] if value and value > 0]
     longest = max(sides) if sides else None
@@ -34,6 +37,7 @@ def build_packaging_profile(
         handling_flags.append("oversize_length")
     if category in {"bumper", "bumper_trim", "fender", "grille", "exhaust", "molding"}:
         handling_flags.append("fragile_or_shape_sensitive")
+    handling_flags.extend(material_risk["flags"])
 
     package_class = _classify_package(hint, length, width, height, side_ratio)
     capture_mode = _recommended_capture_mode(package_class)
@@ -41,6 +45,8 @@ def build_packaging_profile(
     if package_class == "standard_carton" and not handling_flags:
         handling_flags.append("warehouse_ready")
     if package_class in {"bulky_irregular", "irregular_or_soft_pack"}:
+        handling_flags.append("manual_review_recommended")
+    if material_risk["risk_level"] in {"medium", "high"}:
         handling_flags.append("manual_review_recommended")
 
     volumetric_weight_kg = _volumetric_weight(volume_l, length, width, height)
@@ -51,6 +57,10 @@ def build_packaging_profile(
         "recommended_capture_mode": capture_mode,
         "part_category": category,
         "package_hint": hint or None,
+        "material_hint": (material_hint or "").strip().lower() or None,
+        "material_class": material,
+        "material_risk_level": material_risk["risk_level"],
+        "material_capture_adjustments": material_risk["capture_adjustments"],
         "dimensions": {
             "length_mm": length,
             "width_mm": width,
@@ -62,7 +72,7 @@ def build_packaging_profile(
         "volumetric_weight_kg": _round(volumetric_weight_kg, 3),
         "chargeable_weight_kg": _round(chargeable_weight, 3),
         "handling_flags": sorted(set(handling_flags)),
-        "workflow": _workflow_for(package_class),
+        "workflow": _workflow_for(package_class, material),
     }
 
 
@@ -97,14 +107,70 @@ def _recommended_capture_mode(package_class: str) -> str:
     }.get(package_class, "manual_review")
 
 
-def _workflow_for(package_class: str) -> list[str]:
+def _workflow_for(package_class: str, material_class: str | None = None) -> list[str]:
     if package_class == "standard_carton":
-        return ["scan_order", "capture_top_or_depth", "confirm_box_edges", "save_history"]
-    if package_class == "long_part":
-        return ["scan_order", "place_diagonal_or_long_axis_visible", "depth_roi", "check_oversize_rule", "save_history"]
-    if package_class == "irregular_or_soft_pack":
-        return ["scan_order", "depth_object_mask", "manual_adjust_if_needed", "save_history"]
-    return ["scan_order", "depth_object_mask", "manual_review", "save_history"]
+        workflow = ["scan_order", "capture_top_or_depth", "confirm_box_edges", "save_history"]
+    elif package_class == "long_part":
+        workflow = ["scan_order", "place_diagonal_or_long_axis_visible", "depth_roi", "check_oversize_rule", "save_history"]
+    elif package_class == "irregular_or_soft_pack":
+        workflow = ["scan_order", "depth_object_mask", "manual_adjust_if_needed", "save_history"]
+    else:
+        workflow = ["scan_order", "depth_object_mask", "manual_review", "save_history"]
+
+    if material_class in {"reflective", "transparent", "dark_absorbing", "deformable"}:
+        insert_at = max(1, len(workflow) - 1)
+        workflow[insert_at:insert_at] = ["material_surface_check", "retake_or_manual_verify"]
+    return workflow
+
+
+def _material_class(material_hint: str | None) -> str | None:
+    material = (material_hint or "").strip().lower()
+    if not material:
+        return None
+    if material in {"normal", "matte", "cardboard", "paper", "carton"}:
+        return "normal"
+    if material in {"reflective", "glossy", "metal", "metallic", "chrome", "mirror", "foil"}:
+        return "reflective"
+    if material in {"transparent", "clear", "glass", "acrylic", "lens"}:
+        return "transparent"
+    if material in {"black", "dark", "matte_black", "rubber", "absorbing", "dark_absorbing"}:
+        return "dark_absorbing"
+    if material in {"deformable", "soft", "foam", "fabric", "bag", "film"}:
+        return "deformable"
+    return material
+
+
+def _material_risk(material_class: str | None) -> dict[str, Any]:
+    risks = {
+        "reflective": {
+            "risk_level": "high",
+            "flags": ["reflective_depth_noise_risk"],
+            "capture_adjustments": ["change_angle", "reduce_glare", "manual_spot_check"],
+        },
+        "transparent": {
+            "risk_level": "high",
+            "flags": ["transparent_depth_dropout_risk"],
+            "capture_adjustments": ["use_matte_background", "add_visible_outer_bag", "manual_spot_check"],
+        },
+        "dark_absorbing": {
+            "risk_level": "medium",
+            "flags": ["dark_surface_depth_dropout_risk"],
+            "capture_adjustments": ["increase_lighting", "shorten_distance", "manual_spot_check"],
+        },
+        "deformable": {
+            "risk_level": "medium",
+            "flags": ["deformable_shape_drift_risk"],
+            "capture_adjustments": ["avoid_compression", "capture_largest_outline", "manual_spot_check"],
+        },
+    }
+    return risks.get(
+        material_class or "",
+        {
+            "risk_level": "low" if material_class else None,
+            "flags": [],
+            "capture_adjustments": [],
+        },
+    )
 
 
 def _volumetric_weight(

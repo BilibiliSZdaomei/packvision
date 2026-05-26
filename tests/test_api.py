@@ -274,3 +274,28 @@ def test_industry_profile_endpoint_classifies_auto_parts_package():
     assert body["package_class"] == "long_part"
     assert body["recommended_capture_mode"] == "depth_roi_long_item"
     assert "oversize_length" in body["handling_flags"]
+
+
+def test_industry_profile_endpoint_reports_abnormal_material_flow():
+    client = TestClient(create_app())
+    response = client.post(
+        "/api/industry/profile",
+        json={
+            "dimensions": {
+                "length_mm": 460,
+                "width_mm": 300,
+                "height_mm": 180,
+                "volume_l": 24.84,
+            },
+            "part_category": "lamp",
+            "package_hint": "carton",
+            "material_hint": "transparent",
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["material_class"] == "transparent"
+    assert body["material_risk_level"] == "high"
+    assert "transparent_depth_dropout_risk" in body["handling_flags"]
+    assert "material_surface_check" in body["workflow"]
