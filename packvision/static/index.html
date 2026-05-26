@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PackVision Local</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="side-rail">
+        <div class="brand">
+          <div class="brand-mark">PV</div>
+          <div>
+            <h1>PackVision</h1>
+            <p data-i18n="localLab">本地仓库测量台</p>
+          </div>
+        </div>
+        <nav class="rail-nav" aria-label="Primary">
+          <a class="nav-item is-active" href="#measure" data-i18n="measure">测量</a>
+          <a class="nav-item" href="#history" data-i18n="history">历史</a>
+          <a class="nav-item" href="/api/calibration-card.svg" target="_blank" rel="noopener" data-i18n="calibration">校准卡</a>
+        </nav>
+        <div class="rail-status">
+          <span class="status-dot"></span>
+          <span data-i18n="localApi">本地 API</span>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="top-bar">
+          <div>
+            <p class="section-label" data-i18n="project">包装尺寸检测</p>
+            <h2 data-i18n="title">手机照片、侧面照和人工修正一起测</h2>
+          </div>
+          <div class="toolbar">
+            <label class="select-label">
+              <span data-i18n="language">语言</span>
+              <select id="languageSelect" aria-label="Language">
+                <option value="zh">中文</option>
+                <option value="en">English</option>
+                <option value="uk">Українська</option>
+              </select>
+            </label>
+            <div class="segmented" aria-label="Theme">
+              <button type="button" data-theme-choice="light" data-i18n="light">明亮</button>
+              <button type="button" data-theme-choice="dark" data-i18n="dark">深色</button>
+              <button type="button" data-theme-choice="graphite" data-i18n="graphite">石墨</button>
+            </div>
+          </div>
+        </header>
+
+        <section class="guidance-strip" aria-label="Capture quality">
+          <div class="guide-item">
+            <span class="guide-index">1</span>
+            <div>
+              <strong data-i18n="guideModeTitle">多种比例来源</strong>
+              <p data-i18n="guideModeText">优先用 ArUco；没有标记时可用距离和焦距做估算。</p>
+            </div>
+          </div>
+          <div class="guide-item">
+            <span class="guide-index">2</span>
+            <div>
+              <strong data-i18n="guideSideTitle">侧面照可算高度</strong>
+              <p data-i18n="guideSideText">顶部取长宽，侧面取高度候选，异形件可手动框选。</p>
+            </div>
+          </div>
+          <div class="guide-item">
+            <span class="guide-index">3</span>
+            <div>
+              <strong data-i18n="guideTraceTitle">单号追溯</strong>
+              <p data-i18n="guideTraceText">扫码枪、条码图片和手工录入都会保存到历史记录。</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="measure" class="work-grid">
+          <form id="measureForm" class="capture-panel">
+            <div class="panel-head">
+              <div>
+                <p class="section-label" data-i18n="capture">采集</p>
+                <h3 data-i18n="uploadSet">上传图片和单号</h3>
+              </div>
+              <a class="text-link" href="/api/calibration-card.svg" target="_blank" rel="noopener" data-i18n="printMarker">打印标记</a>
+            </div>
+
+            <div class="order-card">
+              <label>
+                <span data-i18n="orderId">单号</span>
+                <input id="orderId" name="order_id" type="text" autocomplete="off" placeholder="SO / PKG / SKU" />
+              </label>
+              <label>
+                <span data-i18n="barcodeText">扫码文本</span>
+                <input id="barcodeText" name="barcode_text" type="text" autocomplete="off" placeholder="Barcode / QR" />
+              </label>
+              <div class="order-actions">
+                <input id="orderImage" type="file" accept="image/*" hidden />
+                <button class="secondary-action compact" type="button" id="decodeBarcodeButton" data-i18n="decodeBarcode">识别条码图片</button>
+              </div>
+            </div>
+
+            <div class="drop-grid">
+              <label class="drop-zone" for="topImage" data-drop-zone="top">
+                <input id="topImage" name="top_image" type="file" accept="image/*" required />
+                <img class="drop-preview" id="topPreview" alt="" />
+                <span class="drop-title" data-i18n="topPhoto">顶部照片</span>
+                <span class="drop-file" id="topFileName" data-i18n="noFile">未选择文件</span>
+              </label>
+              <label class="drop-zone" for="sideImage" data-drop-zone="side">
+                <input id="sideImage" name="side_image" type="file" accept="image/*" />
+                <img class="drop-preview" id="sidePreview" alt="" />
+                <span class="drop-title" data-i18n="sidePhoto">侧面照片</span>
+                <span class="drop-file" id="sideFileName" data-i18n="optional">可选</span>
+              </label>
+            </div>
+
+            <div class="mode-block">
+              <div class="mode-head">
+                <strong data-i18n="measurementMode">测量参数</strong>
+                <span data-i18n="estimateNote">无卡模式需要距离和焦距，结果为估算。</span>
+              </div>
+              <div class="field-grid">
+                <label>
+                  <span data-i18n="markerSize">标记边长，毫米</span>
+                  <input name="marker_size_mm" type="number" min="10" step="0.1" value="50" />
+                </label>
+                <label>
+                  <span data-i18n="manualHeight">人工高度，毫米</span>
+                  <input name="manual_height_mm" type="number" min="0" step="0.1" placeholder="0" />
+                </label>
+                <label>
+                  <span data-i18n="cameraDistance">相机距离，毫米</span>
+                  <input name="camera_distance_mm" type="number" min="50" step="1" placeholder="例如 800" />
+                </label>
+                <label>
+                  <span data-i18n="focal35">等效焦距，毫米</span>
+                  <input name="focal_length_35mm" type="number" min="1" step="0.1" placeholder="例如 24" />
+                </label>
+              </div>
+            </div>
+
+            <input id="topBoxJson" name="top_box_json" type="hidden" />
+            <input id="sideBoxJson" name="side_box_json" type="hidden" />
+
+            <button class="primary-action" type="submit" id="measureButton">
+              <span data-i18n="runMeasure">开始测量</span>
+            </button>
+            <button class="secondary-action" type="button" id="demoButton">
+              <span data-i18n="loadDemo">加载演示图</span>
+            </button>
+          </form>
+
+          <section class="result-panel" aria-live="polite">
+            <div class="panel-head">
+              <div>
+                <p class="section-label" data-i18n="result">结果</p>
+                <h3 id="resultTitle" data-i18n="waiting">等待图片</h3>
+              </div>
+              <div class="result-tools">
+                <span class="confidence" id="confidenceValue">--</span>
+                <button class="tool-button" type="button" id="showTopViewButton" disabled data-i18n="topView">顶部</button>
+                <button class="tool-button" type="button" id="showSideViewButton" disabled data-i18n="sideView">侧面</button>
+                <button class="tool-button" type="button" id="adjustTopButton" disabled data-i18n="adjustBox">手动修正框</button>
+                <button class="tool-button" type="button" id="copyJsonButton" disabled data-i18n="copyJson">复制 JSON</button>
+                <a class="tool-button" id="openImageLink" href="#" target="_blank" rel="noopener" aria-disabled="true" data-i18n="openImage">打开标注图</a>
+              </div>
+            </div>
+
+            <div class="metrics">
+              <div class="metric">
+                <span data-i18n="length">长</span>
+                <strong id="lengthValue">--</strong>
+              </div>
+              <div class="metric">
+                <span data-i18n="width">宽</span>
+                <strong id="widthValue">--</strong>
+              </div>
+              <div class="metric">
+                <span data-i18n="height">高</span>
+                <strong id="heightValue">--</strong>
+              </div>
+              <div class="metric">
+                <span data-i18n="volume">体积</span>
+                <strong id="volumeValue">--</strong>
+              </div>
+            </div>
+
+            <div class="side-summary" id="sideSummary"></div>
+
+            <div class="image-stage" id="imageStage">
+              <img id="annotatedImage" alt="Annotated package result" />
+              <canvas id="annotationCanvas" class="annotation-canvas"></canvas>
+              <div id="drawHint" class="draw-hint" data-i18n="drawHint">拖拽框选需要修正的范围</div>
+              <div id="emptyStage" class="empty-stage" data-i18n="emptyStage">上传顶部照片后开始</div>
+            </div>
+
+            <div class="quality-strip" id="qualityFlags"></div>
+            <div class="recommendation-list" id="recommendations"></div>
+          </section>
+        </section>
+
+        <section id="history" class="history-panel">
+          <div class="panel-head">
+            <div>
+              <p class="section-label" data-i18n="history">历史</p>
+              <h3 data-i18n="historyTitle">带时间戳的测量记录</h3>
+            </div>
+            <div class="history-tools">
+              <input id="historySearch" type="search" placeholder="Order ID" />
+              <button class="tool-button" type="button" id="refreshHistoryButton" data-i18n="refresh">刷新</button>
+            </div>
+          </div>
+          <div class="history-list" id="historyList"></div>
+        </section>
+
+        <section class="api-panel">
+          <div>
+            <p class="section-label" data-i18n="api">API</p>
+            <h3>POST /api/measure</h3>
+          </div>
+          <code>order_id, barcode_text, top_image, side_image?, marker_size_mm, manual_height_mm?, camera_distance_mm?, focal_length_35mm?, top_box_json?</code>
+        </section>
+      </main>
+    </div>
+
+    <script src="/static/app.js" type="module"></script>
+  </body>
+</html>
