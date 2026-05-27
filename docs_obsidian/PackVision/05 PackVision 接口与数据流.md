@@ -38,6 +38,7 @@ flowchart LR
 
 | 接口 | 用途 |
 | --- | --- |
+| `GET /api/deployment/readiness` | 海外仓开箱即用体检：EXE、数据目录、驱动、上位机、OpenNI、相机连接、准备清单 |
 | `GET /api/depth/cameras` | 看配置了几台相机、是否连上、三视图还缺什么 |
 | `GET /api/depth/status` | 看驱动、OpenNI、厂商资料状态 |
 | `GET /api/depth/astra/tutorial-playbook` | 看厂商教程二次审计后的 ROS2 控制、多相机、标定和点云适配 |

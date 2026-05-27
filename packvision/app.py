@@ -42,6 +42,7 @@ from packvision.services.depth_simulation import (
     simulate_astra_depth_measurement_from_image,
 )
 from packvision.services.depth_workflow import build_depth_workflow_guide, recommend_capture_workflow
+from packvision.services.deployment import build_deployment_readiness
 from packvision.services.history import (
     export_measurements_csv,
     get_measurement,
@@ -251,6 +252,10 @@ def create_app() -> FastAPI:
             "history_db": True,
             "depth_camera": depth_camera_status(),
         }
+
+    @app.get("/api/deployment/readiness")
+    def deployment_readiness() -> dict[str, object]:
+        return build_deployment_readiness()
 
     @app.get("/api/calibration-card.svg", response_class=HTMLResponse)
     def calibration_card(marker_size_mm: float = 50.0) -> Response:
