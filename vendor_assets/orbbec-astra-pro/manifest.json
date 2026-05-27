@@ -1,0 +1,1193 @@
+﻿{
+    "schema_version":  1,
+    "vendor_id":  "orbbec-astra-pro",
+    "display_name":  "Orbbec Astra Pro seller tutorial package",
+    "source_root":  "D:\\Documents\\包装尺寸检测\\奥比中光Astra Pro",
+    "generated_at":  "2026-05-28T03:12:32.0040910+08:00",
+    "policy":  {
+                   "normal_git":  "Track manifest, notes, checksums and integration docs.",
+                   "binary_mirror":  "Use Git LFS or private release assets for drivers, SDK archives and other large/proprietary files.",
+                   "public_repo_warning":  "Do not redistribute vendor drivers/SDKs publicly unless the vendor license allows it."
+               },
+    "summary":  {
+                    "file_count":  158,
+                    "total_size_bytes":  385284820,
+                    "total_size_mb":  367.44,
+                    "max_file_size_mb":  82.61,
+                    "files_over_100mb":  0
+                },
+    "extensions":  [
+                       {
+                           "extension":  ".exe",
+                           "count":  2,
+                           "size_bytes":  5885280,
+                           "size_mb":  5.61
+                       },
+                       {
+                           "extension":  ".zip",
+                           "count":  3,
+                           "size_bytes":  148355960,
+                           "size_mb":  141.48
+                       },
+                       {
+                           "extension":  ".xml",
+                           "count":  2,
+                           "size_bytes":  2127,
+                           "size_mb":  0
+                       },
+                       {
+                           "extension":  ".txt",
+                           "count":  2,
+                           "size_bytes":  7879,
+                           "size_mb":  0.01
+                       },
+                       {
+                           "extension":  ".gitkeep",
+                           "count":  1,
+                           "size_bytes":  0,
+                           "size_mb":  0
+                       },
+                       {
+                           "extension":  ".lib",
+                           "count":  3,
+                           "size_bytes":  14177968,
+                           "size_mb":  13.52
+                       },
+                       {
+                           "extension":  ".pdb",
+                           "count":  2,
+                           "size_bytes":  5349376,
+                           "size_mb":  5.1
+                       },
+                       {
+                           "extension":  ".dll",
+                           "count":  4,
+                           "size_bytes":  75857408,
+                           "size_mb":  72.34
+                       },
+                       {
+                           "extension":  ".ini",
+                           "count":  4,
+                           "size_bytes":  6616,
+                           "size_mb":  0.01
+                       },
+                       {
+                           "extension":  ".ttc",
+                           "count":  2,
+                           "size_bytes":  36476852,
+                           "size_mb":  34.79
+                       },
+                       {
+                           "extension":  ".png",
+                           "count":  92,
+                           "size_bytes":  14364827,
+                           "size_mb":  13.7
+                       },
+                       {
+                           "extension":  ".html",
+                           "count":  2,
+                           "size_bytes":  77115,
+                           "size_mb":  0.07
+                       },
+                       {
+                           "extension":  ".md",
+                           "count":  13,
+                           "size_bytes":  92065,
+                           "size_mb":  0.09
+                       },
+                       {
+                           "extension":  ".gz",
+                           "count":  1,
+                           "size_bytes":  25059790,
+                           "size_mb":  23.9
+                       },
+                       {
+                           "extension":  ".pdf",
+                           "count":  19,
+                           "size_bytes":  27252345,
+                           "size_mb":  25.99
+                       },
+                       {
+                           "extension":  ".gitignore",
+                           "count":  1,
+                           "size_bytes":  13334,
+                           "size_mb":  0.01
+                       },
+                       {
+                           "extension":  ".clang-tidy",
+                           "count":  1,
+                           "size_bytes":  4608,
+                           "size_mb":  0
+                       },
+                       {
+                           "extension":  ".gitattributes",
+                           "count":  1,
+                           "size_bytes":  384,
+                           "size_mb":  0
+                       },
+                       {
+                           "extension":  ".tar",
+                           "count":  1,
+                           "size_bytes":  32291840,
+                           "size_mb":  30.8
+                       },
+                       {
+                           "extension":  ".clang-format",
+                           "count":  2,
+                           "size_bytes":  9046,
+                           "size_mb":  0.01
+                       }
+                   ],
+    "largest_files":  [
+                          {
+                              "path":  "相关例程源码\\astra_ws_src_230302.zip",
+                              "size_bytes":  86618364,
+                              "size_mb":  82.61
+                          },
+                          {
+                              "path":  "上位机软件\\上位机软件\\opencv_world410.dll",
+                              "size_bytes":  74628096,
+                              "size_mb":  71.17
+                          },
+                          {
+                              "path":  "上位机软件\\上位机软件.zip",
+                              "size_bytes":  57715793,
+                              "size_mb":  55.04
+                          },
+                          {
+                              "path":  "ROS2系列教程\\OpenNI_ROS2_SDK_v1.1.0_20230131_d6d939.tar",
+                              "size_bytes":  32291840,
+                              "size_mb":  30.8
+                          },
+                          {
+                              "path":  "Linux_SDK\\AstraSDK-v2.1.3-Ubuntu18.04-x86_64.tar.gz",
+                              "size_bytes":  25059790,
+                              "size_mb":  23.9
+                          },
+                          {
+                              "path":  "上位机软件\\上位机软件\\msyh.ttc",
+                              "size_bytes":  19647736,
+                              "size_mb":  18.74
+                          },
+                          {
+                              "path":  "上位机软件\\上位机软件\\msyhbd.ttc",
+                              "size_bytes":  16829116,
+                              "size_mb":  16.05
+                          },
+                          {
+                              "path":  "上位机软件\\上位机软件\\XnLib.lib",
+                              "size_bytes":  14147380,
+                              "size_mb":  13.49
+                          },
+                          {
+                              "path":  "ROS1系列教程\\2、Opencv应用\\OpenPose.pdf",
+                              "size_bytes":  8470523,
+                              "size_mb":  8.08
+                          },
+                          {
+                              "path":  "上位机软件\\上位机软件\\OrbbecViewer.pdb",
+                              "size_bytes":  5197824,
+                              "size_mb":  4.96
+                          },
+                          {
+                              "path":  "上位机软件\\Window 驱动\\SensorDriver_V4.3.0.17.exe",
+                              "size_bytes":  4357472,
+                              "size_mb":  4.16
+                          },
+                          {
+                              "path":  "ROS1系列教程\\4、ROS+Opencv应用\\4、ROS+Opencv应用.pdf",
+                              "size_bytes":  4127391,
+                              "size_mb":  3.94
+                          },
+                          {
+                              "path":  "相关例程源码\\OpenNI-Linux-x64-2.3.0.66.zip",
+                              "size_bytes":  4021803,
+                              "size_mb":  3.84
+                          },
+                          {
+                              "path":  "ROS1系列教程\\8、Astra颜色识别与物体跟踪\\8、颜色识别与物体跟踪.pdf",
+                              "size_bytes":  2393829,
+                              "size_mb":  2.28
+                          },
+                          {
+                              "path":  "ROS1系列教程\\3、ROS+Opencv基础\\3、 ROS+Opencv基础.pdf",
+                              "size_bytes":  1860581,
+                              "size_mb":  1.77
+                          },
+                          {
+                              "path":  "ROS1系列教程\\2、Opencv应用\\2、Opencv应用.pdf",
+                              "size_bytes":  1619321,
+                              "size_mb":  1.54
+                          },
+                          {
+                              "path":  "上位机软件\\上位机软件\\OrbbecViewer.exe",
+                              "size_bytes":  1527808,
+                              "size_mb":  1.46
+                          },
+                          {
+                              "path":  "ROS1系列教程\\6、AR视觉\\6、AR视觉.pdf",
+                              "size_bytes":  1452014,
+                              "size_mb":  1.38
+                          },
+                          {
+                              "path":  "ROS2系列教程\\1、环境搭建\\1、环境搭建.pdf",
+                              "size_bytes":  1420682,
+                              "size_mb":  1.35
+                          },
+                          {
+                              "path":  "ROS1系列教程\\1、Astra相机标定\\1、Astra相机标定.pdf",
+                              "size_bytes":  1296505,
+                              "size_mb":  1.24
+                          }
+                      ],
+    "files":  [
+                  {
+                      "path":  "Linux_SDK\\AstraSDK-v2.1.3-Ubuntu18.04-x86_64.tar.gz",
+                      "size_bytes":  25059790,
+                      "size_mb":  23.9,
+                      "sha256":  "028a8b29fcabb64dc562d101b225db78991bf58487c819f9e4254b4414864058"
+                  },
+                  {
+                      "path":  "Linux_SDK\\Linux SDK使用说明.pdf",
+                      "size_bytes":  305193,
+                      "size_mb":  0.29,
+                      "sha256":  "de4dde8c475f1daa52c551fb9e70230adf159035b932a6e1001cbaa595dae6bc"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\1、Astra相机标定\\1、Astra相机标定.md",
+                      "size_bytes":  6293,
+                      "size_mb":  0.01,
+                      "sha256":  "c32fc9fc59318d083ce519362a5358cb5595a602283e1655834022feae6518da"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\1、Astra相机标定\\1、Astra相机标定.pdf",
+                      "size_bytes":  1296505,
+                      "size_mb":  1.24,
+                      "sha256":  "f581c527ed9caee566ff2d3f587cf312896d04572567bd9a32d344140a64667b"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\1、Astra相机标定\\4101.png",
+                      "size_bytes":  17872,
+                      "size_mb":  0.02,
+                      "sha256":  "296fb41784183209584e6ef8125a446db8b27f792f76f3506b5a7e91c2510fc0"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\1、Astra相机标定\\4102.png",
+                      "size_bytes":  51917,
+                      "size_mb":  0.05,
+                      "sha256":  "d277b6db653f39ed06c592428004fd046f8658759539b04bd83d4581e99681b3"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\1、Astra相机标定\\4103.png",
+                      "size_bytes":  159005,
+                      "size_mb":  0.15,
+                      "sha256":  "926b14a845cd43790f356b1f152f9c70768ebee4dbeb388cb7195673c62a12d5"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\1、Astra相机标定\\4104.png",
+                      "size_bytes":  168616,
+                      "size_mb":  0.16,
+                      "sha256":  "1eb15564ee64af2a460719e39d7f9f470c3acaf143d831ad78903feb4c700d10"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\1、Astra相机标定\\4105.png",
+                      "size_bytes":  128986,
+                      "size_mb":  0.12,
+                      "sha256":  "370fb88d09e47b7b25bd800212712f05412c7bc6cb7899edab64214b8f3599aa"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\1、Astra相机标定\\4106.png",
+                      "size_bytes":  133525,
+                      "size_mb":  0.13,
+                      "sha256":  "4318d0bd49ff7c664bf0045ad01dcf16d6fbc0c30b75b389b19977f0975114aa"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\1、Astra相机标定\\4111.png",
+                      "size_bytes":  198174,
+                      "size_mb":  0.19,
+                      "sha256":  "669ab1e9ac4910ef346833346c610401e7e5a30147cede3ced43fa3086179143"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\1、Astra相机标定\\4408.png",
+                      "size_bytes":  72480,
+                      "size_mb":  0.07,
+                      "sha256":  "1c720758b3754966090ae4817261dd5474c8d3e179f5e5e3243d95bd0f55d227"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\1、Astra相机标定\\4409.png",
+                      "size_bytes":  224338,
+                      "size_mb":  0.21,
+                      "sha256":  "920da686b0dd6231c0a6c7f38ae8fa15c1f62761e9fbc13727bfc40139ffa48f"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\1、Astra相机标定\\4410.png",
+                      "size_bytes":  79624,
+                      "size_mb":  0.08,
+                      "sha256":  "b66a21c8cbe4a00ae86cba208cc0cb6aa2ddf232e41f4cc02c489c6a155a7a30"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\1、Astra相机标定\\4411.png",
+                      "size_bytes":  116650,
+                      "size_mb":  0.11,
+                      "sha256":  "02d7f0463921d8eaf69d6dc516bd5a1bba7e53192258aa01bea5b9a7b622e64c"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\1、Astra相机标定\\image-20221227094716593.png",
+                      "size_bytes":  149844,
+                      "size_mb":  0.14,
+                      "sha256":  "5510e2d6ca7fc6ab2f1e0a0b0bee4e03c2eb654a3d5fd06b7f543124cf899e72"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\2、Opencv应用\\2、Opencv应用.md",
+                      "size_bytes":  12929,
+                      "size_mb":  0.01,
+                      "sha256":  "fdeb03946f348eb8ec79edf1db30bbacc055c30a3824fb2dece4ac4aada71dcb"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\2、Opencv应用\\2、Opencv应用.pdf",
+                      "size_bytes":  1619321,
+                      "size_mb":  1.54,
+                      "sha256":  "a1091a0682ddd220428218ad59dd082474cb333ef2957ceb72573103d56beb98"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\2、Opencv应用\\211.png",
+                      "size_bytes":  2736,
+                      "size_mb":  0,
+                      "sha256":  "2646951dc10249baeacd63d6ad562cdec10e5db1f17cc4addca68609075bebeb"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\2、Opencv应用\\212.png",
+                      "size_bytes":  2720,
+                      "size_mb":  0,
+                      "sha256":  "2a98463acb6f972867b5f567c90ed2527821163de29dfbb2e6a9e78bf6194b21"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\2、Opencv应用\\213.png",
+                      "size_bytes":  2795,
+                      "size_mb":  0,
+                      "sha256":  "bb7b39c4bee6989bb4987b7961de80eac73ec99e7e2318e75ae60338385d4e49"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\2、Opencv应用\\214.png",
+                      "size_bytes":  2832,
+                      "size_mb":  0,
+                      "sha256":  "25c0c7d18c8f0fb241b169ef6373ec2391b9bbf4d67c8a26392da275105b8046"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\2、Opencv应用\\215.png",
+                      "size_bytes":  2821,
+                      "size_mb":  0,
+                      "sha256":  "e567c96d92ba1977ee6202500b6dceabb5837f1d36421ee72e65a53c1f045b9a"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\2、Opencv应用\\216.png",
+                      "size_bytes":  2946,
+                      "size_mb":  0,
+                      "sha256":  "87df38e8311afdb2c0eb449038b2b4847348723082173498de374a16d53bda85"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\2、Opencv应用\\217.png",
+                      "size_bytes":  2736,
+                      "size_mb":  0,
+                      "sha256":  "f94e9cd8c863e5b14cf748fc2e47db0dafee618f05b61cb2edfb6f1cfba925fa"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\2、Opencv应用\\218.png",
+                      "size_bytes":  54875,
+                      "size_mb":  0.05,
+                      "sha256":  "83135d9e04dc7c1077e90903c69dcff283c0c58c4d7958c076b2d785f543ea6e"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\2、Opencv应用\\219.png",
+                      "size_bytes":  236968,
+                      "size_mb":  0.23,
+                      "sha256":  "cc3f4f1ff2b1c13b796a01b4531dc1d7c7d7e9c95ed06a5ad6dec5d6d81691fe"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\2、Opencv应用\\220.png",
+                      "size_bytes":  49144,
+                      "size_mb":  0.05,
+                      "sha256":  "dd3ea230b030d841bf30bf3f45f0edbf746f0abc682353c2eccae4bceb808529"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\2、Opencv应用\\221.png",
+                      "size_bytes":  130751,
+                      "size_mb":  0.12,
+                      "sha256":  "2b38529de085a35c999f2c48fcb7300677cb7d4807f14ba7aa831b5537d669bc"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\2、Opencv应用\\222.png",
+                      "size_bytes":  24563,
+                      "size_mb":  0.02,
+                      "sha256":  "ab8390501f754c83eaac1cde7d92c18e595be406ecef12755985e6038e0d9385"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\2、Opencv应用\\224.png",
+                      "size_bytes":  57741,
+                      "size_mb":  0.06,
+                      "sha256":  "f787d140b74db80634fb2f02232a8ee1553d9e2cf36375170ba01427c44b614e"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\2、Opencv应用\\225.png",
+                      "size_bytes":  7246,
+                      "size_mb":  0.01,
+                      "sha256":  "0946920fb0b76b0166fb9faeb2dc1c6a7696e0dfbfcff83eb59e3d30656e8b64"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\2、Opencv应用\\226.png",
+                      "size_bytes":  124008,
+                      "size_mb":  0.12,
+                      "sha256":  "4f9e659d2ada68535d98344f8d85f9dc46075d3305b354ddbe22924797992fa3"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\2、Opencv应用\\227.png",
+                      "size_bytes":  294650,
+                      "size_mb":  0.28,
+                      "sha256":  "d2c295d93deb0c320f31c9039ff4a5e0dfd73c45dc0dea18b7cbd59cb6e6fed1"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\2、Opencv应用\\OpenPose.pdf",
+                      "size_bytes":  8470523,
+                      "size_mb":  8.08,
+                      "sha256":  "956802ee5b7288662e7612eb1288c6c7ca0c6af9d42158e1b9f415a7d664e427"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\3、ROS+Opencv基础\\2401.png",
+                      "size_bytes":  15456,
+                      "size_mb":  0.01,
+                      "sha256":  "03c9bbee24f184b3236efbe5760237c1715bcdeea64b3e0a8f3ded21543771b5"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\3、ROS+Opencv基础\\2402.png",
+                      "size_bytes":  16994,
+                      "size_mb":  0.02,
+                      "sha256":  "a947a3d528ffa199304467d2a9a130a843d7690051ed4b869dd2e04e66c07853"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\3、ROS+Opencv基础\\2403.png",
+                      "size_bytes":  17765,
+                      "size_mb":  0.02,
+                      "sha256":  "00934ed3557b4f6c6163ceefb941a6072f6579f65cf51099a0fad29baa7b8792"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\3、ROS+Opencv基础\\2404.png",
+                      "size_bytes":  737061,
+                      "size_mb":  0.7,
+                      "sha256":  "10095511ee3641ebb1398b505b79f42afc6cf9c23b47df41eccef13dffdd6e28"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\3、ROS+Opencv基础\\2405.png",
+                      "size_bytes":  146932,
+                      "size_mb":  0.14,
+                      "sha256":  "774d907d05009d9dcaf4a0d5648e84e1f89d60af2378b0b2e099a15e20af2931"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\3、ROS+Opencv基础\\2406.png",
+                      "size_bytes":  200879,
+                      "size_mb":  0.19,
+                      "sha256":  "eaec6de5078f67352b04760cfbcc98401cdbae4d5e9680cd65a28cb2c18b11ba"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\3、ROS+Opencv基础\\2407.png",
+                      "size_bytes":  590487,
+                      "size_mb":  0.56,
+                      "sha256":  "386d45f088d29263f978302e65e3e322390753fbcee8a59aa072fc8679c46f8c"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\3、ROS+Opencv基础\\3、 ROS+Opencv基础.md",
+                      "size_bytes":  8134,
+                      "size_mb":  0.01,
+                      "sha256":  "6ff426a6772f791dbd22da2786c9097c844af97efa35b2aa280c793c0710b046"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\3、ROS+Opencv基础\\3、 ROS+Opencv基础.pdf",
+                      "size_bytes":  1860581,
+                      "size_mb":  1.77,
+                      "sha256":  "dea17613c9250f9e7460beedef1a77d3ba1f64e18b512f4592442b4e0c4357c7"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\4、ROS+Opencv应用\\2501.png",
+                      "size_bytes":  23105,
+                      "size_mb":  0.02,
+                      "sha256":  "a864feeaec87eafc68c76b6c4ec6ed1f22ac9afe38a18de341a0057b9b10cc01"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\4、ROS+Opencv应用\\2502.png",
+                      "size_bytes":  201591,
+                      "size_mb":  0.19,
+                      "sha256":  "a2f216d546b7bf3c375bac6d9b0888b635cbb36a59e718f8090543624bc4980a"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\4、ROS+Opencv应用\\2503.png",
+                      "size_bytes":  299932,
+                      "size_mb":  0.29,
+                      "sha256":  "bf7dbc996c8740290d43128762da245b8334590bc2e6632a7c7bcd37b28b8226"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\4、ROS+Opencv应用\\2504.png",
+                      "size_bytes":  306942,
+                      "size_mb":  0.29,
+                      "sha256":  "7b45031aad7bad87276ec56540633d870ca8c303d1698f274c5c3b62e1db8a76"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\4、ROS+Opencv应用\\2505.png",
+                      "size_bytes":  55577,
+                      "size_mb":  0.05,
+                      "sha256":  "251a5074cdbd39c4dcd17e096bace7886573f631474977425205151e818db17d"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\4、ROS+Opencv应用\\2506.png",
+                      "size_bytes":  256167,
+                      "size_mb":  0.24,
+                      "sha256":  "1aee364cd72fad94d2f5ea264fca7636080494837ce654b38ef093cf639d5cfa"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\4、ROS+Opencv应用\\2507.png",
+                      "size_bytes":  480292,
+                      "size_mb":  0.46,
+                      "sha256":  "0d5d9edb346d0da169d4e147bd3ab622c4a56437e9dc9a9b814192008072e131"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\4、ROS+Opencv应用\\2508.png",
+                      "size_bytes":  383072,
+                      "size_mb":  0.37,
+                      "sha256":  "72f7c521000dc2579d7419eaea6de447ecff34057a62dd9eb5ceb86b1f554892"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\4、ROS+Opencv应用\\2509.png",
+                      "size_bytes":  78517,
+                      "size_mb":  0.07,
+                      "sha256":  "68462e59e3fc0728282849f41e4833f92e7fea534d7861d265e89f2cc3bb6d5f"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\4、ROS+Opencv应用\\2510.png",
+                      "size_bytes":  234542,
+                      "size_mb":  0.22,
+                      "sha256":  "3a9ca10198d012432f26cbd20933f9bb80462aad2a61134141f02e171ffafa77"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\4、ROS+Opencv应用\\2511.png",
+                      "size_bytes":  59144,
+                      "size_mb":  0.06,
+                      "sha256":  "76f06212f24f8bba1e0e59cb14dfbc9e748536b314ad5d684869f3ff5b3445c6"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\4、ROS+Opencv应用\\2512.png",
+                      "size_bytes":  470592,
+                      "size_mb":  0.45,
+                      "sha256":  "f5ecb264515c444e6c1b8dc16a16c1b971e356005a7c1387f0dce5bcb77bc4c7"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\4、ROS+Opencv应用\\2513.png",
+                      "size_bytes":  460094,
+                      "size_mb":  0.44,
+                      "sha256":  "d98461c579665db88b3f1eed5370851c99f4d1192dd6ce9177682dd9dd8a7b0d"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\4、ROS+Opencv应用\\4、ROS+Opencv应用.md",
+                      "size_bytes":  10310,
+                      "size_mb":  0.01,
+                      "sha256":  "ecceb343b8b97e3370d3128c3e97eeba982b98afb51c6ecfb8f145750ca469be"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\4、ROS+Opencv应用\\4、ROS+Opencv应用.pdf",
+                      "size_bytes":  4127391,
+                      "size_mb":  3.94,
+                      "sha256":  "53e483a175eea0f5d42954dfe647afebbd5fede90b31823dececd7b003556374"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\5、数据转换和点云\\2408.png",
+                      "size_bytes":  8629,
+                      "size_mb":  0.01,
+                      "sha256":  "a3aca7e1547dec5a26d11101f9410d340285ec631a995c520ab02e7af8a437f8"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\5、数据转换和点云\\2409.png",
+                      "size_bytes":  80849,
+                      "size_mb":  0.08,
+                      "sha256":  "0534ff3c56fbfb984890f75b6577dd36644b540e24a2b74ebead6f951022173e"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\5、数据转换和点云\\2410.png",
+                      "size_bytes":  234927,
+                      "size_mb":  0.22,
+                      "sha256":  "b99c8045353414b97403ab050db86b0886e4ef48181398517ae5fe5fa56be65c"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\5、数据转换和点云\\2411.png",
+                      "size_bytes":  18025,
+                      "size_mb":  0.02,
+                      "sha256":  "8fa61ba0edc276abf63af8dd5cfddfbc39d3f7777c66ecf2ad815a836597fa30"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\5、数据转换和点云\\5、数据转换和点云.md",
+                      "size_bytes":  5143,
+                      "size_mb":  0,
+                      "sha256":  "f68000a1122e023575e65ecfb2af95ee40ac416118e2944abf1348af53b99e93"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\5、数据转换和点云\\5、数据转换和点云.pdf",
+                      "size_bytes":  414862,
+                      "size_mb":  0.4,
+                      "sha256":  "244c040df116351c0b0c19dce9ab22056a4911d4366f76243d018e5e2bafe0bd"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\6、AR视觉\\2221.png",
+                      "size_bytes":  242532,
+                      "size_mb":  0.23,
+                      "sha256":  "c959b713372b921226ce276d7209318c9a509a76586f9e226c72387acc91faf9"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\6、AR视觉\\2222.png",
+                      "size_bytes":  38969,
+                      "size_mb":  0.04,
+                      "sha256":  "add154edd36cc3e01a82f6715f66d49289b9151b68a02c8c38d66e6da47f96b9"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\6、AR视觉\\2223.png",
+                      "size_bytes":  456145,
+                      "size_mb":  0.44,
+                      "sha256":  "ecd7e22a911ba26ef08623896a748d431201eb524633294431412241610e8d22"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\6、AR视觉\\2224.png",
+                      "size_bytes":  28813,
+                      "size_mb":  0.03,
+                      "sha256":  "d4e77ef9d44b6b2cd45a94cf3e63d0b716685428f473f928af9e43ddfbd97b29"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\6、AR视觉\\2225.png",
+                      "size_bytes":  481704,
+                      "size_mb":  0.46,
+                      "sha256":  "6aa6ccd1da27ad200dea11e0d10dc58b4d83651a49d2f2e0dedabbdca561ad8f"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\6、AR视觉\\6、AR视觉.md",
+                      "size_bytes":  8787,
+                      "size_mb":  0.01,
+                      "sha256":  "277ce8494344e8c10f9d32e95a71f61336e125e3c8bd8370cdac13124bfcaf4a"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\6、AR视觉\\6、AR视觉.pdf",
+                      "size_bytes":  1452014,
+                      "size_mb":  1.38,
+                      "sha256":  "cf319b0cae7ed38a0ae8570a008e9abe7ae2913a8641b057ab2e67005fb580da"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\7、ARTag\\3001.png",
+                      "size_bytes":  20152,
+                      "size_mb":  0.02,
+                      "sha256":  "21ae2b473f461d9ba54bdbd9b9b88070f716063367ab840844841088f69ca0c4"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\7、ARTag\\3002.png",
+                      "size_bytes":  187903,
+                      "size_mb":  0.18,
+                      "sha256":  "21aef27e49f0b1ea0f3c1e5d2a7c07cb57222950dad4d93555b770062fe14202"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\7、ARTag\\3003.png",
+                      "size_bytes":  125866,
+                      "size_mb":  0.12,
+                      "sha256":  "7431fcf1398e65042b1665d42d3b7603174c3f1c886f5ee8314da727f0c92b8f"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\7、ARTag\\3004.png",
+                      "size_bytes":  334336,
+                      "size_mb":  0.32,
+                      "sha256":  "318ed8e003577eed07b71fec0918137b92dcfcbacfd60b922a56442dff51251d"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\7、ARTag\\3005.png",
+                      "size_bytes":  107551,
+                      "size_mb":  0.1,
+                      "sha256":  "8b6940e822d01039b793620e52275a3ea8cb68366a825adcf36ee168d7d122cf"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\7、ARTag\\3006.png",
+                      "size_bytes":  137383,
+                      "size_mb":  0.13,
+                      "sha256":  "ab5a8408b5f7d310e365afc3c58e6ad2f80133f8688657c150ed7f8dc022cddb"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\7、ARTag\\7、ARTag.md",
+                      "size_bytes":  7969,
+                      "size_mb":  0.01,
+                      "sha256":  "15e5fee313f35223894f3c2041ed2f4cfed1704242ce773276bf5d475dd72dfd"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\7、ARTag\\7、ARTag.pdf",
+                      "size_bytes":  1005391,
+                      "size_mb":  0.96,
+                      "sha256":  "97df490552d559558ece50971cbe02fd76dcd442d465fbbd0e9ccb7c0e883b3c"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\8、Astra颜色识别与物体跟踪\\4401.png",
+                      "size_bytes":  13624,
+                      "size_mb":  0.01,
+                      "sha256":  "cfc8d569de985271190ff175a646595f0f601775cee6c4f5b6dfa9df6845f78c"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\8、Astra颜色识别与物体跟踪\\4402.png",
+                      "size_bytes":  63083,
+                      "size_mb":  0.06,
+                      "sha256":  "5fcb884751888b73a740fb33aaf4e973a4da0739cf533d59f32f36ccd986869a"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\8、Astra颜色识别与物体跟踪\\4403.png",
+                      "size_bytes":  99978,
+                      "size_mb":  0.1,
+                      "sha256":  "8a975d24910aaa936c652480b62b0d6a1ac3dc89fd4e348d123dc51a12e74f1d"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\8、Astra颜色识别与物体跟踪\\4404.png",
+                      "size_bytes":  376428,
+                      "size_mb":  0.36,
+                      "sha256":  "81fe2e83604d139abb5a37d9af907fe6b946b8aee61dfb2330a487534b8ffa57"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\8、Astra颜色识别与物体跟踪\\4405.png",
+                      "size_bytes":  413755,
+                      "size_mb":  0.39,
+                      "sha256":  "e750e3b9aed99f90fc155c590263b4e9b307aa56dd03a9d06a9d35ce5147085b"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\8、Astra颜色识别与物体跟踪\\4406.png",
+                      "size_bytes":  63313,
+                      "size_mb":  0.06,
+                      "sha256":  "83e20ea4e4facfd5d1cd3f730fe2f1adb53a80b2eb1ccfeffb01e087ac71fd8b"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\8、Astra颜色识别与物体跟踪\\4407.png",
+                      "size_bytes":  44907,
+                      "size_mb":  0.04,
+                      "sha256":  "0c823420afb7b4cdb3fabdfa8d94714b81b5b3656db7f2e1f1d2d833a86eef36"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\8、Astra颜色识别与物体跟踪\\4408.png",
+                      "size_bytes":  42688,
+                      "size_mb":  0.04,
+                      "sha256":  "023cd33223d184dda1ee2d3dc08b81847cb2a5b5478e26bc9ae583452e798e58"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\8、Astra颜色识别与物体跟踪\\4409.png",
+                      "size_bytes":  48567,
+                      "size_mb":  0.05,
+                      "sha256":  "59bc1daccfe8d0ee953fc510e5252cc5a9f6fef9835001e2e3528242dc8b57a6"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\8、Astra颜色识别与物体跟踪\\4410.png",
+                      "size_bytes":  407037,
+                      "size_mb":  0.39,
+                      "sha256":  "63be7b165f0c722171e084b88f75dc21f3f0a57c5050b23be2a6d84dea7a515c"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\8、Astra颜色识别与物体跟踪\\4411.png",
+                      "size_bytes":  65413,
+                      "size_mb":  0.06,
+                      "sha256":  "b87cc2205ba677545f7c7333c2fedaddcf07c9a5f530d43723fb4703539a7444"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\8、Astra颜色识别与物体跟踪\\4412.png",
+                      "size_bytes":  308562,
+                      "size_mb":  0.29,
+                      "sha256":  "b4b4a32d05970f62117d0c32e1d062a84110747555152ff9a4c5281937bfe33e"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\8、Astra颜色识别与物体跟踪\\8、颜色识别与物体跟踪.md",
+                      "size_bytes":  9176,
+                      "size_mb":  0.01,
+                      "sha256":  "c1f399d5d3ce06ea4d0e2d7ffc7919cfbeac6551f8ec6ddf8c5e7a7ae1f68f3c"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\8、Astra颜色识别与物体跟踪\\8、颜色识别与物体跟踪.pdf",
+                      "size_bytes":  2393829,
+                      "size_mb":  2.28,
+                      "sha256":  "13612b60b6cb5970e4b0c940a397225efe59f256b84fb21c55f9af0333765b20"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\Astra麦克风使用方法\\0、Astra相机使用须知\\使用前须知.html",
+                      "size_bytes":  30426,
+                      "size_mb":  0.03,
+                      "sha256":  "b386a72ed6f7d2f096a06d9d0b0026492af08e4e07a0b1bacca373f7006f384d"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\Astra麦克风使用方法\\0、Astra相机使用须知\\使用前须知.md",
+                      "size_bytes":  537,
+                      "size_mb":  0,
+                      "sha256":  "4caa4e1174f6ecd111314f7ace3adb3b9c31a60958852c758b10e308d1eb0173"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\Astra麦克风使用方法\\0、Astra相机使用须知\\使用前须知.pdf",
+                      "size_bytes":  49790,
+                      "size_mb":  0.05,
+                      "sha256":  "05c1e4c66bf034702fea7deb753a534b1f2c6a4ea92234865678845037e9c94d"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\Astra麦克风使用方法\\9101.png",
+                      "size_bytes":  80589,
+                      "size_mb":  0.08,
+                      "sha256":  "253d8b7cdd600b99ee646b32654d2cf77f0fae0c32534b271531c2cfad8e62f2"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\Astra麦克风使用方法\\Astra麦克风使用方法.md",
+                      "size_bytes":  978,
+                      "size_mb":  0,
+                      "sha256":  "f3382a408cac4a375cacd5e36bcbc641af0e8d231b3f9c4f8326dd53f522b755"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\Astra麦克风使用方法\\Astra麦克风使用方法.pdf",
+                      "size_bytes":  127702,
+                      "size_mb":  0.12,
+                      "sha256":  "615c9a3d2b7f45ad9b1e6bad405e9418c88ecc71995a36a5110ec862bb0dfd09"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\Astra相机使用方法\\9101.png",
+                      "size_bytes":  46658,
+                      "size_mb":  0.04,
+                      "sha256":  "775e8c044db362452d3c6510b22dc17f17aa94dcbfedac6d957b8e6ecc8ff671"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\Astra相机使用方法\\9102.png",
+                      "size_bytes":  88149,
+                      "size_mb":  0.08,
+                      "sha256":  "fabef683bbf900b86d2e01a2bf5a42f5c630c22266ff9671a8abc4f9a6f73c04"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\Astra相机使用方法\\9103.png",
+                      "size_bytes":  197527,
+                      "size_mb":  0.19,
+                      "sha256":  "105d15fb228e720077a99fd962efc560ca3d6db63c36b398b7e6a29a251234fb"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\Astra相机使用方法\\9104.png",
+                      "size_bytes":  116408,
+                      "size_mb":  0.11,
+                      "sha256":  "0d163e5bfaa1fddd83e7d69f5d37480de661acc9e4e838754a6186dd4c73635d"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\Astra相机使用方法\\9105.png",
+                      "size_bytes":  4811,
+                      "size_mb":  0,
+                      "sha256":  "808c3c2e20696c2f8319f004fa5af7eb4a8b1f2f3ade361ed42a90d5096158f2"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\Astra相机使用方法\\9106.png",
+                      "size_bytes":  25962,
+                      "size_mb":  0.02,
+                      "sha256":  "ad3a35d9591fe4ca6d800009576142d76d543628e02cacafb504c60a3326de48"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\Astra相机使用方法\\9107.png",
+                      "size_bytes":  40603,
+                      "size_mb":  0.04,
+                      "sha256":  "131188bd8fd86de15d4c336ea9612ade5ad1bcb6ceab41901d8202f01c513a89"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\Astra相机使用方法\\9108.png",
+                      "size_bytes":  469052,
+                      "size_mb":  0.45,
+                      "sha256":  "97ecc80f74d31990f0b03d3f7fdc7cc8ef16415abd18324c97a97d0287937d15"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\Astra相机使用方法\\Astra相机使用方法.md",
+                      "size_bytes":  4268,
+                      "size_mb":  0,
+                      "sha256":  "d3ea5d8596166151627e5d1877f6956d67dda0fec73c4f989fb2dee43e03102b"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\Astra相机使用方法\\Astra相机使用方法.pdf",
+                      "size_bytes":  643018,
+                      "size_mb":  0.61,
+                      "sha256":  "9f938d5dc55a7f65598ccd81f92382e04b10f84f7993e7f20302930318d6369f"
+                  },
+                  {
+                      "path":  "ROS1系列教程\\Astra相机使用方法\\image-20221227161207008.png",
+                      "size_bytes":  145952,
+                      "size_mb":  0.14,
+                      "sha256":  "cdd604c8d4932cc29678516d9aa02192445df80275c9792e07f74235eadd9c23"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\1、环境搭建\\1、环境搭建.html",
+                      "size_bytes":  46689,
+                      "size_mb":  0.04,
+                      "sha256":  "8da75e3b781dfd1f41f158674523f7bc9438506253a661f115294cfd21e64643"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\1、环境搭建\\1、环境搭建.md",
+                      "size_bytes":  2658,
+                      "size_mb":  0,
+                      "sha256":  "b6e4a8dcefab87544949e337222f0cb8b87229301af93c6447881f0ee4221277"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\1、环境搭建\\1、环境搭建.pdf",
+                      "size_bytes":  1420682,
+                      "size_mb":  1.35,
+                      "sha256":  "a4b2b392c7d9ac32c2d0ec56f0da02d32c1013aaff0bf19095b40993e043af6e"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\1、环境搭建\\image-20230301095857909.png",
+                      "size_bytes":  17222,
+                      "size_mb":  0.02,
+                      "sha256":  "0f9c529c63d67b8d8ad5c26a7f4e02b6e8942ff06a82156378ac2ac538b40fcd"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\1、环境搭建\\image-20230301100035043.png",
+                      "size_bytes":  206250,
+                      "size_mb":  0.2,
+                      "sha256":  "bd36664207dd4db9eb4b48f7f53fbc7e1eefc4a1fbd0a75da7438e0cf29ccfcd"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\1、环境搭建\\image-20230301100301773.png",
+                      "size_bytes":  489712,
+                      "size_mb":  0.47,
+                      "sha256":  "231ec8289b817d2dd4256a5b48ee47b866aba6fd2b53f308dd57a16db25d2202"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\1、环境搭建\\image-20230301100344907.png",
+                      "size_bytes":  52424,
+                      "size_mb":  0.05,
+                      "sha256":  "f2833b17cadeb7466e84b665e6a73fa6ee3443549a8a3d9395a5a09b4203ff89"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\1、环境搭建\\image-20230301100416390.png",
+                      "size_bytes":  265224,
+                      "size_mb":  0.25,
+                      "sha256":  "537dba7f977d326e7af74ad3a46454dce8526502a708e2a17a7f88a7629a59a0"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\1、环境搭建\\image-20230301102306024.png",
+                      "size_bytes":  101220,
+                      "size_mb":  0.1,
+                      "sha256":  "4e2472e292e1caded5a1a7d80019d485eb0831313d1ac5f23c632a097c543e9a"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\1、环境搭建\\image-20230301102600237.png",
+                      "size_bytes":  30221,
+                      "size_mb":  0.03,
+                      "sha256":  "03619c86cf0c10cc70dd06a04ba07bc679b03a3e5a88402bccbcc9e9b38a05eb"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\OpenNI_ROS2_SDK_v1.1.0_20230131_d6d939.tar",
+                      "size_bytes":  32291840,
+                      "size_mb":  30.8,
+                      "sha256":  "fb5e97bc80ce21b374135efd04463ff4edc8474a1186ac0041f044db077024d2"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\ros2_astra_camera\\.clang-format",
+                      "size_bytes":  4522,
+                      "size_mb":  0,
+                      "sha256":  "dd455ee03d208cf3969be07dd30f98a22b139ca90ec3ecf1bf069beffc5091a2"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\ros2_astra_camera\\.gitattributes",
+                      "size_bytes":  384,
+                      "size_mb":  0,
+                      "sha256":  "2903475f0b10535aebd93f499fd719aef92f06b610e8d9a4218e2eea5f7e8c45"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\ros2_astra_camera\\.gitignore",
+                      "size_bytes":  13334,
+                      "size_mb":  0.01,
+                      "sha256":  "70c2d163051d66342d32fa1b5ca38920604c5bb0d792099e1fe82f8a30a3f831"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\ros2_astra_camera\\astra_camera\\.clang-format",
+                      "size_bytes":  4524,
+                      "size_mb":  0,
+                      "sha256":  "a6a74e4552c76344fb64b60f00c9479c4c7fa24b1653f2c9b196c6ab5a071b2f"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\ros2_astra_camera\\astra_camera\\.clang-tidy",
+                      "size_bytes":  4608,
+                      "size_mb":  0,
+                      "sha256":  "b806eeac995afd467c01b00386db2adfbf554f905b21960ca329944e5415b2f9"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\ros2_astra_camera\\astra_camera\\CMakeLists.txt",
+                      "size_bytes":  6603,
+                      "size_mb":  0.01,
+                      "sha256":  "b5365aaa1cc92d3a8390e2e1bdecba5aaf3c10df21190b90bf14c8874b5bf3d6"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\ros2_astra_camera\\astra_camera\\config\\.gitkeep",
+                      "size_bytes":  0,
+                      "size_mb":  0,
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\ros2_astra_camera\\astra_camera\\package.xml",
+                      "size_bytes":  1196,
+                      "size_mb":  0,
+                      "sha256":  "a7be77006a84f2f476e8aec9b46859f308f51e67ba05033db9d469891e96378d"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\ros2_astra_camera\\astra_camera_msgs\\CMakeLists.txt",
+                      "size_bytes":  1276,
+                      "size_mb":  0,
+                      "sha256":  "1e7e9888e37c4d3819779cbb9c9acf887ae0eb8cf72f6d471f553c1257558cdb"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\ros2_astra_camera\\astra_camera_msgs\\package.xml",
+                      "size_bytes":  931,
+                      "size_mb":  0,
+                      "sha256":  "c14fbbbb1e4edbc1581107f865f43db1967c8035411d78a778667be29645bd7c"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\ros2_astra_camera\\README.MD",
+                      "size_bytes":  14883,
+                      "size_mb":  0.01,
+                      "sha256":  "d87741c668925522f0493062259406aaaa6cdd72367dfc83346e8d89e7e80e7d"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\ROS2_SDK 使用说明.pdf",
+                      "size_bytes":  362878,
+                      "size_mb":  0.35,
+                      "sha256":  "cf86c82422cdb1fbdb84a2ec0d0766da3a06451d975013064e12c51a92a9e105"
+                  },
+                  {
+                      "path":  "ROS2系列教程\\ROS2_SDK 树莓派下使用说明.pdf",
+                      "size_bytes":  196966,
+                      "size_mb":  0.19,
+                      "sha256":  "d608bb357db4db2cb9a4873257ed462154bd6a8df8c6c59f55841ca3be70eec9"
+                  },
+                  {
+                      "path":  "产品规格书-Astra Pro_Datasheet _v2.0.pdf",
+                      "size_bytes":  956138,
+                      "size_mb":  0.91,
+                      "sha256":  "d1634d3942255625dafa835f90dc760e26a3f5a3297237bf0e9bf5b908cb01d2"
+                  },
+                  {
+                      "path":  "棋盘格标定200x160_7x10.pdf",
+                      "size_bytes":  68465,
+                      "size_mb":  0.07,
+                      "sha256":  "42016775ca642d352c087af74edc8c2f3bde7074309241cfd82d3743a814d9d7"
+                  },
+                  {
+                      "path":  "上位机软件\\Window 驱动\\SensorDriver_V4.3.0.17.exe",
+                      "size_bytes":  4357472,
+                      "size_mb":  4.16,
+                      "sha256":  "219438f083de36aa195bafc87680b80e93b02e945ccf7c7cdbdca71971db6dbf"
+                  },
+                  {
+                      "path":  "上位机软件\\上位机软件.zip",
+                      "size_bytes":  57715793,
+                      "size_mb":  55.04,
+                      "sha256":  "1d3e73513bf0c0892afd8956c3da0047968e00c72ec984d7f95418384841671c"
+                  },
+                  {
+                      "path":  "上位机软件\\上位机软件\\imgui.ini",
+                      "size_bytes":  449,
+                      "size_mb":  0,
+                      "sha256":  "689a100b649ae9b11144d0956e039ae5b4ac577558a7e59b667f524857e586b2"
+                  },
+                  {
+                      "path":  "上位机软件\\上位机软件\\msyh.ttc",
+                      "size_bytes":  19647736,
+                      "size_mb":  18.74,
+                      "sha256":  "e4b3b9d058750fb80899c24f68e35beda606ca92694eff0e9f7f91eec7a846aa"
+                  },
+                  {
+                      "path":  "上位机软件\\上位机软件\\msyhbd.ttc",
+                      "size_bytes":  16829116,
+                      "size_mb":  16.05,
+                      "sha256":  "06e1a30f687ab7d39f533447b21e84d51e0cecdaa6bfa060c87136b168811bdc"
+                  },
+                  {
+                      "path":  "上位机软件\\上位机软件\\opencv_world410.dll",
+                      "size_bytes":  74628096,
+                      "size_mb":  71.17,
+                      "sha256":  "3eeb6f0befda496d6f037b997aefde145641440fe5cddbba9237a6ae29d52d7c"
+                  },
+                  {
+                      "path":  "上位机软件\\上位机软件\\OpenNI.ini",
+                      "size_bytes":  475,
+                      "size_mb":  0,
+                      "sha256":  "3e177e1852cc861cc005c5e6e48037f04d85c0af6bd4988594f6cbb69775403c"
+                  },
+                  {
+                      "path":  "上位机软件\\上位机软件\\OpenNI2.dll",
+                      "size_bytes":  295936,
+                      "size_mb":  0.28,
+                      "sha256":  "8f76a691c3163b9088790a88cba50f6be95ca607dd2e28f5b83d7896f121da3e"
+                  },
+                  {
+                      "path":  "上位机软件\\上位机软件\\OpenNI2\\Drivers\\OniFile.dll",
+                      "size_bytes":  236032,
+                      "size_mb":  0.23,
+                      "sha256":  "3680ca5bb42f1172404b61e14181e3ee79f3fe41cdb6dfc653c08aaaee40246f"
+                  },
+                  {
+                      "path":  "上位机软件\\上位机软件\\OpenNI2\\Drivers\\OniFile.ini",
+                      "size_bytes":  216,
+                      "size_mb":  0,
+                      "sha256":  "768ec608fc73a058e146761283eed863b520d88df120039a7375b77090d646b3"
+                  },
+                  {
+                      "path":  "上位机软件\\上位机软件\\OpenNI2\\Drivers\\OniFile.lib",
+                      "size_bytes":  10940,
+                      "size_mb":  0.01,
+                      "sha256":  "3a5c8db72fe6f02d0708059ccfa3b238c53c92a3a2bcc6a5623fc173a449ea24"
+                  },
+                  {
+                      "path":  "上位机软件\\上位机软件\\OpenNI2\\Drivers\\orbbec.dll",
+                      "size_bytes":  697344,
+                      "size_mb":  0.67,
+                      "sha256":  "11965195fae5c07d03919baf70a9b896b6311f5295f345209fbd19f388e0ae1f"
+                  },
+                  {
+                      "path":  "上位机软件\\上位机软件\\OpenNI2\\Drivers\\orbbec.ini",
+                      "size_bytes":  5476,
+                      "size_mb":  0.01,
+                      "sha256":  "c2345fc609c01cc6aef3ee63a1d609490387f554576dbe421599c73b5a58f295"
+                  },
+                  {
+                      "path":  "上位机软件\\上位机软件\\OpenNI2\\Drivers\\orbbec.lib",
+                      "size_bytes":  19648,
+                      "size_mb":  0.02,
+                      "sha256":  "bc86c325e0acdb4e5293788ca70348f3e58530e551dbbbf19bb936b980551e4b"
+                  },
+                  {
+                      "path":  "上位机软件\\上位机软件\\OrbbecViewer.exe",
+                      "size_bytes":  1527808,
+                      "size_mb":  1.46,
+                      "sha256":  "886a4e10abff59ef39769542578027dc3e9ee43c53c9133ac6704ea0c825a6cf"
+                  },
+                  {
+                      "path":  "上位机软件\\上位机软件\\OrbbecViewer.pdb",
+                      "size_bytes":  5197824,
+                      "size_mb":  4.96,
+                      "sha256":  "60c8bcdf71fa26d25229626a5460526b877173fd5bb61aeab9ec74ea7f86f66f"
+                  },
+                  {
+                      "path":  "上位机软件\\上位机软件\\XnLib.lib",
+                      "size_bytes":  14147380,
+                      "size_mb":  13.49,
+                      "sha256":  "7153c6ca56168002fdf1867f6aab035c2474f7bd81d4a8221449168dcacbb660"
+                  },
+                  {
+                      "path":  "上位机软件\\上位机软件\\XnLib.pdb",
+                      "size_bytes":  151552,
+                      "size_mb":  0.14,
+                      "sha256":  "18671850f4c128998dd9e9fbff0ee017fbf8aa10cc5e400ccef57a6186acc881"
+                  },
+                  {
+                      "path":  "上位机软件\\上位机使用说明.pdf",
+                      "size_bytes":  481096,
+                      "size_mb":  0.46,
+                      "sha256":  "23babcda0c69f65067855cc73d42ec97e283ded104a84e695cfb40313925baa8"
+                  },
+                  {
+                      "path":  "相关例程源码\\astra_ws_src_230302.zip",
+                      "size_bytes":  86618364,
+                      "size_mb":  82.61,
+                      "sha256":  "990fff94807cc1f4466f342d34e7e175b35d936ec8dde7355b3f4c8b1b6716bc"
+                  },
+                  {
+                      "path":  "相关例程源码\\OpenNI-Linux-x64-2.3.0.66.zip",
+                      "size_bytes":  4021803,
+                      "size_mb":  3.84,
+                      "sha256":  "7b2ad5faa851dffa4667e41680525a47eb7a306b63630058130bd5419e345478"
+                  }
+              ]
+}

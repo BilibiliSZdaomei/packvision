@@ -5,6 +5,9 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .tmp/
+# Raw vendor camera packages are large and may include redistributable-restricted
+# drivers/SDKs. Track metadata under vendor_assets/; mirror binaries only via
+# Git LFS/private release assets when redistribution is acceptable.
 奥比中光Astra Pro/
 data/
 output/

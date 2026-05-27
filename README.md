@@ -358,9 +358,44 @@ D:\Documents\包装尺寸检测\docs_obsidian\PackVision
 - `docs_cn\21_海外仓开箱即用交付方案.md`
 - `docs_cn\22_PackVision_分阶段开发执行与自动化.md`
 - `docs_cn\23_PackVision_完整项目报告.md`
+- `docs_cn\24_厂商资料包Git维护策略.md`
 - `docs_obsidian\PackVision\14 PackVision 完整项目报告.md`
+- `docs_obsidian\PackVision\15 厂商资料包 Git 维护策略.md`
 
-## 15. 当前结论
+## 15. 厂商资料包维护策略
+
+当前 Astra Pro 厂商资料包位于：
+
+```text
+D:\Documents\包装尺寸检测\奥比中光Astra Pro
+```
+
+统计结果：
+
+- 文件数：`158`
+- 总大小：`367.44 MB`
+- 最大单文件：`82.61 MB`
+- 超过 GitHub 普通 `100 MB` 单文件限制：`0`
+
+技术上可以提交，但不建议直接把完整原始包塞进普通 Git 历史。PackVision 现在采用：
+
+- 普通 Git 追踪 `vendor_assets` 下的 README、manifest、SHA-256 校验和维护说明。
+- 原始驱动、SDK、DLL、PDF、示例包继续保留本地或迁入 Git LFS/私有 Release 资产。
+- 后续新增厂商相机时，每个相机单独建立 `vendor_assets/<camera-id>/`。
+
+当前清单：
+
+```text
+D:\Documents\包装尺寸检测\vendor_assets\orbbec-astra-pro\manifest.json
+```
+
+生成命令：
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\inventory_vendor_package.ps1
+```
+
+## 16. 当前结论
 
 PackVision 已经从“图片测量 Demo”推进为可交付的本地仓库测量工作台雏形：
 
