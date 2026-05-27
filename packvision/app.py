@@ -30,6 +30,7 @@ from packvision.services.depth_geometry import (
     measure_depth_object_mask,
     measure_depth_roi,
 )
+from packvision.services.depth_quality import DepthQualityError, analyze_depth_quality
 from packvision.services.depth_workflow import build_depth_workflow_guide, recommend_capture_workflow
 from packvision.services.history import (
     export_measurements_csv,
@@ -111,6 +112,16 @@ class DepthObjectMeasurePayload(DepthTraceabilityPayload):
 class DepthCaptureProbePayload(BaseModel):
     backend: str = "auto"
     timeout_ms: int = 1500
+
+
+class DepthQualityPayload(BaseModel):
+    depth_frame: list[list[float]]
+    roi: list[int] | None = None
+    background_roi: list[int] | None = None
+    min_valid_depth_mm: float = 50.0
+    max_valid_depth_mm: float = 6000.0
+    depth_scale: float = 1.0
+    noise_check: bool = True
 
 
 class IndustryProfilePayload(BaseModel):
@@ -339,6 +350,21 @@ def create_app() -> FastAPI:
                 )
             )
         except DepthCaptureError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post("/api/depth/quality")
+    def depth_quality(payload: DepthQualityPayload) -> dict[str, object]:
+        try:
+            return analyze_depth_quality(
+                payload.depth_frame,
+                roi=payload.roi,
+                background_roi=payload.background_roi,
+                min_valid_depth_mm=payload.min_valid_depth_mm,
+                max_valid_depth_mm=payload.max_valid_depth_mm,
+                depth_scale=payload.depth_scale,
+                noise_check=payload.noise_check,
+            )
+        except DepthQualityError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     @app.get("/api/depth/demo-object")

@@ -166,6 +166,29 @@ def test_depth_capture_probe_endpoint_is_actionable_without_required_hardware():
     assert body["next_action_keys"]
 
 
+def test_depth_quality_endpoint_flags_sparse_synthetic_frame():
+    client = TestClient(create_app())
+    depth = [[0.0 for _ in range(8)] for _ in range(8)]
+    for y in range(2, 6):
+        for x in range(2, 4):
+            depth[y][x] = 800.0
+
+    response = client.post(
+        "/api/depth/quality",
+        json={
+            "depth_frame": depth,
+            "roi": [2, 2, 6, 6],
+            "min_valid_depth_mm": 50,
+            "max_valid_depth_mm": 6000,
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["status"] == "review"
+    assert "depth_hole_risk" in body["quality_flags"]
+
+
 def test_depth_demo_object_endpoint_returns_measurement():
     client = TestClient(create_app())
     response = client.get("/api/depth/demo-object")

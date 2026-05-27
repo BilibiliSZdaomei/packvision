@@ -5,6 +5,8 @@ from typing import Any
 
 import numpy as np
 
+from packvision.services.depth_quality import DepthQualityError, analyze_depth_quality
+
 
 @dataclass(frozen=True)
 class DepthIntrinsics:
@@ -49,6 +51,13 @@ def measure_depth_roi(
 ) -> dict[str, Any]:
     depth_mm = _normalize_depth_frame(depth_frame, intrinsics.depth_scale)
     roi = _clip_roi(config.roi, intrinsics.width, intrinsics.height, "roi")
+    quality = _analyze_depth_quality(
+        depth_mm,
+        roi=roi,
+        background_roi=config.background_roi,
+        min_valid_depth_mm=config.min_valid_depth_mm,
+        max_valid_depth_mm=config.max_valid_depth_mm,
+    )
     object_values = _valid_depth_values(
         depth_mm,
         roi,
@@ -93,6 +102,7 @@ def measure_depth_roi(
         flags.append("sparse_depth_roi")
     if config.trim_ratio:
         flags.append("depth_outliers_trimmed")
+    flags.extend(quality["quality_flags"])
 
     length_mm = max(object_width_mm, object_length_mm)
     width_mm = min(object_width_mm, object_length_mm)
@@ -128,7 +138,12 @@ def measure_depth_roi(
                 "depth_scale": intrinsics.depth_scale,
             },
         },
+        "depth_quality": quality,
         "quality_flags": sorted(set(flags)),
+        "recommendation_codes": _depth_recommendations(
+            quality["recommendation_codes"],
+            flags,
+        ),
         "method": {
             "name": "depth_camera_roi_projection",
             "notes": [
@@ -147,6 +162,14 @@ def measure_depth_object_mask(
 ) -> dict[str, Any]:
     depth_mm = _normalize_depth_frame(depth_frame, intrinsics.depth_scale)
     roi = _clip_roi(config.roi, intrinsics.width, intrinsics.height, "roi")
+    quality = _analyze_depth_quality(
+        depth_mm,
+        roi=roi,
+        background_roi=config.background_roi,
+        min_valid_depth_mm=config.min_valid_depth_mm,
+        max_valid_depth_mm=config.max_valid_depth_mm,
+        noise_check=False,
+    )
     table_depth_mm = config.table_depth_mm
     if table_depth_mm is None and config.background_roi:
         background_roi = _clip_roi(
@@ -200,6 +223,7 @@ def measure_depth_object_mask(
         flags.append("small_object_mask")
     if config.trim_quantile:
         flags.append("point_cloud_extent_trimmed")
+    flags.extend(quality["quality_flags"])
 
     confidence = 0.82 * min(1.0, max(0.35, object_ratio * 4.0))
 
@@ -231,7 +255,12 @@ def measure_depth_object_mask(
                 "depth_scale": intrinsics.depth_scale,
             },
         },
+        "depth_quality": quality,
         "quality_flags": sorted(set(flags)),
+        "recommendation_codes": _depth_recommendations(
+            quality["recommendation_codes"],
+            flags,
+        ),
         "method": {
             "name": "depth_object_mask_projection",
             "notes": [
@@ -250,6 +279,35 @@ def _normalize_depth_frame(depth_frame: Any, depth_scale: float) -> np.ndarray:
     if depth_scale <= 0:
         raise DepthMeasurementError("depth_scale must be positive.")
     return depth * float(depth_scale)
+
+
+def _analyze_depth_quality(
+    depth_mm: np.ndarray,
+    *,
+    roi: list[int],
+    background_roi: list[int] | None,
+    min_valid_depth_mm: float,
+    max_valid_depth_mm: float,
+    noise_check: bool = True,
+) -> dict[str, Any]:
+    try:
+        return analyze_depth_quality(
+            depth_mm,
+            roi=roi,
+            background_roi=background_roi,
+            min_valid_depth_mm=min_valid_depth_mm,
+            max_valid_depth_mm=max_valid_depth_mm,
+            noise_check=noise_check,
+        )
+    except DepthQualityError as exc:
+        raise DepthMeasurementError(str(exc)) from exc
+
+
+def _depth_recommendations(base_recommendations: list[str], flags: list[str]) -> list[str]:
+    recommendations = list(base_recommendations)
+    if "small_object_mask" in flags:
+        recommendations.append("expand_object_roi_or_reposition")
+    return sorted(set(recommendations))
 
 
 def _clip_roi(roi: list[int], width: int, height: int, field_name: str) -> list[int]:

@@ -73,3 +73,26 @@ def test_measure_depth_object_mask_uses_object_extent_not_full_roi():
     assert result["dimensions"]["height_mm"] == pytest.approx(240.0, abs=0.1)
     assert result["depth"]["object_pixel_count"] == 1514
     assert "depth_object_mask_used" in result["quality_flags"]
+
+
+def test_measure_depth_roi_merges_depth_quality_recommendations():
+    import numpy as np
+
+    depth = np.full((20, 20), 1000.0, dtype=np.float32)
+    depth[5:15, 5:15] = 0.0
+    depth[5:15, 5:9] = 800.0
+
+    result = measure_depth_roi(
+        depth,
+        DepthIntrinsics(fx=100, fy=100, cx=10, cy=10, width=20, height=20),
+        DepthMeasurementConfig(
+            roi=[5, 5, 15, 15],
+            background_roi=[0, 0, 4, 4],
+        ),
+    )
+
+    assert result["status"] == "measured"
+    assert result["depth_quality"]["roi"]["valid_pixel_ratio"] == pytest.approx(0.4)
+    assert "sparse_depth_frame" in result["quality_flags"]
+    assert "depth_hole_risk" in result["quality_flags"]
+    assert "retake_depth_with_less_reflection" in result["recommendation_codes"]
