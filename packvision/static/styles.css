@@ -54,6 +54,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  overflow-x: hidden;
   background:
     linear-gradient(115deg, rgba(31, 122, 117, 0.08), transparent 42%),
     var(--bg);
@@ -70,6 +71,8 @@ select {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
   min-height: 100vh;
+  width: 100%;
+  min-width: 0;
 }
 
 .side-rail {
@@ -79,12 +82,15 @@ select {
   padding: 28px 22px;
   background: var(--rail);
   color: #f8f4e8;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 14px;
+  min-width: 0;
 }
 
 .brand-mark {
@@ -117,15 +123,18 @@ select {
   margin-top: 4px;
   color: rgba(248, 244, 232, 0.72);
   font-size: 0.86rem;
+  overflow-wrap: anywhere;
 }
 
 .rail-nav {
   display: grid;
   gap: 8px;
+  max-width: 100%;
 }
 
 .nav-item {
   width: 100%;
+  min-width: 84px;
   min-height: 44px;
   padding: 0 14px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -167,6 +176,8 @@ select {
   display: grid;
   gap: 22px;
   align-content: start;
+  width: 100%;
+  min-width: 0;
 }
 
 .top-bar {
@@ -174,6 +185,11 @@ select {
   justify-content: space-between;
   align-items: flex-start;
   gap: 18px;
+  min-width: 0;
+}
+
+.top-bar > div {
+  min-width: 0;
 }
 
 .section-label {
@@ -187,7 +203,9 @@ select {
   margin-top: 6px;
   font-size: clamp(1.9rem, 3vw, 3.2rem);
   line-height: 1.02;
+  width: 100%;
   max-width: 780px;
+  overflow-wrap: anywhere;
 }
 
 .toolbar {
@@ -297,6 +315,7 @@ input {
 .result-panel,
 .depth-panel,
 .history-panel,
+.usage-panel,
 .api-panel {
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -307,7 +326,8 @@ input {
 .capture-panel,
 .result-panel,
 .depth-panel,
-.history-panel {
+.history-panel,
+.usage-panel {
   padding: 22px;
 }
 
@@ -556,7 +576,7 @@ input {
 .tool-button {
   display: inline-grid;
   place-items: center;
-  min-height: 38px;
+  min-height: 44px;
   padding: 0 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -566,6 +586,19 @@ input {
   font-size: 0.82rem;
   font-weight: 800;
   cursor: pointer;
+}
+
+.nav-item:focus-visible,
+.tool-button:focus-visible,
+.primary-action:focus-visible,
+.secondary-action:focus-visible,
+.segmented button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+.drop-zone:focus-within {
+  outline: 3px solid color-mix(in srgb, var(--accent) 70%, white);
+  outline-offset: 2px;
 }
 
 .tool-button:disabled,
@@ -824,6 +857,66 @@ input {
   gap: 8px;
 }
 
+.usage-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.usage-card {
+  display: grid;
+  gap: 6px;
+  min-height: 104px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  border-left: 3px solid var(--accent);
+}
+
+.usage-card span,
+.usage-card small {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.usage-card strong {
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
+.usage-endpoints {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.usage-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.35fr) repeat(2, minmax(90px, 0.55fr));
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.usage-row div {
+  display: grid;
+  gap: 4px;
+}
+
+.usage-row span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  overflow-wrap: anywhere;
+}
+
+.usage-row strong {
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
+}
+
 .history-row {
   width: 100%;
   display: grid;
@@ -897,6 +990,15 @@ input {
 
   .rail-nav {
     display: flex;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .rail-nav::-webkit-scrollbar {
+    display: none;
   }
 
   .rail-status {
@@ -924,6 +1026,16 @@ input {
     display: grid;
   }
 
+  .side-rail {
+    overflow: hidden;
+  }
+
+  .top-bar h2 {
+    font-size: clamp(1.35rem, 5.8vw, 1.65rem);
+    line-height: 1.08;
+    word-break: break-all;
+  }
+
   .result-panel .panel-head {
     display: grid;
   }
@@ -941,6 +1053,8 @@ input {
   .field-grid,
   .metrics,
   .depth-status-grid,
+  .usage-summary-grid,
+  .usage-row,
   .industry-card,
   .validation-plan-card,
   .depth-demo-card,

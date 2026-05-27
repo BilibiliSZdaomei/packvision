@@ -20,6 +20,7 @@
           <a class="nav-item is-active" href="#measure" data-i18n="measure">测量</a>
           <a class="nav-item" href="#depth" data-i18n="depth">深度</a>
           <a class="nav-item" href="#history" data-i18n="history">历史</a>
+          <a class="nav-item" href="#usage" data-i18n="usage">统计</a>
           <a class="nav-item" href="/api/calibration-card.svg" target="_blank" rel="noopener" data-i18n="calibration">校准卡</a>
         </nav>
         <div class="rail-status">
@@ -271,6 +272,21 @@
             </div>
           </div>
           <div class="history-list" id="historyList"></div>
+        </section>
+
+        <section id="usage" class="usage-panel">
+          <div class="panel-head">
+            <div>
+              <p class="section-label" data-i18n="usage">统计</p>
+              <h3 data-i18n="usageTitle">后台使用与测量次数</h3>
+            </div>
+            <div class="history-tools">
+              <button class="tool-button" type="button" id="refreshUsageButton" data-i18n="refreshUsage">刷新统计</button>
+              <a class="tool-button" id="exportUsageLink" href="/api/usage/export.csv" target="_blank" rel="noopener" data-i18n="exportUsage">导出统计 CSV</a>
+            </div>
+          </div>
+          <div class="usage-summary-grid" id="usageSummaryGrid"></div>
+          <div class="usage-endpoints" id="usageEndpointList"></div>
         </section>
 
         <section class="api-panel">

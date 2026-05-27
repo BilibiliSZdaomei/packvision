@@ -4,6 +4,7 @@ const translations = {
     measure: "测量",
     depth: "深度",
     history: "历史",
+    usage: "统计",
     calibration: "校准卡",
     localApi: "本地 API",
     project: "包装尺寸检测",
@@ -75,6 +76,17 @@ const translations = {
     copied: "已复制",
     openImage: "打开标注图",
     historyTitle: "带时间戳的测量记录",
+    usageTitle: "后台使用与测量次数",
+    refreshUsage: "刷新统计",
+    exportUsage: "导出统计 CSV",
+    totalCalls: "总调用",
+    measurementCalls: "测量次数",
+    failedCalls: "失败次数",
+    todayMeasurements: "今日测量",
+    successRate: "成功率",
+    lastEvent: "最近调用",
+    endpointBreakdown: "接口明细",
+    noUsage: "暂无调用记录",
     refresh: "刷新",
     noHistory: "还没有匹配的历史记录",
     manualBoxReady: "手动框已应用",
@@ -124,6 +136,7 @@ const translations = {
     measure: "Measure",
     depth: "Depth",
     history: "History",
+    usage: "Usage",
     calibration: "Calibration",
     localApi: "Local API",
     project: "Packaging dimension detection",
@@ -195,6 +208,17 @@ const translations = {
     copied: "Copied",
     openImage: "Open image",
     historyTitle: "Timestamped measurement records",
+    usageTitle: "Backend usage and measurement counts",
+    refreshUsage: "Refresh usage",
+    exportUsage: "Export usage CSV",
+    totalCalls: "Total calls",
+    measurementCalls: "Measurements",
+    failedCalls: "Failures",
+    todayMeasurements: "Today",
+    successRate: "Success rate",
+    lastEvent: "Last call",
+    endpointBreakdown: "Endpoint breakdown",
+    noUsage: "No usage records yet",
     refresh: "Refresh",
     noHistory: "No matching history yet",
     manualBoxReady: "Manual box applied",
@@ -244,6 +268,7 @@ const translations = {
     measure: "Вимір",
     depth: "Глибина",
     history: "Історія",
+    usage: "Статистика",
     calibration: "Калібрування",
     localApi: "Локальний API",
     project: "Вимірювання пакування",
@@ -315,6 +340,17 @@ const translations = {
     copied: "Скопійовано",
     openImage: "Відкрити фото",
     historyTitle: "Історія з часовими мітками",
+    usageTitle: "Використання та кількість вимірювань",
+    refreshUsage: "Оновити статистику",
+    exportUsage: "Експорт CSV",
+    totalCalls: "Усього викликів",
+    measurementCalls: "Вимірювання",
+    failedCalls: "Помилки",
+    todayMeasurements: "Сьогодні",
+    successRate: "Успішність",
+    lastEvent: "Останній виклик",
+    endpointBreakdown: "За endpoint",
+    noUsage: "Записів використання ще немає",
     refresh: "Оновити",
     noHistory: "Записів ще немає",
     manualBoxReady: "Рамку застосовано",
@@ -797,6 +833,7 @@ const state = {
   depthProbe: null,
   depthWorkflow: null,
   validationPlan: null,
+  usageSummary: null,
   lastDepthDemo: null,
   activeView: "top",
   previewUrls: { top: null, side: null },
@@ -850,6 +887,10 @@ const historySearch = document.querySelector("#historySearch");
 const historyList = document.querySelector("#historyList");
 const refreshHistoryButton = document.querySelector("#refreshHistoryButton");
 const exportHistoryLink = document.querySelector("#exportHistoryLink");
+const usageSummaryGrid = document.querySelector("#usageSummaryGrid");
+const usageEndpointList = document.querySelector("#usageEndpointList");
+const refreshUsageButton = document.querySelector("#refreshUsageButton");
+const exportUsageLink = document.querySelector("#exportUsageLink");
 
 const metricEls = {
   length_mm: document.querySelector("#lengthValue"),
@@ -894,6 +935,9 @@ function applyLanguage() {
   }
   if (state.validationPlan) {
     renderValidationPlan(state.validationPlan);
+  }
+  if (state.usageSummary) {
+    renderUsageSummary(state.usageSummary);
   }
   if (state.lastDepthDemo) {
     renderDepthDemo(state.lastDepthDemo);
@@ -1023,6 +1067,7 @@ async function submitMeasurement(event) {
     }
     renderResult(data);
     await loadHistory();
+    await loadUsageSummary();
   } catch (error) {
     showError(error);
   } finally {
@@ -1453,6 +1498,7 @@ async function runDepthDemo() {
     }
     state.lastDepthDemo = data;
     renderDepthDemo(data);
+    await loadUsageSummary();
   } catch (error) {
     depthDemoSummary.innerHTML = "";
     const item = document.createElement("div");
@@ -1480,6 +1526,7 @@ async function saveDepthDemo() {
     renderDepthDemo(data);
     renderResult(data);
     await loadHistory();
+    await loadUsageSummary();
   } catch (error) {
     depthDemoSummary.innerHTML = "";
     const item = document.createElement("div");
@@ -1511,6 +1558,69 @@ function renderDepthDemo(data) {
   appendSummaryCell(card, t("height"), formatMm(data.dimensions?.height_mm));
   appendSummaryCell(card, t("history"), data.history_saved ? t("savedToHistory") : "--");
   depthDemoSummary.appendChild(card);
+}
+
+async function loadUsageSummary() {
+  if (!usageSummaryGrid || !usageEndpointList) {
+    return;
+  }
+  const response = await fetch("/api/usage/summary");
+  if (!response.ok) {
+    return;
+  }
+  const data = await response.json();
+  state.usageSummary = data;
+  renderUsageSummary(data);
+}
+
+function renderUsageSummary(data) {
+  usageSummaryGrid.innerHTML = "";
+  usageEndpointList.innerHTML = "";
+  const today = new Date().toISOString().slice(0, 10);
+  const todayRow = (data.by_day || []).find((item) => item.day === today);
+  const successRate = data.total_calls
+    ? `${Math.round((Number(data.successful_calls || 0) / Number(data.total_calls)) * 100)}%`
+    : "--";
+
+  appendUsageCard(t("todayMeasurements"), todayRow?.measurement_calls || 0, today);
+  appendUsageCard(t("measurementCalls"), data.measurement_calls || 0, t("totalCalls"));
+  appendUsageCard(t("failedCalls"), data.failed_calls || 0, t("successRate") + ` ${successRate}`);
+  appendUsageCard(t("lastEvent"), data.last_event_at ? formatDate(data.last_event_at) : "--", t("endpointBreakdown"));
+
+  if (exportUsageLink) {
+    exportUsageLink.href = "/api/usage/export.csv?limit=1000";
+  }
+
+  const endpoints = data.by_endpoint || [];
+  if (!endpoints.length) {
+    const empty = document.createElement("div");
+    empty.className = "history-empty";
+    empty.textContent = t("noUsage");
+    usageEndpointList.appendChild(empty);
+    return;
+  }
+
+  for (const item of endpoints.slice(0, 8)) {
+    const row = document.createElement("div");
+    row.className = "usage-row";
+    appendSummaryCell(row, item.endpoint, `${item.call_count || 0} | ${item.method || "GET"}`);
+    appendSummaryCell(row, t("measurementCalls"), String(item.measurement_calls || 0));
+    appendSummaryCell(row, t("failedCalls"), String(item.failed_calls || 0));
+    usageEndpointList.appendChild(row);
+  }
+}
+
+function appendUsageCard(label, value, sub) {
+  const card = document.createElement("div");
+  card.className = "usage-card";
+  const labelEl = document.createElement("span");
+  const valueEl = document.createElement("strong");
+  const subEl = document.createElement("small");
+  labelEl.textContent = label;
+  valueEl.textContent = String(value ?? "--");
+  subEl.textContent = sub || "";
+  card.append(labelEl, valueEl, subEl);
+  usageSummaryGrid.appendChild(card);
 }
 
 async function loadHistory() {
@@ -1756,6 +1866,7 @@ copyJsonButton.addEventListener("click", copyResultJson);
 decodeBarcodeButton.addEventListener("click", () => orderImage.click());
 orderImage.addEventListener("change", decodeBarcodeImage);
 refreshHistoryButton.addEventListener("click", loadHistory);
+refreshUsageButton.addEventListener("click", loadUsageSummary);
 refreshDepthStatusButton.addEventListener("click", loadDepthStatus);
 probeDepthCaptureButton.addEventListener("click", probeDepthCapture);
 loadDepthWorkflowButton.addEventListener("click", loadDepthWorkflow);
@@ -1813,3 +1924,4 @@ applyLanguage();
 applyTheme();
 loadDepthStatus();
 loadHistory();
+loadUsageSummary();
