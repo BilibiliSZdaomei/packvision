@@ -40,3 +40,17 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert "package_class=long_part&material_class=reflective&camera_count=2" not in js
     assert ".workflow-fields" in css
     assert ".workflow-controls" in css
+
+
+def test_measurement_form_keeps_package_material_optional():
+    html = (ROOT / "packvision" / "static" / "index.html").read_text(encoding="utf-8")
+    js = (ROOT / "packvision" / "static" / "app.js").read_text(encoding="utf-8")
+    css = (ROOT / "packvision" / "static" / "styles.css").read_text(encoding="utf-8")
+
+    assert '<details class="parts-card optional-details" id="optionalPartDetails">' in html
+    assert 'data-i18n="autoMeasureNoSelection"' in html
+    assert 'name="package_hint"' in html
+    assert 'name="material_hint"' in html
+    assert "autoMeasureNoSelection" in js
+    assert ".parts-fields" in css
+    assert ".optional-details summary" in css

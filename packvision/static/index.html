@@ -101,36 +101,42 @@
               </div>
             </div>
 
-            <div class="parts-card">
-              <label>
-                <span data-i18n="partCategory">备件类型</span>
-                <input name="part_category" type="text" autocomplete="off" placeholder="filter / bumper / shock" />
-              </label>
-              <label>
-                <span data-i18n="packageHint">包装类型</span>
-                <select name="package_hint">
-                  <option value="" data-i18n="autoPackage">自动判断</option>
-                  <option value="carton" data-i18n="carton">标准纸箱</option>
-                  <option value="long_part" data-i18n="longPart">长条件</option>
-                  <option value="irregular" data-i18n="irregular">异形件</option>
-                  <option value="soft" data-i18n="softPack">软包</option>
-                </select>
-              </label>
-              <label>
-                <span data-i18n="actualWeight">实重，kg</span>
-                <input name="actual_weight_kg" type="number" min="0" step="0.01" placeholder="0" />
-              </label>
-              <label>
-                <span data-i18n="materialHint">材质/表面</span>
-                <select name="material_hint">
-                  <option value="" data-i18n="autoMaterial">自动/普通</option>
-                  <option value="reflective" data-i18n="reflectiveMaterial">反光/金属</option>
-                  <option value="transparent" data-i18n="transparentMaterial">透明/灯罩</option>
-                  <option value="dark_absorbing" data-i18n="darkMaterial">深黑吸光</option>
-                  <option value="deformable" data-i18n="deformableMaterial">易变形软材</option>
-                </select>
-              </label>
-            </div>
+            <details class="parts-card optional-details" id="optionalPartDetails">
+              <summary>
+                <span data-i18n="optionalPartDetails">可选补充信息</span>
+                <strong data-i18n="autoMeasureNoSelection">不填也会自动判断包装和材质</strong>
+              </summary>
+              <div class="parts-fields">
+                <label>
+                  <span data-i18n="partCategory">备件类型</span>
+                  <input name="part_category" type="text" autocomplete="off" placeholder="filter / bumper / shock" />
+                </label>
+                <label>
+                  <span data-i18n="packageHint">包装类型</span>
+                  <select name="package_hint">
+                    <option value="" data-i18n="autoPackage">自动判断</option>
+                    <option value="carton" data-i18n="carton">标准纸箱</option>
+                    <option value="long_part" data-i18n="longPart">长条件</option>
+                    <option value="irregular" data-i18n="irregular">异形件</option>
+                    <option value="soft" data-i18n="softPack">软包</option>
+                  </select>
+                </label>
+                <label>
+                  <span data-i18n="actualWeight">实重，kg</span>
+                  <input name="actual_weight_kg" type="number" min="0" step="0.01" placeholder="0" />
+                </label>
+                <label>
+                  <span data-i18n="materialHint">材质/表面</span>
+                  <select name="material_hint">
+                    <option value="" data-i18n="autoMaterial">自动/普通</option>
+                    <option value="reflective" data-i18n="reflectiveMaterial">反光/金属</option>
+                    <option value="transparent" data-i18n="transparentMaterial">透明/灯罩</option>
+                    <option value="dark_absorbing" data-i18n="darkMaterial">深黑吸光</option>
+                    <option value="deformable" data-i18n="deformableMaterial">易变形软材</option>
+                  </select>
+                </label>
+              </div>
+            </details>
 
             <div class="drop-grid">
               <label class="drop-zone" for="topImage" data-drop-zone="top">
