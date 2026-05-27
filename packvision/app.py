@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from packvision import __version__
+from packvision.services.ai_plugins import build_ai_plugin_inventory
 from packvision.services.barcode import detect_codes
 from packvision.services.astra_vendor import AstraVendorError, astra_vendor_profile, normalize_camera_info
 from packvision.services.capture_quality import CaptureQualityError, analyze_capture_quality
@@ -257,6 +258,10 @@ def create_app() -> FastAPI:
     @app.get("/api/deployment/readiness")
     def deployment_readiness() -> dict[str, object]:
         return build_deployment_readiness()
+
+    @app.get("/api/ai/plugins")
+    def ai_plugins() -> dict[str, object]:
+        return build_ai_plugin_inventory()
 
     @app.get("/api/calibration-card.svg", response_class=HTMLResponse)
     def calibration_card(marker_size_mm: float = 50.0) -> Response:

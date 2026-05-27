@@ -13,6 +13,7 @@ def test_deployment_readiness_reports_handoff_modes(tmp_path):
     assert "depth_preinstall" in readiness["readiness_modes"]
     assert "camera_trial" in readiness["readiness_modes"]
     assert "overseas_handoff_package" in readiness["readiness_modes"]
+    assert readiness["ai_plugins"]["base_package_policy"]["heavy_models_bundled"] is False
     assert readiness["target_warehouse_prepare_before_arrival"]
     repo_readiness = build_deployment_readiness(vendor_root=tmp_path)
     assert Path(repo_readiness["local_paths"]["readiness_script"]).exists()

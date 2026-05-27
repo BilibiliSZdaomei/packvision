@@ -17,6 +17,12 @@ dist/
 build/
 *.spec.tmp
 *.log
+models/**/weights/
+models/**/*.onnx
+models/**/*.pt
+models/**/*.pth
+models/**/*.engine
+models/**/*.safetensors
 *.jpg
 *.jpeg
 *.png

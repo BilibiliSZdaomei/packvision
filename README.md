@@ -231,6 +231,7 @@ PowerShell -ExecutionPolicy Bypass -File .\scripts\check_astra_depth_status.ps1
 | `GET /api/validation/trial-template.csv` | WPS/Excel 可填写真值模板。 |
 | `POST /api/validation/evaluate` | 评估人工真值和系统测量误差。 |
 | `POST /api/validation/evaluate-csv` | 批量评估试运行 CSV。 |
+| `GET /api/ai/plugins` | 可选 AI 模型插件清单、依赖和模型文件体检；基础包不内置重模型。 |
 
 ## 9. 技术架构
 
@@ -246,6 +247,7 @@ flowchart TD
   C --> I["深度相机接口"]
   I --> J["OpenNI/ROS/camera_info"]
   I --> K["多相机角色和融合"]
+  E --> L["可选 AI 插件状态"]
 ```
 
 主要技术：
@@ -254,6 +256,7 @@ flowchart TD
 - OpenCV ArUco、轮廓、条码/二维码。
 - SQLite 本地历史和统计。
 - OpenNI/PrimeSense Astra Pro 采集后端。
+- 可选 AI 插件协议，默认不携带 YOLO/SAM/Depth 模型权重。
 - PyInstaller Windows EXE。
 - PowerShell 交付和体检脚本。
 
@@ -285,7 +288,7 @@ PackVision 借鉴但不直接复制这些方向：
 | 单目照片精度有限 | 已在文档和置信度中说明 | 图片版作为兜底，真实尺寸主线切深度相机。 |
 | 异形件/异常材质样本不足 | 待现场采集 | 建立复核样本池和真值模板。 |
 | 多相机外参未验证 | 预留架构 | 后续开 `codex/packvision-multiview-extrinsics` 分支探索。 |
-| AI 模型可能导致包变重 | 暂不内置 | 后续开 `codex/packvision-ai-plugin-spike` 插件分支。 |
+| AI 模型可能导致包变重 | 已做轻量插件协议 | 基础包不带权重；`models/` 只维护插件清单和可选模型入口。 |
 
 ## 12. 开发自动化和分支策略
 
@@ -360,9 +363,11 @@ D:\Documents\包装尺寸检测\docs_obsidian\PackVision
 - `docs_cn\23_PackVision_完整项目报告.md`
 - `docs_cn\24_厂商资料包Git维护策略.md`
 - `docs_cn\25_复核样本池与真值闭环.md`
+- `docs_cn\26_AI插件接口与轻量部署策略.md`
 - `docs_obsidian\PackVision\14 PackVision 完整项目报告.md`
 - `docs_obsidian\PackVision\15 厂商资料包 Git 维护策略.md`
 - `docs_obsidian\PackVision\16 复核样本池与真值闭环.md`
+- `docs_obsidian\PackVision\17 AI 插件接口与轻量部署策略.md`
 
 ## 15. 厂商资料包维护策略
 

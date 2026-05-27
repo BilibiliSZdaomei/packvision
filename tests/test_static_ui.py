@@ -30,6 +30,17 @@ def test_static_ui_exposes_review_sample_pool_workspace():
     assert ".review-priority-high" in css
 
 
+def test_static_ui_exposes_lightweight_ai_plugin_status():
+    html = (ROOT / "packvision" / "static" / "index.html").read_text(encoding="utf-8")
+    js = (ROOT / "packvision" / "static" / "app.js").read_text(encoding="utf-8")
+
+    assert 'id="loadAiPluginsButton"' in html
+    assert 'id="aiPluginSummary"' in html
+    assert "/api/ai/plugins" in js
+    assert "heavy_models_bundled" in js
+    assert "aiPluginNoPlugins" in js
+
+
 def test_static_ui_has_mobile_navigation_and_focus_states():
     css = (ROOT / "packvision" / "static" / "styles.css").read_text(encoding="utf-8")
 

@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from packvision import __version__
+from packvision.services.ai_plugins import build_ai_plugin_inventory
 from packvision.services.depth_camera import depth_camera_status
 from packvision.services.depth_capture import depth_capture_capabilities
 from packvision.services.measurement import opencv_ready
@@ -29,6 +30,7 @@ def build_deployment_readiness(
     app_status = _app_status(root, max_handoff_mb=max_handoff_mb)
     depth_status = depth_camera_status(vendor_root)
     capture_status = depth_capture_capabilities(vendor_root)
+    ai_plugin_status = build_ai_plugin_inventory()
     checklist = _checklist(app_status, data_dirs, depth_status, capture_status)
     blockers = [item for item in checklist if item["status"] == "blocker"]
     warnings = [item for item in checklist if item["status"] == "warning"]
@@ -66,6 +68,7 @@ def build_deployment_readiness(
         },
         "hardware_status": depth_status,
         "capture_status": capture_status,
+        "ai_plugins": ai_plugin_status,
     }
 
 

@@ -788,6 +788,49 @@ def test_industry_profile_endpoint_reports_abnormal_material_flow():
     assert "material_surface_check" in body["workflow"]
 
 
+def test_ai_plugin_endpoint_reports_lightweight_base_without_plugins(monkeypatch, tmp_path):
+    monkeypatch.setenv("PACKVISION_AI_MODEL_ROOT", str(tmp_path))
+    client = TestClient(create_app())
+    response = client.get("/api/ai/plugins")
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["base_package_policy"]["heavy_models_bundled"] is False
+    assert body["summary"]["installed_count"] == 0
+    assert body["plugins"] == []
+    assert "manual_annotation_review" in body["fallback_chain"]
+
+
+def test_ai_plugin_endpoint_validates_optional_model_manifest(monkeypatch, tmp_path):
+    plugin_dir = tmp_path / "packvision-yolo"
+    plugin_dir.mkdir()
+    (plugin_dir / "plugin.json").write_text(
+        """
+        {
+          "id": "packvision-yolo-carton",
+          "name": "PackVision carton detector",
+          "version": "0.1.0",
+          "enabled": true,
+          "engine": "onnxruntime_cpu",
+          "capabilities": ["box_detection", "oriented_box_detection"],
+          "model_files": [{"path": "weights/model.onnx", "required": true}]
+        }
+        """,
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("PACKVISION_AI_MODEL_ROOT", str(tmp_path))
+    client = TestClient(create_app())
+    response = client.get("/api/ai/plugins")
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["summary"]["installed_count"] == 1
+    assert body["summary"]["attention_count"] == 1
+    assert body["plugins"][0]["id"] == "packvision-yolo-carton"
+    assert body["plugins"][0]["status"] == "needs_attention"
+    assert body["plugins"][0]["issues"][0]["code"] == "missing_model_file"
+
+
 def test_validation_trial_plan_endpoint_returns_site_plan():
     client = TestClient(create_app())
     response = client.get("/api/validation/trial-plan")

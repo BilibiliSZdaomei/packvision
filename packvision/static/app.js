@@ -122,6 +122,12 @@ const translations = {
     notRequired: "暂不需要",
     validationPlan: "验收计划",
     validationTemplate: "验收模板",
+    aiPlugins: "AI 插件",
+    aiPluginStatus: "插件状态",
+    aiPluginReady: "可用插件",
+    aiPluginAttention: "需处理",
+    aiPluginPolicy: "基础包不内置重模型",
+    aiPluginNoPlugins: "未安装 AI 插件，继续使用深度/手动复核兜底",
     minSamples: "最少样本",
     tolerance: "容差",
     toleranceTemplate: "≤ {mm} mm 或 ≤ {pct}% 最大尺寸误差",
@@ -270,6 +276,12 @@ const translations = {
     notRequired: "Not needed",
     validationPlan: "Trial plan",
     validationTemplate: "Trial CSV",
+    aiPlugins: "AI plugins",
+    aiPluginStatus: "Plugin status",
+    aiPluginReady: "Ready plugins",
+    aiPluginAttention: "Needs attention",
+    aiPluginPolicy: "Base package ships without heavy models",
+    aiPluginNoPlugins: "No AI plugins installed; depth/manual fallback remains active",
     minSamples: "Min samples",
     tolerance: "Tolerance",
     toleranceTemplate: "≤ {mm} mm or ≤ {pct}% max dimension error",
@@ -418,6 +430,12 @@ const translations = {
     notRequired: "Не потрібно",
     validationPlan: "План приймання",
     validationTemplate: "CSV приймання",
+    aiPlugins: "AI плагіни",
+    aiPluginStatus: "Стан плагінів",
+    aiPluginReady: "Готові плагіни",
+    aiPluginAttention: "Потрібна увага",
+    aiPluginPolicy: "Базовий пакет без важких моделей",
+    aiPluginNoPlugins: "AI плагіни не встановлені; працює ручний/глибинний резерв",
     minSamples: "Мін. зразків",
     tolerance: "Допуск",
     toleranceTemplate: "≤ {mm} мм або ≤ {pct}% макс. похибка",
@@ -938,6 +956,7 @@ const state = {
   depthProbe: null,
   depthWorkflow: null,
   validationPlan: null,
+  aiPlugins: null,
   usageSummary: null,
   reviewSamples: null,
   lastDepthDemo: null,
@@ -989,7 +1008,9 @@ const workflowCameraCountSelect = document.querySelector("#workflowCameraCountSe
 const loadValidationPlanButton = document.querySelector("#loadValidationPlanButton");
 const runDepthDemoButton = document.querySelector("#runDepthDemoButton");
 const saveDepthDemoButton = document.querySelector("#saveDepthDemoButton");
+const loadAiPluginsButton = document.querySelector("#loadAiPluginsButton");
 const validationPlanSummary = document.querySelector("#validationPlanSummary");
+const aiPluginSummary = document.querySelector("#aiPluginSummary");
 const depthWorkflowSummary = document.querySelector("#depthWorkflowSummary");
 const depthProbeSummary = document.querySelector("#depthProbeSummary");
 const depthDemoSummary = document.querySelector("#depthDemoSummary");
@@ -1051,6 +1072,9 @@ function applyLanguage() {
   }
   if (state.validationPlan) {
     renderValidationPlan(state.validationPlan);
+  }
+  if (state.aiPlugins) {
+    renderAiPlugins(state.aiPlugins);
   }
   if (state.reviewSamples) {
     renderReviewSamples(state.reviewSamples);
@@ -1678,6 +1702,62 @@ function formatTolerance(scenario) {
     .replace("{pct}", String(scenario.relative_tolerance_pct));
 }
 
+async function loadAiPlugins() {
+  loadAiPluginsButton.disabled = true;
+  try {
+    const response = await fetch("/api/ai/plugins");
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.detail || response.statusText);
+    }
+    state.aiPlugins = data;
+    renderAiPlugins(data);
+  } catch (error) {
+    aiPluginSummary.innerHTML = "";
+    const item = document.createElement("div");
+    item.className = "recommendation";
+    item.textContent = String(error.message || error);
+    aiPluginSummary.appendChild(item);
+  } finally {
+    loadAiPluginsButton.disabled = false;
+  }
+}
+
+function renderAiPlugins(data) {
+  aiPluginSummary.innerHTML = "";
+  const summary = data.summary || {};
+  const lead = document.createElement("div");
+  lead.className = "depth-probe-card";
+  appendSummaryCell(lead, t("aiPluginStatus"), data.status || "--");
+  appendSummaryCell(lead, t("aiPluginReady"), String(summary.ready_count || 0));
+  appendSummaryCell(lead, t("aiPluginAttention"), String(summary.attention_count || 0));
+  aiPluginSummary.appendChild(lead);
+
+  const policy = document.createElement("div");
+  policy.className = "depth-probe-card";
+  appendSummaryCell(policy, t("aiPluginPolicy"), data.base_package_policy?.heavy_models_bundled ? t("required") : t("notRequired"));
+  appendSummaryCell(policy, t("captureMode"), firstLabels(data.fallback_chain || [], null, 4));
+  aiPluginSummary.appendChild(policy);
+
+  const plugins = data.plugins || [];
+  if (!plugins.length) {
+    const empty = document.createElement("div");
+    empty.className = "history-empty";
+    empty.textContent = t("aiPluginNoPlugins");
+    aiPluginSummary.appendChild(empty);
+    return;
+  }
+
+  for (const plugin of plugins.slice(0, 4)) {
+    const card = document.createElement("div");
+    card.className = "depth-probe-card";
+    appendSummaryCell(card, plugin.name || plugin.id, plugin.status || "--");
+    appendSummaryCell(card, t("captureMode"), firstLabels(plugin.capabilities || [], null, 3));
+    appendSummaryCell(card, t("nextAction"), firstLabels((plugin.issues || []).map((item) => item.code), null, 2));
+    aiPluginSummary.appendChild(card);
+  }
+}
+
 async function runDepthDemo() {
   runDepthDemoButton.disabled = true;
   try {
@@ -2145,6 +2225,7 @@ for (const select of [workflowPackageSelect, workflowMaterialSelect, workflowCam
   });
 }
 loadValidationPlanButton.addEventListener("click", loadValidationPlan);
+loadAiPluginsButton.addEventListener("click", loadAiPlugins);
 runDepthDemoButton.addEventListener("click", runDepthDemo);
 saveDepthDemoButton.addEventListener("click", saveDepthDemo);
 historySearch.addEventListener("keydown", (event) => {
