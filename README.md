@@ -1,20 +1,68 @@
-# PackVision Local
+# PackVision Local 项目报告
 
-本地包装尺寸检测工具：上传手机照片，识别顶部长宽、侧面高度候选，支持无校准卡估算、手动修正框、单号/条码追溯和本地历史记录。目标是先在没有摄像头、没有深度相机的仓库环境里跑起来，再逐步接入相机、扫码枪、YOLO/深度模型。
+> 当前分支：`codex/astra-pro-depth-camera`  
+> 项目目录：`D:\Documents\包装尺寸检测`  
+> 当前定位：面向汽车备件仓库的本地包装尺寸检测工作台，支持图片上传、单号追溯、Astra Pro 深度相机接入、海外仓交付包和后续多相机/AI 插件扩展。
 
-## 当前能力
+## 1. 项目一句话
 
-- 本地 Web UI，支持中文、English、Українська 和明亮/深色/石墨主题。
-- `POST /api/measure` 支持顶部照片、侧面照片、ArUco 标记、人工高度、相机距离、等效焦距、手动框选范围。
-- 没有校准卡时，可基于相机距离 + EXIF/手动 35mm 等效焦距做尺寸估算。
-- 侧面照片会单独识别轮廓，并生成高度候选。
-- 支持手动修正顶部/侧面标注框，适合异形件、软包、边缘识别失败场景。
-- 支持单号录入、扫码枪文本输入、上传条码/二维码图片识别单号。
-- SQLite 本地历史记录，保存时间戳、单号、尺寸、置信度、上传图和标注图。
-- `GET /api/demo-image.jpg` 可在没有摄像头时一键试测。
-- PyInstaller 打包为 Windows EXE。
+PackVision 不是单纯的“拍照量尺寸 Demo”，而是给海外汽车备件仓库使用的本地测量系统：仓库员工扫码或录入单号后放件，系统自动完成图片/深度相机测量、异常提示、历史保存、使用次数统计和 CSV 导出。
 
-## 运行
+## 2. 背景和目标
+
+仓库现场的真实约束是：
+
+- 员工不适合手动输入焦距、光圈、相机内参等工程参数。
+- 手机照片可以作为无硬件阶段的兜底，但单目照片不能稳定恢复真实三维尺寸。
+- 深度相机到货后，测量主线应切到 Astra Pro 深度帧、厂商/ROS/OpenNI 内参和质量门控。
+- 海外仓电脑多为普通 Windows 办公电脑，不能默认有强显卡。
+- 交付包要轻量、可复制、可诊断，压缩包目标不超过 `100 MB`。
+- 后续可能从 1 台 Astra Pro 扩展到 2 台、3 台，甚至替换更高端深度相机。
+
+项目目标分三层：
+
+| 层级 | 目标 |
+| --- | --- |
+| 图片版 | 没有相机时也能上传图片、扫码、保存历史、导出结果。 |
+| Astra Pro 版 | 接入深度相机，做真实三维测量和现场精度验证。 |
+| 多相机/AI 版 | 后续支持三视图、多相机融合、YOLO/分割/单目深度插件。 |
+
+## 3. 当前完成状态
+
+| 模块 | 状态 | 说明 |
+| --- | --- | --- |
+| 本地 Web UI | 已完成基础版 | 支持中文、English、Українська，支持明亮/深色/石墨主题。 |
+| 图片上传测量 | 已完成 | 顶部图、侧面图、ArUco、相机距离/焦距估算、手动框选。 |
+| 单号和条码 | 已完成 | 支持手动单号、扫码枪文本、上传条码/二维码图片识别。 |
+| 历史追溯 | 已完成 | SQLite 保存时间戳、单号、尺寸、置信度、上传图、标注图。 |
+| 使用次数统计 | 已完成 | 后台记录接口调用次数、测量次数、成功/失败次数，可导出 CSV。 |
+| 异形件/长条件 | 已有深度算法基础 | 支持深度 ROI、object mask、长条件主轴测量。 |
+| Astra Pro 适配 | 已完成无硬件开发底座 | 驱动/上位机/OpenNI 状态检查、内参归一化、采集探测、模拟干跑。 |
+| 多相机冗余 | 已有架构 | 相机角色、序列号、三视图缺口、保守融合接口已预留。 |
+| 海外仓交付包 | 已完成第一版 | 可生成小于 `100 MB` 的现场交付压缩包。 |
+| 自动化开发流程 | 已配置 | `packvision` 自动化已按分阶段落地模式启用。 |
+
+当前验证结果：
+
+```text
+80 passed in 5.14s
+```
+
+最新已验证交付包：
+
+```text
+D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_20260528_0231.zip
+```
+
+大小约：
+
+```text
+73.4 MB
+```
+
+## 4. 运行方式
+
+开发环境运行：
 
 ```powershell
 py -3.11 -m venv .venv
@@ -28,10 +76,14 @@ py -3.11 -m venv .venv
 http://127.0.0.1:8765
 ```
 
-## 打包 EXE
+如果端口被占用，PackVision 会自动尝试后续端口，例如 `8766`。
+
+## 5. 打包和交付
+
+打包 EXE：
 
 ```powershell
-.\scripts\build_exe.ps1
+PowerShell -ExecutionPolicy Bypass -File .\scripts\build_exe.ps1
 ```
 
 输出：
@@ -40,79 +92,280 @@ http://127.0.0.1:8765
 D:\Documents\包装尺寸检测\dist\PackVision.exe
 ```
 
-## API 摘要
+生成海外仓现场交付包：
 
-- `GET /api/health`：运行状态。
-- `GET /api/demo-image.jpg`：演示图片。
-- `GET /api/calibration-card.svg`：A4 ArUco 校准卡。
-- `POST /api/measure`：测量图片。
-- `GET /api/history`：历史记录列表。
-- `GET /api/history/export.csv`：按单号筛选导出 CSV。
-- `GET /api/history/{measurement_id}`：单条记录详情。
-- `GET /api/usage/summary`：后台使用统计，返回总调用次数、测量次数、成功/失败次数、按接口和日期汇总。
-- `GET /api/usage/events`：后台调用日志明细。
-- `GET /api/usage/export.csv`：导出使用日志 CSV，方便汇报。
-- `POST /api/orders/scan`：扫码枪/手工单号标准化接口。
-- `POST /api/orders/decode-image`：上传条码或二维码图片识别单号。
-
-## 对标路线
-
-当前轻量 EXE 先集成 OpenCV ArUco、OpenCV 条码/二维码识别和传统轮廓检测。对标方向记录在：
-
-```text
-D:\Documents\包装尺寸检测\docs_cn\02_对标开源方案与本地落地.md
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\build_handoff_package.ps1
 ```
 
-重点结论：YOLO/OBB/分割适合提升包装或异形件边界识别；Depth Anything V2 适合做单目深度插件；但两者都会增加模型文件和运行依赖，不适合直接塞进当前轻量 EXE 主包。
+输出目录：
 
-## 现实边界
+```text
+D:\Documents\包装尺寸检测\release
+```
 
-单张普通手机照片只有二维投影。只靠焦距、光圈、EXIF 不能稳定恢复真实三维尺寸，因为缺少拍摄距离、物体深度和姿态信息。当前实现把“精确”和“估算”分开：
+交付包会包含：
 
-1. 有 ArUco 标记：作为优先高置信比例来源。
-2. 无标记但有距离和焦距：给出可追溯估算，并降低置信度。
-3. 有侧面照片：补充高度候选。
-4. 识别不准：用手动框修正并重新测量。
-5. 异形件：先支持手动框选，后续可接 YOLO/分割模型。
+- `PackVision.exe`
+- `START_HERE.txt`
+- `check_astra_depth_status.ps1`
+- `docs_cn`
+- `docs_obsidian\PackVision`
 
-## Astra Pro 深度相机分支
+默认限制：
 
-深度相机开发在分支：
+```text
+100 MB
+```
+
+超过限制时脚本会失败，避免后续传输困难。
+
+## 6. 开箱即用边界
+
+PackVision 软件包可以复制即用，但 Astra Pro 深度相机不能完全免驱动。
+
+| 场景 | 是否只靠 EXE | 说明 |
+| --- | --- | --- |
+| 手机照片/上传图片测量 | 可以 | 不需要相机驱动。 |
+| 单号、扫码、历史、CSV | 可以 | 数据保存在本机用户目录。 |
+| Astra Pro 实时采集 | 不可以 | 目标电脑必须先安装 Astra Pro Windows 驱动，并用 OrbbecViewer 验证画面。 |
+| 两台/三台相机 | 需要现场调试 | 需要供电、USB 稳定性、支架、序列号绑定和视角验证。 |
+
+目标海外仓提前准备：
+
+- Astra Pro 相机。
+- Windows 10/11 64 位电脑。
+- Astra Pro Windows 驱动。
+- OrbbecViewer。
+- 原装 USB 数据线；如需延长，优先主动 USB-A 公对母延长线。
+- A4 ArUco 标定卡，100% 原比例打印。
+- 稳定支架、哑光工作台、稳定光照。
+- 卷尺/卡尺、标准纸箱、长条件、异形件、黑色/反光/透明样品。
+
+## 7. 体检接口和现场脚本
+
+开箱即用体检接口：
+
+```text
+GET /api/deployment/readiness
+```
+
+它会检查：
+
+- 图片版是否可运行。
+- 本地历史和结果目录是否可写。
+- EXE 是否存在、大小是否符合传输限制。
+- Astra Pro 厂商资料、驱动、OrbbecViewer、OpenNI runtime 是否存在。
+- 当前是否检测到深度相机。
+- 海外仓到货前需要准备哪些物理物品。
+- 到现场后的操作顺序。
+
+现场脚本：
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\check_astra_depth_status.ps1
+```
+
+在源码目录中，它会直接调用 Python 服务输出完整 readiness 结果。  
+在现场交付包目录中，它会提示或访问本地 EXE API，帮助判断环境是否可用。
+
+## 8. 核心 API
+
+### 基础
+
+| 接口 | 用途 |
+| --- | --- |
+| `GET /api/health` | 运行状态。 |
+| `GET /api/demo-image.jpg` | 演示图片。 |
+| `GET /api/calibration-card.svg` | A4 ArUco 标定卡。 |
+| `GET /api/deployment/readiness` | 海外仓交付和环境体检。 |
+
+### 图片测量
+
+| 接口 | 用途 |
+| --- | --- |
+| `POST /api/measure` | 上传顶部/侧面图片测量。 |
+| `POST /api/capture/quality` | 检查照片过曝、欠曝、反光等风险。 |
+
+### 单号和历史
+
+| 接口 | 用途 |
+| --- | --- |
+| `POST /api/orders/scan` | 扫码枪/手工单号标准化。 |
+| `POST /api/orders/decode-image` | 上传条码/二维码图片识别单号。 |
+| `GET /api/history` | 历史记录列表。 |
+| `GET /api/history/export.csv` | 导出历史 CSV。 |
+| `GET /api/history/{measurement_id}` | 单条记录详情。 |
+
+### 使用统计
+
+| 接口 | 用途 |
+| --- | --- |
+| `GET /api/usage/summary` | 使用次数和测量次数汇总。 |
+| `GET /api/usage/events` | 接口调用日志。 |
+| `GET /api/usage/export.csv` | 导出使用日志 CSV。 |
+
+### Astra Pro 深度相机
+
+| 接口 | 用途 |
+| --- | --- |
+| `GET /api/depth/status` | 驱动、OpenNI、厂商资料状态。 |
+| `GET /api/depth/vendor-profile` | Astra Pro 厂商参数和标定策略。 |
+| `GET /api/depth/astra/tutorial-playbook` | 厂商教程二次审计后的控制、标定、多相机说明。 |
+| `GET /api/depth/cameras` | 相机配置、角色、三视图缺口。 |
+| `GET /api/depth/capture/capabilities` | 可用采集后端。 |
+| `POST /api/depth/capture/probe` | 探测当前相机是否可采集。 |
+| `POST /api/depth/capture/frame` | 采集一帧深度数据。 |
+| `POST /api/depth/measure-capture` | 采集并直接测量。 |
+| `POST /api/depth/camera-info/normalize` | 把 ROS/OpenNI/camera_info 转成测量内参。 |
+| `POST /api/depth/measure-roi` | 用深度 ROI 测规则物体。 |
+| `POST /api/depth/measure-object` | 用 object mask 测异形件。 |
+| `POST /api/depth/quality` | 深度质量门控。 |
+| `POST /api/depth/fuse-measurements` | 多视角结果保守融合。 |
+
+### 现场验证
+
+| 接口 | 用途 |
+| --- | --- |
+| `GET /api/validation/trial-plan` | 到货验收抽检计划。 |
+| `GET /api/validation/trial-template.csv` | WPS/Excel 可填写真值模板。 |
+| `POST /api/validation/evaluate` | 评估人工真值和系统测量误差。 |
+| `POST /api/validation/evaluate-csv` | 批量评估试运行 CSV。 |
+
+## 9. 技术架构
+
+```mermaid
+flowchart TD
+  A["仓库员工"] --> B["扫码/录入单号"]
+  B --> C["图片上传或 Astra Pro 采集"]
+  C --> D["测量服务"]
+  D --> E["尺寸结果和质量标记"]
+  E --> F["历史记录 SQLite"]
+  E --> G["使用次数统计"]
+  E --> H["CSV 导出/现场验收"]
+  C --> I["深度相机接口"]
+  I --> J["OpenNI/ROS/camera_info"]
+  I --> K["多相机角色和融合"]
+```
+
+主要技术：
+
+- FastAPI 本地 API。
+- OpenCV ArUco、轮廓、条码/二维码。
+- SQLite 本地历史和统计。
+- OpenNI/PrimeSense Astra Pro 采集后端。
+- PyInstaller Windows EXE。
+- PowerShell 交付和体检脚本。
+
+## 10. 对标和取舍
+
+PackVision 借鉴但不直接复制这些方向：
+
+| 对标方向 | 学习点 | 当前取舍 |
+| --- | --- | --- |
+| OpenCV | 标定、轮廓、二维码、ArUco | 已作为基础能力使用。 |
+| Ultralytics YOLO | 检测、分割、OBB、模型导出 | 后续做插件，不进入基础包。 |
+| Segment Anything | 人工复核快速贴边 | 作为复核增强候选，不默认集成。 |
+| Depth Anything V2 | 手机照片相对深度辅助 | 只能做辅助，不能承诺毫米级真实尺寸。 |
+| Open3D | 点云和多视图配准 | 后续多相机阶段参考。 |
+| CVAT/Label Studio | 标注和复核闭环 | 后续做失败样本池和训练数据导出。 |
+
+核心取舍：
+
+- 基础包保持轻量。
+- 重模型插件化。
+- 仓库员工不接触工程参数。
+- 模拟结果、单目估算、未硬件验证都必须明确标注。
+
+## 11. 当前风险
+
+| 风险 | 当前状态 | 应对 |
+| --- | --- | --- |
+| Astra Pro 真实硬件未连接验证 | 待相机到货 | 到货后先跑 OrbbecViewer，再跑 readiness 和 capture probe。 |
+| 单目照片精度有限 | 已在文档和置信度中说明 | 图片版作为兜底，真实尺寸主线切深度相机。 |
+| 异形件/异常材质样本不足 | 待现场采集 | 建立复核样本池和真值模板。 |
+| 多相机外参未验证 | 预留架构 | 后续开 `codex/packvision-multiview-extrinsics` 分支探索。 |
+| AI 模型可能导致包变重 | 暂不内置 | 后续开 `codex/packvision-ai-plugin-spike` 插件分支。 |
+
+## 12. 开发自动化和分支策略
+
+本地开发循环：
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\dev_cycle.ps1
+```
+
+带打包验证：
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\dev_cycle.ps1 -BuildPackage
+```
+
+当前自动化任务：
+
+```text
+packvision
+```
+
+状态：
+
+```text
+ACTIVE
+```
+
+主开发分支：
 
 ```text
 codex/astra-pro-depth-camera
 ```
 
-店铺附赠教程资料默认读取：
+分歧探索分支规则：
+
+| 分支 | 用途 |
+| --- | --- |
+| `codex/packvision-ui-auto-workstation` | 工业现场 UI 自动化。 |
+| `codex/packvision-review-sample-pool` | 真值模板和复核样本池。 |
+| `codex/packvision-ai-plugin-spike` | AI 模型插件探索。 |
+| `codex/packvision-multiview-extrinsics` | 多相机外参和融合探索。 |
+
+## 13. 后续开发计划
+
+优先级：
+
+1. 工业现场 UI 自动化：默认扫码、放件、自动测量、结果、复核。
+2. 真值模板和复核样本池：让失败/低置信/人工改框样本可追溯、可导出。
+3. Astra Pro 到货真实验证：标准纸箱、长条件、异形件、异常材质全流程测试。
+4. AI 插件接口：定义模型插件目录和 ONNX Runtime CPU 优先策略。
+5. 多相机三视图：top/front/side，序列号绑定，视角冲突复核，保守融合。
+
+## 14. 文档入口
+
+中文文档：
 
 ```text
-D:\BaiduNetdiskDownload\奥比中光Astra Pro
+D:\Documents\包装尺寸检测\docs_cn
 ```
 
-本分支新增：
+Obsidian 笔记：
 
-- `GET /api/depth/status`：检查 Astra Pro 教程资料、OpenNI2 运行时、Windows 驱动和可选 `pyorbbecsdk`。
-- `GET /api/depth/vendor-profile`：返回 Astra Pro 厂商规格、上位机验收流程、厂商优先标定策略和 ROS/OpenNI 推荐接口。
-- `GET /api/depth/astra/tutorial-playbook`：返回二次审计后的厂商教程适配手册，包括 ROS2 曝光/增益/镜像/激光/流控制服务、多相机 `device_num`、`cleanup_shm_node`、D2C/点云和标定 URL 映射。
-- `POST /api/depth/camera-info/normalize`：把 ROS `/camera/depth/camera_info` 或标定 YAML 转成测量接口可直接使用的 `fx/fy/cx/cy` 内参，避免仓库员工手动输入参数。
-- `GET /api/depth/workflow-guide`：按包装类型、材质和相机数量返回到货调试清单、USB/支架/线材准备项和采集步骤；默认不要求购买主板。
-- `GET /api/depth/capture/capabilities`：报告可选采集后端、OpenNI2/OpenCV 探测能力和当前推荐路径。
-- `POST /api/depth/capture/probe`：到货前后都可运行的采集探测接口，返回状态、选中后端和下一步动作。
-- `GET /api/depth/demo-object`：无硬件时运行合成异形件深度测量演示。
-- `POST /api/depth/demo-object/save`：把深度演示按单号保存到历史记录，方便验证追溯流程。
-- `POST /api/depth/simulate-from-image`：上传真实 RGB 图片，用 Astra Pro 近似内参和合成深度帧跑硬件到货前干测，输出标注图和深度预览图。
-- `POST /api/depth/measure-roi`：用深度图、相机内参、ROI 和桌面深度计算真实长宽高。
-- `POST /api/depth/quality`：检查深度孔洞、稀疏有效点、ROI 噪声和台面背景稳定性，提前暴露反光、透明、深黑材质风险。
-- `POST /api/depth/measure-object`：用桌面深度分离物体 mask，再用点云范围测异形件；长条件可传 `footprint_method=principal_axes` 按主轴方向测真实长度。
-- `POST /api/depth/measure-roi` 和 `POST /api/depth/measure-object` 支持 `order_id`、`barcode_text`、`part_category`、`package_hint`、`material_hint`、`actual_weight_kg`、`save_to_history`，真实相机接入后可直接进入同一套历史追溯和 CSV 导出。
-- `POST /api/industry/profile`：按汽车备件场景判断标准纸箱、长条件、软包/异形件、异常材质风险和计费重。
-- `GET /api/validation/trial-plan`：返回 Astra Pro 到货后普通纸箱、长条件、异形件和异常材质的最小抽检计划。
-- `POST /api/validation/evaluate`：输入人工真值和系统测量值，输出误差、失败样本、复核样本和是否可进入现场试运行。
-- `GET /api/validation/trial-template.csv`：下载 WPS/Excel 可直接填写的现场验收模板，覆盖普通包装、长条件、异形件和异常材质样本。
-- `POST /api/validation/evaluate-csv`：上传填写后的 CSV，批量计算误差、复核项和现场试运行结论。
-- `scripts\check_astra_depth_status.ps1`：本地检查深度相机资料和 SDK 状态。
-- `docs_cn\08_Astra_Pro_深度相机分支计划.md`：到货后的驱动、上位机、SDK、实测清单。
-- `docs_cn\09_汽车备件测量落地方案.md`：汽车备件仓库的普通包装、异形包装和异常材质落地流程。
-- `docs_cn\10_Astra_Pro_到货验收与现场试运行.md`：两台 Astra Pro 到货后的第一小时验收、标准纸箱/长条件/异形件试运行流程。
-- `docs_cn\16_Astra_Pro_厂商资料学习笔记.md`：基于店铺附赠资料包重新梳理的厂商工具链、标定策略和 PackVision 修正方向。
-- `docs_cn\19_真实样例图_Astra_深度模拟干跑.md`：使用 CLUBS 真实箱内场景图做 Astra 深度模拟测量的说明。
+```text
+D:\Documents\包装尺寸检测\docs_obsidian\PackVision
+```
+
+重点文档：
+
+- `docs_cn\20_PackVision_对标差距与开发计划.md`
+- `docs_cn\21_海外仓开箱即用交付方案.md`
+- `docs_cn\22_PackVision_分阶段开发执行与自动化.md`
+- `docs_cn\23_PackVision_完整项目报告.md`
+- `docs_obsidian\PackVision\14 PackVision 完整项目报告.md`
+
+## 15. 当前结论
+
+PackVision 已经从“图片测量 Demo”推进为可交付的本地仓库测量工作台雏形：
+
+- 图片版可以开箱即用。
+- 深度相机版已经具备接入和验收底座。
+- 海外仓交付包可以生成，并保持在 100 MB 内。
+- 历史、统计、单号、CSV、文档和自动化已经形成闭环。
+- 真实相机到货后，下一步重点是硬件连接验证和现场误差评估。
