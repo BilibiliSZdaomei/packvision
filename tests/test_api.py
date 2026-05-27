@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 import pytest
+from uuid import uuid4
 
 from packvision.app import create_app
 from packvision.services.measurement import opencv_ready
@@ -394,6 +395,46 @@ def test_usage_events_and_export_include_api_call_logs():
     assert export.status_code == 200
     assert "endpoint" in export.text
     assert "/api/depth/quality" in export.text
+
+
+def test_usage_events_link_successful_measurements_to_order_and_measurement_id():
+    client = TestClient(create_app())
+    order_id = f"USAGE-TRACE-{uuid4().hex[:8]}"
+    depth = [[1000.0 for _ in range(8)] for _ in range(8)]
+    for y in range(2, 6):
+        for x in range(2, 6):
+            depth[y][x] = 800.0
+
+    response = client.post(
+        "/api/depth/measure-roi",
+        json={
+            "depth_frame": depth,
+            "intrinsics": {
+                "fx": 100.0,
+                "fy": 100.0,
+                "cx": 4.0,
+                "cy": 4.0,
+                "width": 8,
+                "height": 8,
+            },
+            "roi": [2, 2, 6, 6],
+            "background_roi": [0, 0, 2, 2],
+            "order_id": order_id,
+            "package_hint": "carton",
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    events = client.get("/api/usage/events", params={"limit": 50, "endpoint": "/api/depth/measure-roi"})
+    matching = [
+        item
+        for item in events.json()["items"]
+        if item["measurement_id"] == body["measurement_id"]
+    ]
+    assert matching
+    assert matching[0]["order_id"] == order_id
+    assert matching[0]["measurement_source"] == "depth_roi_api"
 
 
 def test_industry_profile_endpoint_classifies_auto_parts_package():

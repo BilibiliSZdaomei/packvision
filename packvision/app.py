@@ -173,11 +173,16 @@ def create_app() -> FastAPI:
                 )
             raise
         if should_log:
+            trace = _usage_trace(request)
             record_usage_event(
                 endpoint=endpoint,
                 method=request.method,
                 status_code=response.status_code,
                 duration_ms=(time.perf_counter() - started_at) * 1000,
+                order_id=trace.get("order_id"),
+                measurement_id=trace.get("measurement_id"),
+                measurement_source=trace.get("measurement_source"),
+                extra=trace.get("extra"),
             )
         return response
 
@@ -217,6 +222,7 @@ def create_app() -> FastAPI:
 
     @app.post("/api/measure")
     async def measure(
+        request: Request,
         top_image: Annotated[UploadFile, File()],
         side_image: Annotated[UploadFile | None, File()] = None,
         marker_size_mm: Annotated[float, Form()] = 50.0,
@@ -299,6 +305,7 @@ def create_app() -> FastAPI:
             "top_upload": str(top_path),
             "side_upload": str(side_path) if side_path else None,
         }
+        _set_usage_trace(request, result, measurement_source="image_measure_api")
         save_measurement(result)
         return result
 
@@ -453,8 +460,8 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     @app.get("/api/depth/demo-object")
-    def depth_demo_object() -> dict[str, object]:
-        return _finalize_depth_result(
+    def depth_demo_object(request: Request) -> dict[str, object]:
+        result = _finalize_depth_result(
             _depth_demo_object_result(),
             DepthTraceabilityPayload(
                 part_category="bumper_trim",
@@ -463,10 +470,12 @@ def create_app() -> FastAPI:
             ),
             measurement_source="depth_demo_object",
         )
+        _set_usage_trace(request, result)
+        return result
 
     @app.post("/api/depth/demo-object/save")
-    def save_depth_demo_object(payload: DepthTraceabilityPayload) -> dict[str, object]:
-        return _finalize_depth_result(
+    def save_depth_demo_object(request: Request, payload: DepthTraceabilityPayload) -> dict[str, object]:
+        result = _finalize_depth_result(
             _depth_demo_object_result(),
             DepthTraceabilityPayload(
                 order_id=payload.order_id,
@@ -480,9 +489,11 @@ def create_app() -> FastAPI:
             measurement_source="depth_demo_object",
             save_to_history=True,
         )
+        _set_usage_trace(request, result)
+        return result
 
     @app.post("/api/depth/measure-roi")
-    def depth_measure_roi(payload: DepthMeasurePayload) -> dict[str, object]:
+    def depth_measure_roi(request: Request, payload: DepthMeasurePayload) -> dict[str, object]:
         try:
             result = measure_depth_roi(
                 payload.depth_frame,
@@ -496,12 +507,14 @@ def create_app() -> FastAPI:
                     trim_ratio=payload.trim_ratio,
                 ),
             )
-            return _finalize_depth_result(result, payload, measurement_source="depth_roi_api")
+            finalized = _finalize_depth_result(result, payload, measurement_source="depth_roi_api")
+            _set_usage_trace(request, finalized)
+            return finalized
         except DepthMeasurementError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     @app.post("/api/depth/measure-object")
-    def depth_measure_object(payload: DepthObjectMeasurePayload) -> dict[str, object]:
+    def depth_measure_object(request: Request, payload: DepthObjectMeasurePayload) -> dict[str, object]:
         try:
             result = measure_depth_object_mask(
                 payload.depth_frame,
@@ -517,7 +530,9 @@ def create_app() -> FastAPI:
                     footprint_method=payload.footprint_method,
                 ),
             )
-            return _finalize_depth_result(result, payload, measurement_source="depth_object_api")
+            finalized = _finalize_depth_result(result, payload, measurement_source="depth_object_api")
+            _set_usage_trace(request, finalized)
+            return finalized
         except DepthMeasurementError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
@@ -655,3 +670,27 @@ def _finalize_depth_result(
     if should_save:
         save_measurement(result)
     return result
+
+
+def _set_usage_trace(
+    request: Request,
+    result: dict[str, object],
+    *,
+    measurement_source: str | None = None,
+) -> None:
+    industry_profile = result.get("industry_profile") or {}
+    request.state.usage_trace = {
+        "order_id": result.get("order_id"),
+        "measurement_id": result.get("measurement_id"),
+        "measurement_source": measurement_source or result.get("measurement_source"),
+        "extra": {
+            "history_saved": result.get("history_saved"),
+            "package_class": industry_profile.get("package_class"),
+            "part_category": result.get("part_category"),
+        },
+    }
+
+
+def _usage_trace(request: Request) -> dict[str, object]:
+    trace = getattr(request.state, "usage_trace", None)
+    return trace if isinstance(trace, dict) else {}
