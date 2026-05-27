@@ -59,6 +59,7 @@ from packvision.services.measurement import (
     measure_images,
     opencv_ready,
 )
+from packvision.services.review_pool import export_review_samples_csv, list_review_samples
 from packvision.services.storage import ensure_data_dirs, resource_path, write_bytes
 from packvision.services.usage import (
     export_usage_csv,
@@ -390,6 +391,19 @@ def create_app() -> FastAPI:
         if not result:
             raise HTTPException(status_code=404, detail="Measurement not found.")
         return result
+
+    @app.get("/api/review/samples")
+    def review_samples(limit: int = 50, order_id: str | None = None) -> dict[str, object]:
+        return list_review_samples(limit=limit, order_id=_clean_text(order_id))
+
+    @app.get("/api/review/export.csv")
+    def review_export(limit: int = 500, order_id: str | None = None) -> Response:
+        csv_text = export_review_samples_csv(limit=limit, order_id=_clean_text(order_id))
+        return Response(
+            content=csv_text,
+            media_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": 'attachment; filename="packvision-review-samples.csv"'},
+        )
 
     @app.get("/api/usage/summary")
     def usage_report(

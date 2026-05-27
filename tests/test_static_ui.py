@@ -14,6 +14,22 @@ def test_static_ui_exposes_usage_statistics_workspace():
     assert 'id="exportUsageLink"' in html
 
 
+def test_static_ui_exposes_review_sample_pool_workspace():
+    html = (ROOT / "packvision" / "static" / "index.html").read_text(encoding="utf-8")
+    js = (ROOT / "packvision" / "static" / "app.js").read_text(encoding="utf-8")
+    css = (ROOT / "packvision" / "static" / "styles.css").read_text(encoding="utf-8")
+
+    assert 'href="#review"' in html
+    assert 'id="review"' in html
+    assert 'id="reviewSummaryGrid"' in html
+    assert 'id="reviewList"' in html
+    assert 'id="refreshReviewButton"' in html
+    assert 'id="exportReviewLink"' in html
+    assert "/api/review/samples" in js
+    assert "loadReviewSamples()" in js
+    assert ".review-priority-high" in css
+
+
 def test_static_ui_has_mobile_navigation_and_focus_states():
     css = (ROOT / "packvision" / "static" / "styles.css").read_text(encoding="utf-8")
 

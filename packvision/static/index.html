@@ -20,6 +20,7 @@
           <a class="nav-item is-active" href="#measure" data-i18n="measure">测量</a>
           <a class="nav-item" href="#depth" data-i18n="depth">深度</a>
           <a class="nav-item" href="#history" data-i18n="history">历史</a>
+          <a class="nav-item" href="#review" data-i18n="review">复核</a>
           <a class="nav-item" href="#usage" data-i18n="usage">统计</a>
           <a class="nav-item" href="/api/calibration-card.svg" target="_blank" rel="noopener" data-i18n="calibration">校准卡</a>
         </nav>
@@ -300,6 +301,22 @@
           <div class="history-list" id="historyList"></div>
         </section>
 
+        <section id="review" class="history-panel">
+          <div class="panel-head">
+            <div>
+              <p class="section-label" data-i18n="review">复核</p>
+              <h3 data-i18n="reviewTitle">失败和低置信样本池</h3>
+            </div>
+            <div class="history-tools">
+              <input id="reviewSearch" type="search" placeholder="Order ID" />
+              <button class="tool-button" type="button" id="refreshReviewButton" data-i18n="refreshReview">刷新复核</button>
+              <a class="tool-button" id="exportReviewLink" href="/api/review/export.csv" target="_blank" rel="noopener" data-i18n="exportReview">导出复核 CSV</a>
+            </div>
+          </div>
+          <div class="usage-summary-grid" id="reviewSummaryGrid"></div>
+          <div class="history-list" id="reviewList"></div>
+        </section>
+
         <section id="usage" class="usage-panel">
           <div class="panel-head">
             <div>
@@ -320,7 +337,7 @@
             <p class="section-label" data-i18n="api">API</p>
             <h3>POST /api/measure</h3>
           </div>
-          <code>order_id, barcode_text, top_image, side_image?, marker_size_mm, manual_height_mm?, camera_distance_mm?, focal_length_35mm?, top_box_json?, GET /api/depth/status, GET /api/depth/workflow-guide, POST /api/depth/measure-object, GET /api/history/export.csv, GET /api/validation/trial-template.csv</code>
+          <code>order_id, barcode_text, top_image, side_image?, marker_size_mm, manual_height_mm?, camera_distance_mm?, focal_length_35mm?, top_box_json?, GET /api/depth/status, GET /api/depth/workflow-guide, POST /api/depth/measure-object, GET /api/history/export.csv, GET /api/review/samples, GET /api/validation/trial-template.csv</code>
         </section>
       </main>
     </div>

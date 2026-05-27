@@ -389,6 +389,57 @@ def test_depth_fuse_measurements_endpoint_saves_traceable_result():
     assert "multi_view_fusion" in body["quality_flags"]
 
 
+def test_review_samples_collects_low_confidence_and_view_conflicts():
+    client = TestClient(create_app())
+    order_id = f"RV-{uuid4().hex[:8]}"
+    response = client.post(
+        "/api/depth/fuse-measurements",
+        json={
+            "order_id": order_id,
+            "part_category": "bumper",
+            "package_hint": "irregular",
+            "save_to_history": True,
+            "view_measurements": [
+                {
+                    "view_id": "top",
+                    "role": "top",
+                    "status": "measured",
+                    "confidence": 0.54,
+                    "dimensions": {"length_mm": 980, "width_mm": 260, "height_mm": 155},
+                    "quality_flags": ["depth_hole_risk"],
+                    "recommendation_codes": ["retake_depth_with_less_reflection"],
+                },
+                {
+                    "view_id": "front",
+                    "role": "front",
+                    "status": "measured",
+                    "confidence": 0.49,
+                    "dimensions": {"length_mm": 710, "width_mm": 255, "height_mm": 150},
+                },
+            ],
+        },
+    )
+
+    measured = response.json()
+    assert response.status_code == 200
+    assert measured["history_saved"] is True
+    assert measured["status"] == "review"
+
+    review = client.get("/api/review/samples", params={"order_id": order_id})
+    body = review.json()
+    assert review.status_code == 200
+    assert body["summary"]["total_review_samples"] == 1
+    assert body["items"][0]["measurement_id"] == measured["measurement_id"]
+    assert body["items"][0]["priority"] in {"critical", "high"}
+    assert "view_disagreement_risk" in body["items"][0]["review_reasons"]
+    assert "low_confidence" in body["items"][0]["review_reasons"]
+
+    export = client.get("/api/review/export.csv", params={"order_id": order_id})
+    assert export.status_code == 200
+    assert "measurement_id,created_at,order_id,status,priority" in export.text
+    assert order_id in export.text
+
+
 def test_depth_quality_endpoint_flags_sparse_synthetic_frame():
     client = TestClient(create_app())
     depth = [[0.0 for _ in range(8)] for _ in range(8)]

@@ -994,6 +994,19 @@ summary:focus-visible,
   border-color: var(--accent);
 }
 
+.history-row.review-priority-critical,
+.history-row.review-priority-high {
+  border-left: 3px solid #c64b3b;
+}
+
+.history-row.review-priority-medium {
+  border-left: 3px solid var(--accent-2);
+}
+
+.history-row[class*="review-priority"] {
+  grid-template-columns: minmax(120px, 1fr) minmax(95px, 0.65fr) minmax(115px, 0.9fr) minmax(180px, 1.35fr) minmax(150px, 1fr);
+}
+
 .history-row span {
   color: var(--muted);
   font-size: 0.8rem;

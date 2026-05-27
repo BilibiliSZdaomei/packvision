@@ -359,8 +359,10 @@ D:\Documents\包装尺寸检测\docs_obsidian\PackVision
 - `docs_cn\22_PackVision_分阶段开发执行与自动化.md`
 - `docs_cn\23_PackVision_完整项目报告.md`
 - `docs_cn\24_厂商资料包Git维护策略.md`
+- `docs_cn\25_复核样本池与真值闭环.md`
 - `docs_obsidian\PackVision\14 PackVision 完整项目报告.md`
 - `docs_obsidian\PackVision\15 厂商资料包 Git 维护策略.md`
+- `docs_obsidian\PackVision\16 复核样本池与真值闭环.md`
 
 ## 15. 厂商资料包维护策略
 

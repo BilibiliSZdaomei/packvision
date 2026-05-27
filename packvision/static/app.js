@@ -4,6 +4,7 @@ const translations = {
     measure: "测量",
     depth: "深度",
     history: "历史",
+    review: "复核",
     usage: "统计",
     calibration: "校准卡",
     localApi: "本地 API",
@@ -79,6 +80,14 @@ const translations = {
     copied: "已复制",
     openImage: "打开标注图",
     historyTitle: "带时间戳的测量记录",
+    reviewTitle: "失败和低置信样本池",
+    refreshReview: "刷新复核",
+    exportReview: "导出复核 CSV",
+    reviewSamples: "复核样本",
+    highPriority: "高优先级",
+    topReviewReason: "主要原因",
+    noReview: "暂无需要复核的样本",
+    suggestedAction: "建议动作",
     usageTitle: "后台使用与测量次数",
     refreshUsage: "刷新统计",
     exportUsage: "导出统计 CSV",
@@ -143,6 +152,7 @@ const translations = {
     measure: "Measure",
     depth: "Depth",
     history: "History",
+    review: "Review",
     usage: "Usage",
     calibration: "Calibration",
     localApi: "Local API",
@@ -218,6 +228,14 @@ const translations = {
     copied: "Copied",
     openImage: "Open image",
     historyTitle: "Timestamped measurement records",
+    reviewTitle: "Failure and low-confidence sample pool",
+    refreshReview: "Refresh review",
+    exportReview: "Export review CSV",
+    reviewSamples: "Review samples",
+    highPriority: "High priority",
+    topReviewReason: "Top reason",
+    noReview: "No review samples yet",
+    suggestedAction: "Suggested action",
     usageTitle: "Backend usage and measurement counts",
     refreshUsage: "Refresh usage",
     exportUsage: "Export usage CSV",
@@ -282,6 +300,7 @@ const translations = {
     measure: "Вимір",
     depth: "Глибина",
     history: "Історія",
+    review: "Перевірка",
     usage: "Статистика",
     calibration: "Калібрування",
     localApi: "Локальний API",
@@ -357,6 +376,14 @@ const translations = {
     copied: "Скопійовано",
     openImage: "Відкрити фото",
     historyTitle: "Історія з часовими мітками",
+    reviewTitle: "Зразки помилок і низької довіри",
+    refreshReview: "Оновити перевірку",
+    exportReview: "Експорт CSV",
+    reviewSamples: "Зразки перевірки",
+    highPriority: "Високий пріоритет",
+    topReviewReason: "Головна причина",
+    noReview: "Немає зразків для перевірки",
+    suggestedAction: "Рекомендована дія",
     usageTitle: "Використання та кількість вимірювань",
     refreshUsage: "Оновити статистику",
     exportUsage: "Експорт CSV",
@@ -912,6 +939,7 @@ const state = {
   depthWorkflow: null,
   validationPlan: null,
   usageSummary: null,
+  reviewSamples: null,
   lastDepthDemo: null,
   activeView: "top",
   previewUrls: { top: null, side: null },
@@ -969,6 +997,11 @@ const historySearch = document.querySelector("#historySearch");
 const historyList = document.querySelector("#historyList");
 const refreshHistoryButton = document.querySelector("#refreshHistoryButton");
 const exportHistoryLink = document.querySelector("#exportHistoryLink");
+const reviewSearch = document.querySelector("#reviewSearch");
+const reviewSummaryGrid = document.querySelector("#reviewSummaryGrid");
+const reviewList = document.querySelector("#reviewList");
+const refreshReviewButton = document.querySelector("#refreshReviewButton");
+const exportReviewLink = document.querySelector("#exportReviewLink");
 const usageSummaryGrid = document.querySelector("#usageSummaryGrid");
 const usageEndpointList = document.querySelector("#usageEndpointList");
 const refreshUsageButton = document.querySelector("#refreshUsageButton");
@@ -1018,6 +1051,9 @@ function applyLanguage() {
   }
   if (state.validationPlan) {
     renderValidationPlan(state.validationPlan);
+  }
+  if (state.reviewSamples) {
+    renderReviewSamples(state.reviewSamples);
   }
   if (state.usageSummary) {
     renderUsageSummary(state.usageSummary);
@@ -1777,6 +1813,81 @@ function appendUsageCard(label, value, sub) {
   usageSummaryGrid.appendChild(card);
 }
 
+async function loadReviewSamples() {
+  if (!reviewSummaryGrid || !reviewList) {
+    return;
+  }
+  const params = new URLSearchParams();
+  if (reviewSearch.value.trim()) {
+    params.set("order_id", reviewSearch.value.trim());
+  }
+  params.set("limit", "50");
+  updateReviewExportLink(params);
+  const response = await fetch(`/api/review/samples?${params}`);
+  if (!response.ok) {
+    return;
+  }
+  const data = await response.json();
+  state.reviewSamples = data;
+  renderReviewSamples(data);
+}
+
+function updateReviewExportLink(params) {
+  if (!exportReviewLink) {
+    return;
+  }
+  const exportParams = new URLSearchParams(params);
+  exportParams.set("limit", "500");
+  exportReviewLink.href = `/api/review/export.csv?${exportParams}`;
+}
+
+function renderReviewSamples(data) {
+  reviewSummaryGrid.innerHTML = "";
+  reviewList.innerHTML = "";
+  const items = data.items || [];
+  const summary = data.summary || {};
+  const byPriority = summary.by_priority || {};
+  const highCount = Number(byPriority.critical || 0) + Number(byPriority.high || 0);
+  const topReason = summary.top_reasons?.[0]?.reason || "--";
+  appendReviewCard(t("reviewSamples"), summary.total_review_samples || 0, t("review"));
+  appendReviewCard(t("highPriority"), highCount, "critical + high");
+  appendReviewCard(t("topReviewReason"), topReason, t("suggestedAction"));
+
+  if (!items.length) {
+    const empty = document.createElement("div");
+    empty.className = "history-empty";
+    empty.textContent = t("noReview");
+    reviewList.appendChild(empty);
+    return;
+  }
+
+  for (const item of items) {
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = `history-row review-priority-${item.priority || "medium"}`;
+    row.addEventListener("click", () => openHistoryItem(item.measurement_id));
+    appendHistoryCell(row, item.order_id || item.barcode_text || item.measurement_id, formatDate(item.created_at), true);
+    appendHistoryCell(row, item.priority || "medium", `${Math.round((item.confidence || 0) * 100)}% | ${item.status || "--"}`, false);
+    appendHistoryCell(row, labelFrom(packageClassLabels, item.package_class), labelFrom(materialClassLabels, item.material_class), false);
+    appendHistoryCell(row, (item.review_reasons || []).slice(0, 3).join(" | "), t("topReviewReason"), false);
+    appendHistoryCell(row, item.suggested_action || "--", t("suggestedAction"), false);
+    reviewList.appendChild(row);
+  }
+}
+
+function appendReviewCard(label, value, sub) {
+  const card = document.createElement("div");
+  card.className = "usage-card";
+  const labelEl = document.createElement("span");
+  const valueEl = document.createElement("strong");
+  const subEl = document.createElement("small");
+  labelEl.textContent = label;
+  valueEl.textContent = String(value ?? "--");
+  subEl.textContent = sub || "";
+  card.append(labelEl, valueEl, subEl);
+  reviewSummaryGrid.appendChild(card);
+}
+
 async function loadHistory() {
   const params = new URLSearchParams();
   if (historySearch.value.trim()) {
@@ -2020,6 +2131,7 @@ copyJsonButton.addEventListener("click", copyResultJson);
 decodeBarcodeButton.addEventListener("click", () => orderImage.click());
 orderImage.addEventListener("change", decodeBarcodeImage);
 refreshHistoryButton.addEventListener("click", loadHistory);
+refreshReviewButton.addEventListener("click", loadReviewSamples);
 refreshUsageButton.addEventListener("click", loadUsageSummary);
 refreshDepthStatusButton.addEventListener("click", loadDepthStatus);
 probeDepthCaptureButton.addEventListener("click", probeDepthCapture);
@@ -2039,6 +2151,12 @@ historySearch.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
     event.preventDefault();
     loadHistory();
+  }
+});
+reviewSearch.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    loadReviewSamples();
   }
 });
 for (const input of [orderIdInput, barcodeTextInput]) {
@@ -2086,4 +2204,5 @@ applyLanguage();
 applyTheme();
 loadDepthStatus();
 loadHistory();
+loadReviewSamples();
 loadUsageSummary();
