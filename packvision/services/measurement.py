@@ -5,6 +5,8 @@ import io
 from dataclasses import dataclass
 from typing import Any
 
+from packvision.services.capture_quality import analyze_decoded_capture_quality
+
 try:
     import cv2
     import numpy as np
@@ -45,6 +47,7 @@ def measure_images(
 
     cfg = config or MeasurementConfig()
     top_image = _decode_image(top_image_bytes)
+    top_quality = analyze_decoded_capture_quality(top_image)
     top = _measure_single_view(
         top_image,
         top_image_bytes,
@@ -56,9 +59,12 @@ def measure_images(
     )
 
     side = None
+    side_quality = None
     if side_image_bytes:
+        side_image = _decode_image(side_image_bytes)
+        side_quality = analyze_decoded_capture_quality(side_image)
         side = _measure_single_view(
-            _decode_image(side_image_bytes),
+            side_image,
             side_image_bytes,
             cfg.marker_size_mm,
             "side",
@@ -68,7 +74,9 @@ def measure_images(
         )
 
     dimensions: dict[str, float | None] = {"length_mm": None, "width_mm": None, "height_mm": None}
-    flags: list[str] = ["single_camera_perspective_limited"]
+    flags: list[str] = ["single_camera_perspective_limited", *top_quality["quality_flags"]]
+    if side_quality:
+        flags.extend(side_quality["quality_flags"])
     status = "needs_reference"
     confidence = 0.2
 
@@ -143,6 +151,10 @@ def measure_images(
         "dimensions": dimensions,
         "quality_flags": sorted(set(flags)),
         "recommendation_codes": _recommendations(flags),
+        "capture_quality": {
+            "top": top_quality,
+            "side": side_quality,
+        },
         "side_measurement": side_measurement,
         "top_view": _public_view(top),
         "side_view": _public_view(side) if side else None,
@@ -506,4 +518,12 @@ def _recommendations(flags: list[str]) -> list[str]:
         recommendations.append("keep_camera_top_down")
     if "camera_distance_exif_scale_used" in flag_set or "camera_distance_manual_focal_scale_used" in flag_set:
         recommendations.append("distance_mode_is_estimate")
+    if "lighting_overexposed" in flag_set:
+        recommendations.append("retake_away_from_direct_light")
+    if "lighting_underexposed" in flag_set:
+        recommendations.append("add_stable_indoor_light")
+    if "low_contrast_capture" in flag_set:
+        recommendations.append("retake_on_plain_background")
+    if "blurry_capture" in flag_set:
+        recommendations.append("stabilize_camera_or_tripod")
     return recommendations

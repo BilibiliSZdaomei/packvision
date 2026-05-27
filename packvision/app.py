@@ -14,6 +14,7 @@ from pydantic import BaseModel
 
 from packvision import __version__
 from packvision.services.barcode import detect_codes
+from packvision.services.capture_quality import CaptureQualityError, analyze_capture_quality
 from packvision.services.depth_camera import depth_camera_status
 from packvision.services.depth_capture import (
     DepthCaptureConfig,
@@ -292,6 +293,18 @@ def create_app() -> FastAPI:
         if len(content) > MAX_UPLOAD_BYTES:
             raise HTTPException(status_code=413, detail="Image must be 15 MB or smaller.")
         return detect_codes(content)
+
+    @app.post("/api/capture/quality")
+    async def capture_quality(image: Annotated[UploadFile, File()]) -> dict[str, object]:
+        content = await image.read()
+        if not content:
+            raise HTTPException(status_code=422, detail="image is required.")
+        if len(content) > MAX_UPLOAD_BYTES:
+            raise HTTPException(status_code=413, detail="Image must be 15 MB or smaller.")
+        try:
+            return analyze_capture_quality(content)
+        except CaptureQualityError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     @app.get("/api/depth/status")
     def depth_status() -> dict[str, object]:

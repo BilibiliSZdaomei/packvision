@@ -379,6 +379,23 @@ input {
   font-size: 0.92rem;
 }
 
+.advanced-mode {
+  display: grid;
+  gap: 12px;
+}
+
+.advanced-mode summary {
+  width: fit-content;
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.advanced-mode .field-grid {
+  margin-top: 12px;
+}
+
 .drop-grid,
 .field-grid,
 .metrics {

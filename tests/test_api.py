@@ -88,6 +88,27 @@ def test_order_scan_endpoint_normalizes_payload():
 
 
 @pytest.mark.skipif(not opencv_ready(), reason="OpenCV is unavailable")
+def test_capture_quality_endpoint_flags_overexposed_upload():
+    import cv2
+    import numpy as np
+
+    image = np.full((320, 420, 3), 255, dtype=np.uint8)
+    ok, encoded = cv2.imencode(".jpg", image)
+    assert ok
+
+    client = TestClient(create_app())
+    response = client.post(
+        "/api/capture/quality",
+        files={"image": ("bright.jpg", encoded.tobytes(), "image/jpeg")},
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["status"] == "review"
+    assert "lighting_overexposed" in body["quality_flags"]
+
+
+@pytest.mark.skipif(not opencv_ready(), reason="OpenCV is unavailable")
 def test_decode_order_image_endpoint_accepts_image():
     client = TestClient(create_app())
     demo = client.get("/api/demo-image.jpg")

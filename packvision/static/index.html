@@ -151,24 +151,27 @@
                 <strong data-i18n="measurementMode">测量参数</strong>
                 <span data-i18n="estimateNote">无卡模式需要距离和焦距，结果为估算。</span>
               </div>
-              <div class="field-grid">
-                <label>
-                  <span data-i18n="markerSize">标记边长，毫米</span>
-                  <input name="marker_size_mm" type="number" min="10" step="0.1" value="50" />
-                </label>
-                <label>
-                  <span data-i18n="manualHeight">人工高度，毫米</span>
-                  <input name="manual_height_mm" type="number" min="0" step="0.1" placeholder="0" />
-                </label>
-                <label>
-                  <span data-i18n="cameraDistance">相机距离，毫米</span>
-                  <input name="camera_distance_mm" type="number" min="50" step="1" placeholder="例如 800" />
-                </label>
-                <label>
-                  <span data-i18n="focal35">等效焦距，毫米</span>
-                  <input name="focal_length_35mm" type="number" min="1" step="0.1" placeholder="例如 24" />
-                </label>
-              </div>
+              <details class="advanced-mode">
+                <summary data-i18n="advancedEstimateParams">高级估算参数</summary>
+                <div class="field-grid">
+                  <label>
+                    <span data-i18n="markerSize">标记边长，毫米</span>
+                    <input name="marker_size_mm" type="number" min="10" step="0.1" value="50" />
+                  </label>
+                  <label>
+                    <span data-i18n="manualHeight">人工高度，毫米</span>
+                    <input name="manual_height_mm" type="number" min="0" step="0.1" placeholder="0" />
+                  </label>
+                  <label>
+                    <span data-i18n="cameraDistance">相机距离，毫米</span>
+                    <input name="camera_distance_mm" type="number" min="50" step="1" placeholder="例如 800" />
+                  </label>
+                  <label>
+                    <span data-i18n="focal35">等效焦距，毫米</span>
+                    <input name="focal_length_35mm" type="number" min="1" step="0.1" placeholder="例如 24" />
+                  </label>
+                </div>
+              </details>
             </div>
 
             <input id="topBoxJson" name="top_box_json" type="hidden" />
