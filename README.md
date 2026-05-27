@@ -36,6 +36,7 @@ PackVision 不是单纯的“拍照量尺寸 Demo”，而是给海外汽车备�
 | 单号和条码 | 已完成 | 支持手动单号、扫码枪文本、上传条码/二维码图片识别。 |
 | 历史追溯 | 已完成 | SQLite 保存时间戳、单号、尺寸、置信度、上传图、标注图。 |
 | 使用次数统计 | 已完成 | 后台记录接口调用次数、测量次数、成功/失败次数，可导出 CSV。 |
+| 现场支持包 | 已完成 | 一键导出环境体检、日志、历史、用量、复核样本和真值模板，默认不包含现场图片。 |
 | 异形件/长条件 | 已有深度算法基础 | 支持深度 ROI、object mask、长条件主轴测量。 |
 | Astra Pro 适配 | 已完成无硬件开发底座 | 驱动/上位机/OpenNI 状态检查、内参归一化、采集探测、模拟干跑。 |
 | 多相机冗余 | 已有架构 | 相机角色、序列号、三视图缺口、保守融合接口已预留。 |
@@ -45,7 +46,7 @@ PackVision 不是单纯的“拍照量尺寸 Demo”，而是给海外汽车备�
 当前验证结果：
 
 ```text
-80 passed in 5.14s
+92 passed in 7.22s
 ```
 
 最新已验证交付包：
@@ -148,6 +149,7 @@ PackVision 软件包可以复制即用，但 Astra Pro 深度相机不能完全�
 
 ```text
 GET /api/deployment/readiness
+GET /api/deployment/support-bundle.zip
 ```
 
 它会检查：
@@ -159,6 +161,8 @@ GET /api/deployment/readiness
 - 当前是否检测到深度相机。
 - 海外仓到货前需要准备哪些物理物品。
 - 到现场后的操作顺序。
+
+现场支持包会生成一个 zip，包含体检结果、深度相机状态、采集后端状态、AI 插件状态、历史 CSV、使用日志 CSV、复核样本、真值模板和 `PackVision.log`。默认不包含上传照片和标注图片，便于控制文件大小和现场隐私。
 
 现场脚本：
 
@@ -179,6 +183,7 @@ PowerShell -ExecutionPolicy Bypass -File .\scripts\check_astra_depth_status.ps1
 | `GET /api/demo-image.jpg` | 演示图片。 |
 | `GET /api/calibration-card.svg` | A4 ArUco 标定卡。 |
 | `GET /api/deployment/readiness` | 海外仓交付和环境体检。 |
+| `GET /api/deployment/support-bundle.zip` | 现场远程排错支持包。 |
 
 ### 图片测量
 

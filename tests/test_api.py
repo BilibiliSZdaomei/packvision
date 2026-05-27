@@ -24,6 +24,15 @@ def test_favicon_endpoint_does_not_404():
     assert response.status_code == 204
 
 
+def test_deployment_support_bundle_endpoint_returns_zip():
+    client = TestClient(create_app())
+    response = client.get("/api/deployment/support-bundle.zip")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/zip"
+    assert response.content.startswith(b"PK")
+
+
 @pytest.mark.skipif(not opencv_ready(), reason="OpenCV ArUco is unavailable")
 def test_demo_image_endpoint_returns_jpeg():
     client = TestClient(create_app())

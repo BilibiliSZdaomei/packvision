@@ -67,6 +67,7 @@ from packvision.services.review_pool import (
     list_review_samples,
 )
 from packvision.services.storage import ensure_data_dirs, resource_path, write_bytes
+from packvision.services.support_bundle import build_support_bundle
 from packvision.services.usage import (
     export_usage_csv,
     init_usage_db,
@@ -271,6 +272,15 @@ def create_app() -> FastAPI:
     @app.get("/api/deployment/readiness")
     def deployment_readiness() -> dict[str, object]:
         return build_deployment_readiness()
+
+    @app.get("/api/deployment/support-bundle.zip")
+    def deployment_support_bundle() -> FileResponse:
+        bundle_path = build_support_bundle()
+        return FileResponse(
+            bundle_path,
+            media_type="application/zip",
+            filename=bundle_path.name,
+        )
 
     @app.get("/api/ai/plugins")
     def ai_plugins() -> dict[str, object]:

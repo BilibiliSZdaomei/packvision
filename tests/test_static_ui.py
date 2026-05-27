@@ -37,8 +37,11 @@ def test_static_ui_exposes_lightweight_ai_plugin_status():
     js = (ROOT / "packvision" / "static" / "app.js").read_text(encoding="utf-8")
 
     assert 'id="loadAiPluginsButton"' in html
+    assert 'id="downloadSupportBundleLink"' in html
+    assert "/api/deployment/support-bundle.zip" in html
     assert 'id="aiPluginSummary"' in html
     assert "/api/ai/plugins" in js
+    assert "supportBundle" in js
     assert "heavy_models_bundled" in js
     assert "aiPluginNoPlugins" in js
 
