@@ -52,13 +52,13 @@ PackVision 不是单纯的“拍照量尺寸 Demo”，而是给海外汽车备�
 最新已验证交付包：
 
 ```text
-D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_20260528_0231.zip
+D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_20260528_0749.zip
 ```
 
 大小约：
 
 ```text
-73.4 MB
+73.45 MB
 ```
 
 ## 4. 运行方式
