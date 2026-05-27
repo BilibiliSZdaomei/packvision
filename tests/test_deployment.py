@@ -34,3 +34,7 @@ def test_deployment_readiness_endpoint_is_actionable():
     assert body["transfer_package"]["max_zip_mb"] == 100
     assert body["transfer_package"]["include_driver_installer_by_default"] is False
     assert any(check["id"] == "field_accessories" for check in body["checks"])
+
+
+def test_development_cycle_script_exists():
+    assert Path("scripts/dev_cycle.ps1").exists()
