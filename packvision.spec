@@ -7,7 +7,7 @@ from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs
 
 root = Path.cwd()
 datas = [
-    (str(root / "packvision" / "static"), "packvision/static"),
+    (str(root / "packvision" / "static"), "static"),
 ]
 datas += collect_data_files("cv2")
 
@@ -19,6 +19,8 @@ hiddenimports = [
     "PIL",
     "PIL.Image",
     "PIL.ExifTags",
+    "primesense",
+    "primesense.openni2",
     "uvicorn.loops.auto",
     "uvicorn.lifespan.on",
     "uvicorn.protocols.http.auto",

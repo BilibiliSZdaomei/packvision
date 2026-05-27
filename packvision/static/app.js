@@ -124,6 +124,9 @@ const translations = {
     depthDriver: "驱动状态",
     depthOpenNi: "OpenNI2",
     depthPyorbbec: "pyorbbecsdk",
+    depthConfiguredCameras: "配置相机",
+    depthDetectedDevices: "已连接设备",
+    depthThreeView: "三视图",
     captureProbe: "采集探测",
     captureStatus: "采集状态",
     selectedBackend: "选中后端",
@@ -260,6 +263,9 @@ const translations = {
     depthDriver: "Driver status",
     depthOpenNi: "OpenNI2",
     depthPyorbbec: "pyorbbecsdk",
+    depthConfiguredCameras: "Configured cameras",
+    depthDetectedDevices: "Connected devices",
+    depthThreeView: "Three-view",
     captureProbe: "Capture probe",
     captureStatus: "Capture status",
     selectedBackend: "Selected backend",
@@ -396,6 +402,9 @@ const translations = {
     depthDriver: "Стан драйвера",
     depthOpenNi: "OpenNI2",
     depthPyorbbec: "pyorbbecsdk",
+    depthConfiguredCameras: "Налаштовані камери",
+    depthDetectedDevices: "Підключені пристрої",
+    depthThreeView: "Три ракурси",
     captureProbe: "Перевірка збору",
     captureStatus: "Стан збору",
     selectedBackend: "Обраний бекенд",
@@ -1394,10 +1403,23 @@ function renderDepthStatus(data) {
   const openNiReady = Boolean(data.openni2?.openni_dll_found && data.openni2?.orbbec_driver_found);
   const pyorbbecReady = Boolean(data.pyorbbecsdk_available);
   const driverReady = Boolean(data.windows_driver?.found);
+  const inventory = data.camera_inventory || {};
+  const configuredCount = Number(inventory.configured_camera_count || 0);
+  const targetCount = Number(inventory.target_camera_count || configuredCount || 1);
+  const detectedCount = Number(inventory.openni_probe?.device_count || 0);
+  const missingThreeView = inventory.missing_three_view_roles || [];
   appendDepthPill(depthStatusGrid, t("depthBackend"), data.recommended_backend || "--", Boolean(data.ready_for_hardware_trial));
   appendDepthPill(depthStatusGrid, t("depthOpenNi"), openNiReady ? t("ready") : t("missing"), openNiReady);
   appendDepthPill(depthStatusGrid, t("depthPyorbbec"), pyorbbecReady ? t("installed") : t("unavailable"), pyorbbecReady);
   appendDepthPill(depthStatusGrid, t("depthDriver"), driverReady ? t("installed") : t("missing"), driverReady);
+  appendDepthPill(depthStatusGrid, t("depthConfiguredCameras"), `${configuredCount}/${targetCount}`, configuredCount > 0);
+  appendDepthPill(depthStatusGrid, t("depthDetectedDevices"), String(detectedCount), detectedCount > 0);
+  appendDepthPill(
+    depthStatusGrid,
+    t("depthThreeView"),
+    missingThreeView.length ? `${t("missing")}: ${missingThreeView.join(", ")}` : t("ready"),
+    missingThreeView.length === 0,
+  );
 }
 
 function appendDepthPill(parent, label, value, isReady) {

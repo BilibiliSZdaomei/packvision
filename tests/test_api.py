@@ -261,9 +261,11 @@ def test_depth_capture_capabilities_endpoint_reports_optional_backends():
     assert response.status_code == 200
     assert "capture_backends" in body
     assert "pyorbbecsdk" in body["capture_backends"]
+    assert "openni2_primesense" in body["capture_backends"]
     assert "openni2_runtime_probe" in body["capture_backends"]
     assert body["recommended_capture_backend"] in {
         "pyorbbecsdk",
+        "openni2_primesense",
         "openni2_runtime_probe",
         "not_ready",
     }
@@ -281,10 +283,84 @@ def test_depth_capture_probe_endpoint_is_actionable_without_required_hardware():
         "driver_ready_capture_backend_missing",
         "capture_backend_missing",
         "hardware_validation_required",
+        "openni_runtime_ready_no_device",
     }
     assert isinstance(body["ready"], bool)
     assert body["next_actions"]
     assert body["next_action_keys"]
+
+
+def test_depth_cameras_endpoint_returns_configured_rig():
+    client = TestClient(create_app())
+    response = client.get("/api/depth/cameras")
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["configured_camera_count"] >= 1
+    assert "required_three_view_roles" in body
+    assert body["upgrade_path"]["three_camera_target"]
+
+
+def test_depth_capture_frame_endpoint_returns_captured_frame_without_hardware(monkeypatch):
+    from packvision.services.depth_capture import DepthFrameBundle
+    from packvision.services.depth_geometry import DepthIntrinsics
+
+    def fake_capture(config):
+        return DepthFrameBundle(
+            depth_frame=[[1000.0, 1001.0], [999.0, 1002.0]],
+            intrinsics=DepthIntrinsics(fx=100, fy=100, cx=1, cy=1, width=2, height=2),
+            backend="openni2_primesense",
+            camera_id=config.camera_id or "astra-pro-top-01",
+            role=config.role or "top",
+            serial_number="fake-uri",
+            frame_index=7,
+        )
+
+    monkeypatch.setattr("packvision.app.capture_depth_once", fake_capture)
+    client = TestClient(create_app())
+    response = client.post("/api/depth/capture/frame", json={"include_frame": False})
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["status"] == "captured"
+    assert body["frame_shape"] == {"height": 2, "width": 2}
+    assert "depth_frame" not in body
+    assert body["camera_id"] == "astra-pro-top-01"
+
+
+def test_depth_fuse_measurements_endpoint_saves_traceable_result():
+    client = TestClient(create_app())
+    response = client.post(
+        "/api/depth/fuse-measurements",
+        json={
+            "order_id": "MV-001",
+            "part_category": "bumper",
+            "package_hint": "irregular",
+            "view_measurements": [
+                {
+                    "view_id": "top",
+                    "role": "top",
+                    "status": "measured",
+                    "confidence": 0.82,
+                    "dimensions": {"length_mm": 900, "width_mm": 240, "height_mm": 160},
+                },
+                {
+                    "view_id": "front",
+                    "role": "front",
+                    "status": "measured",
+                    "confidence": 0.78,
+                    "dimensions": {"length_mm": 910, "width_mm": 250, "height_mm": 170},
+                },
+            ],
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["measurement_source"] == "depth_multi_view_fusion"
+    assert body["order_id"] == "MV-001"
+    assert body["dimensions"]["length_mm"] == 910.0
+    assert "multi_view_fusion" in body["quality_flags"]
 
 
 def test_depth_quality_endpoint_flags_sparse_synthetic_frame():

@@ -4,6 +4,7 @@ python-multipart==0.0.20
 opencv-contrib-python-headless==4.12.0.88
 numpy==2.2.6
 pillow==11.3.0
+primesense==2.2.0.30.post5
 pyinstaller==6.15.0
 pytest==8.4.1
 httpx==0.28.1

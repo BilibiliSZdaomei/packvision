@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from packvision.services.astra_vendor import astra_vendor_profile, resolve_astra_root
+from packvision.services.depth_devices import build_depth_camera_inventory
 
 
 DEFAULT_ASTRA_ROOT = Path(r"D:\BaiduNetdiskDownload\奥比中光Astra Pro")
@@ -57,6 +58,7 @@ def depth_camera_status(vendor_root: str | Path | None = None) -> dict[str, Any]
             "ros2_openni_sdk": str(ros2_sdk) if ros2_sdk.exists() else None,
         },
         "vendor_profile": vendor_profile,
+        "camera_inventory": build_depth_camera_inventory(),
         "calibration_strategy": vendor_profile["vendor_first_calibration_strategy"],
         "notes": [
             "Install the Windows sensor driver before first USB validation.",

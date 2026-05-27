@@ -19,11 +19,14 @@ from packvision.services.astra_vendor import AstraVendorError, astra_vendor_prof
 from packvision.services.capture_quality import CaptureQualityError, analyze_capture_quality
 from packvision.services.depth_camera import depth_camera_status
 from packvision.services.depth_capture import (
+    capture_depth_once,
     DepthCaptureConfig,
     DepthCaptureError,
     depth_capture_capabilities,
     probe_depth_capture,
 )
+from packvision.services.depth_devices import build_depth_camera_inventory
+from packvision.services.depth_fusion import DepthFusionError, fuse_depth_measurements
 from packvision.services.depth_geometry import (
     DepthObjectConfig,
     DepthIntrinsics,
@@ -123,12 +126,45 @@ class DepthObjectMeasurePayload(DepthTraceabilityPayload):
 class DepthCaptureProbePayload(BaseModel):
     backend: str = "auto"
     timeout_ms: int = 1500
+    camera_id: str | None = None
+    role: str | None = None
+
+
+class DepthCaptureFramePayload(BaseModel):
+    backend: str = "auto"
+    timeout_ms: int = 1500
+    camera_id: str | None = None
+    role: str | None = None
+    include_frame: bool = True
 
 
 class CameraInfoNormalizePayload(BaseModel):
     camera_info: dict[str, Any]
     stream: str = "depth"
     depth_scale: float = 1.0
+
+
+class DepthMeasureCapturePayload(DepthTraceabilityPayload):
+    backend: str = "auto"
+    timeout_ms: int = 1500
+    camera_id: str | None = None
+    role: str | None = None
+    measurement_mode: str = "object_mask"
+    roi: list[int]
+    background_roi: list[int] | None = None
+    table_depth_mm: float | None = None
+    min_valid_depth_mm: float = 50.0
+    max_valid_depth_mm: float = 6000.0
+    object_min_height_mm: float = 30.0
+    trim_quantile: float = 0.02
+    footprint_method: str = "principal_axes"
+    trim_ratio: float = 0.08
+
+
+class DepthFusionPayload(DepthTraceabilityPayload):
+    view_measurements: list[dict[str, Any]]
+    strategy: str = "conservative_max"
+    disagreement_ratio: float = 0.12
 
 
 class DepthQualityPayload(BaseModel):
@@ -463,6 +499,10 @@ def create_app() -> FastAPI:
     def depth_capture_capability_report() -> dict[str, object]:
         return depth_capture_capabilities()
 
+    @app.get("/api/depth/cameras")
+    def depth_cameras() -> dict[str, object]:
+        return build_depth_camera_inventory()
+
     @app.post("/api/depth/capture/probe")
     def depth_capture_probe(payload: DepthCaptureProbePayload) -> dict[str, object]:
         try:
@@ -470,9 +510,89 @@ def create_app() -> FastAPI:
                 DepthCaptureConfig(
                     backend=payload.backend,
                     timeout_ms=payload.timeout_ms,
+                    camera_id=payload.camera_id,
+                    role=payload.role,
                 )
             )
         except DepthCaptureError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post("/api/depth/capture/frame")
+    def depth_capture_frame(payload: DepthCaptureFramePayload) -> dict[str, object]:
+        try:
+            bundle = capture_depth_once(
+                DepthCaptureConfig(
+                    backend=payload.backend,
+                    timeout_ms=payload.timeout_ms,
+                    camera_id=payload.camera_id,
+                    role=payload.role,
+                )
+            )
+            return _depth_frame_response(bundle, include_frame=payload.include_frame)
+        except DepthCaptureError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post("/api/depth/measure-capture")
+    def depth_measure_capture(request: Request, payload: DepthMeasureCapturePayload) -> dict[str, object]:
+        try:
+            bundle = capture_depth_once(
+                DepthCaptureConfig(
+                    backend=payload.backend,
+                    timeout_ms=payload.timeout_ms,
+                    camera_id=payload.camera_id,
+                    role=payload.role,
+                )
+            )
+            measurement_mode = str(payload.measurement_mode or "object_mask").strip().lower()
+            if measurement_mode == "roi":
+                result = measure_depth_roi(
+                    bundle.depth_frame,
+                    bundle.intrinsics,
+                    DepthMeasurementConfig(
+                        roi=payload.roi,
+                        background_roi=payload.background_roi,
+                        table_depth_mm=payload.table_depth_mm,
+                        min_valid_depth_mm=payload.min_valid_depth_mm,
+                        max_valid_depth_mm=payload.max_valid_depth_mm,
+                        trim_ratio=payload.trim_ratio,
+                    ),
+                )
+            elif measurement_mode in {"object_mask", "auto"}:
+                result = measure_depth_object_mask(
+                    bundle.depth_frame,
+                    bundle.intrinsics,
+                    DepthObjectConfig(
+                        roi=payload.roi,
+                        background_roi=payload.background_roi,
+                        table_depth_mm=payload.table_depth_mm,
+                        min_valid_depth_mm=payload.min_valid_depth_mm,
+                        max_valid_depth_mm=payload.max_valid_depth_mm,
+                        object_min_height_mm=payload.object_min_height_mm,
+                        trim_quantile=payload.trim_quantile,
+                        footprint_method=payload.footprint_method,
+                    ),
+                )
+            else:
+                raise DepthCaptureError("measurement_mode must be auto, object_mask, or roi.")
+            result["camera_capture"] = _depth_frame_response(bundle, include_frame=False)
+            finalized = _finalize_depth_result(result, payload, measurement_source="depth_camera_capture")
+            _set_usage_trace(request, finalized)
+            return finalized
+        except (DepthCaptureError, DepthMeasurementError) as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post("/api/depth/fuse-measurements")
+    def depth_fuse_measurements(request: Request, payload: DepthFusionPayload) -> dict[str, object]:
+        try:
+            result = fuse_depth_measurements(
+                payload.view_measurements,
+                strategy=payload.strategy,
+                disagreement_ratio=payload.disagreement_ratio,
+            )
+            finalized = _finalize_depth_result(result, payload, measurement_source="depth_multi_view_fusion")
+            _set_usage_trace(request, finalized)
+            return finalized
+        except DepthFusionError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     @app.post("/api/depth/quality")
@@ -644,6 +764,33 @@ def _suffix(filename: str | None) -> str:
         return ".jpg"
     suffix = Path(filename).suffix.lower()
     return suffix if suffix in {".jpg", ".jpeg", ".png", ".webp", ".bmp"} else ".jpg"
+
+
+def _depth_frame_response(bundle: Any, *, include_frame: bool) -> dict[str, object]:
+    frame_height = len(bundle.depth_frame)
+    frame_width = len(bundle.depth_frame[0]) if frame_height else 0
+    response: dict[str, object] = {
+        "status": "captured",
+        "backend": bundle.backend,
+        "camera_id": bundle.camera_id,
+        "role": bundle.role,
+        "serial_number": bundle.serial_number,
+        "frame_index": bundle.frame_index,
+        "timestamp_us": bundle.timestamp_us,
+        "frame_shape": {"height": frame_height, "width": frame_width},
+        "intrinsics": {
+            "fx": bundle.intrinsics.fx,
+            "fy": bundle.intrinsics.fy,
+            "cx": bundle.intrinsics.cx,
+            "cy": bundle.intrinsics.cy,
+            "width": bundle.intrinsics.width,
+            "height": bundle.intrinsics.height,
+            "depth_scale": bundle.intrinsics.depth_scale,
+        },
+    }
+    if include_frame:
+        response["depth_frame"] = bundle.depth_frame
+    return response
 
 
 def _depth_demo_object_result() -> dict[str, object]:

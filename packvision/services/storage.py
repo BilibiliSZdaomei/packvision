@@ -8,7 +8,11 @@ from pathlib import Path
 
 def resource_path(*parts: str) -> Path:
     if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-        return Path(sys._MEIPASS).joinpath("packvision", *parts)  # type: ignore[attr-defined]
+        bundle_root = Path(sys._MEIPASS)  # type: ignore[attr-defined]
+        direct = bundle_root.joinpath(*parts)
+        if direct.exists():
+            return direct
+        return bundle_root.joinpath("packvision", *parts)
     return Path(__file__).resolve().parents[1].joinpath(*parts)
 
 
