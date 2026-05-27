@@ -40,6 +40,7 @@ flowchart LR
 | --- | --- |
 | `GET /api/depth/cameras` | 看配置了几台相机、是否连上、三视图还缺什么 |
 | `GET /api/depth/status` | 看驱动、OpenNI、厂商资料状态 |
+| `GET /api/depth/astra/tutorial-playbook` | 看厂商教程二次审计后的 ROS2 控制、多相机、标定和点云适配 |
 | `POST /api/depth/capture/probe` | 探测相机能不能采集 |
 | `POST /api/depth/capture/frame` | 采集一帧深度数据 |
 | `POST /api/depth/measure-capture` | 采集并直接测量 |
@@ -90,10 +91,30 @@ flowchart LR
   "camera_id": "astra-pro-top-01",
   "role": "top",
   "backend": "openni2_primesense",
-  "model": "Orbbec Astra Pro"
+  "model": "Orbbec Astra Pro",
+  "serial_hint": null,
+  "ros2_profile": {
+    "launch_file": "astra_pro.launch.xml",
+    "device_num": 1,
+    "operator_policy": {
+      "measurement_mode": "auto",
+      "manual_intrinsics_allowed": false
+    }
+  }
 }
 ```
 
 后面增加相机时，先增加配置，不要改仓库操作流程。
+
+## 厂商教程适配接口
+
+`GET /api/depth/astra/tutorial-playbook` 是给工程调试看的，不是给仓库员工操作的。它把厂商教程里的内容翻译成 PackVision 语言：
+
+- 曝光、增益、白平衡、镜像、激光、流开关服务。
+- `device_num`、serial number、`multi_astra.launch.xml`、`cleanup_shm_node`。
+- `ir_info_url`、`color_info_url` 和 `camera_name` 规则。
+- 点云、彩色点云、D2C 对齐何时启用。
+
+原则：员工只负责扫码、放货、自动采集、确认保存；工程师才处理 ROS2 参数。
 
 继续读：[[06 多相机三视图方案]]

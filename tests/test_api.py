@@ -175,6 +175,28 @@ def test_depth_vendor_profile_endpoint_prefers_vendor_camera_info():
     assert body["hardware_profile"]["model"] == "Orbbec Astra Pro"
     assert "/camera/depth/camera_info" in body["ros_interfaces"]["camera_info_topics"]
     assert body["vendor_first_calibration_strategy"]["warehouse_worker"]
+    assert body["tutorial_playbook"]["multi_camera_playbook"]["vendor_commands"]["cleanup_shared_memory"]
+
+
+def test_depth_astra_tutorial_playbook_endpoint_maps_missed_vendor_controls():
+    client = TestClient(create_app())
+    response = client.get("/api/depth/astra/tutorial-playbook")
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["status"] == "reviewed_and_project_mapped"
+    services = [
+        control["service"]
+        for group in body["control_catalog"]
+        for control in group["controls"]
+    ]
+    launch_params = [item["name"] for item in body["launch_parameter_catalog"]]
+    assert "/camera/set_ir_exposure" in services
+    assert "/camera/set_depth_mirror" in services
+    assert "device_num" in launch_params
+    assert "depth_registration" in launch_params
+    assert body["multi_camera_playbook"]["vendor_commands"]["cleanup_shared_memory"].endswith("cleanup_shm_node")
+    assert body["calibration_contract"]["warehouse_worker_policy"].startswith("Workers never")
 
 
 def test_depth_camera_info_normalize_accepts_ros_camera_info():
@@ -299,6 +321,8 @@ def test_depth_cameras_endpoint_returns_configured_rig():
     assert body["configured_camera_count"] >= 1
     assert "required_three_view_roles" in body
     assert body["upgrade_path"]["three_camera_target"]
+    assert body["ros2_multi_camera"]["cleanup_command"] == "ros2 run astra_camera cleanup_shm_node"
+    assert body["cameras"][0]["ros2_profile"]["operator_policy"]["measurement_mode"] == "auto"
 
 
 def test_depth_capture_frame_endpoint_returns_captured_frame_without_hardware(monkeypatch):

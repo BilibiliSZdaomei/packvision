@@ -36,6 +36,7 @@ from packvision.services.depth_geometry import (
     measure_depth_roi,
 )
 from packvision.services.depth_quality import DepthQualityError, analyze_depth_quality
+from packvision.services.astra_tutorials import build_astra_tutorial_playbook
 from packvision.services.depth_workflow import build_depth_workflow_guide, recommend_capture_workflow
 from packvision.services.history import (
     export_measurements_csv,
@@ -468,6 +469,10 @@ def create_app() -> FastAPI:
     @app.get("/api/depth/vendor-profile")
     def depth_vendor_profile() -> dict[str, object]:
         return astra_vendor_profile()
+
+    @app.get("/api/depth/astra/tutorial-playbook")
+    def depth_astra_tutorial_playbook() -> dict[str, object]:
+        return build_astra_tutorial_playbook()
 
     @app.post("/api/depth/camera-info/normalize")
     def depth_camera_info_normalize(payload: CameraInfoNormalizePayload) -> dict[str, object]:

@@ -123,3 +123,18 @@ OpenNI 可用坐标转换：
 3. UI 增加工程调试入口，主流程仍保持自动测量。
 4. 点云测量算法改为厂商参数优先。
 5. 保留自研标定为兜底，不再作为 Astra Pro 默认路径。
+
+## 二次审计新增适配
+
+再次复查 ROS2 README、`astra_pro.launch.xml` 和 `multi_astra.launch.xml` 后，补上以下项目映射：
+
+- 新增 `GET /api/depth/astra/tutorial-playbook`，把厂商教程中的曝光、增益、白平衡、镜像、激光、流开关、多相机、标定 URL、点云/D2C 参数整理成结构化接口。
+- `GET /api/depth/cameras` 现在返回 ROS2 多相机建议命令，包括 `list_devices_node`、`cleanup_shm_node`、单相机 launch 和多相机 launch。
+- 每台相机配置自动生成 `ros2_profile`，保留 `device_num`、`serial_number`、`connection_delay_ms`、UVC、点云、D2C 和标定 URL 字段。
+- 标定仍坚持厂商优先：`/camera/depth/camera_info` 或 `ir_info_url` / `color_info_url` YAML 优先，Astra Pro FOV 估算只作为工程兜底。
+
+这部分的详细说明见：
+
+```text
+D:\Documents\包装尺寸检测\docs_cn\18_Astra_Pro_教程二次审计与项目适配.md
+```

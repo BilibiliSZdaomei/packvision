@@ -93,6 +93,7 @@ D:\BaiduNetdiskDownload\奥比中光Astra Pro
 
 - `GET /api/depth/status`：检查 Astra Pro 教程资料、OpenNI2 运行时、Windows 驱动和可选 `pyorbbecsdk`。
 - `GET /api/depth/vendor-profile`：返回 Astra Pro 厂商规格、上位机验收流程、厂商优先标定策略和 ROS/OpenNI 推荐接口。
+- `GET /api/depth/astra/tutorial-playbook`：返回二次审计后的厂商教程适配手册，包括 ROS2 曝光/增益/镜像/激光/流控制服务、多相机 `device_num`、`cleanup_shm_node`、D2C/点云和标定 URL 映射。
 - `POST /api/depth/camera-info/normalize`：把 ROS `/camera/depth/camera_info` 或标定 YAML 转成测量接口可直接使用的 `fx/fy/cx/cy` 内参，避免仓库员工手动输入参数。
 - `GET /api/depth/workflow-guide`：按包装类型、材质和相机数量返回到货调试清单、USB/支架/线材准备项和采集步骤；默认不要求购买主板。
 - `GET /api/depth/capture/capabilities`：报告可选采集后端、OpenNI2/OpenCV 探测能力和当前推荐路径。

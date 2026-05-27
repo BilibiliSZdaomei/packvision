@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 from typing import Any
 
+from packvision.services.astra_tutorials import build_astra_ros2_camera_profile
 from packvision.services.astra_vendor import ASTRA_PRO_SPECS, resolve_astra_root
 
 
@@ -75,6 +76,11 @@ def build_default_depth_camera_config(vendor_root: str | Path | None = None) -> 
                     "purpose": "single-camera warehouse measurement and first hardware validation",
                 },
                 "intrinsics": astra_depth_intrinsics_from_fov(640, 480),
+                "ros2_profile": build_astra_ros2_camera_profile(
+                    "astra-pro-top-01",
+                    "top",
+                    device_num=1,
+                ),
             }
         ],
         "future_ready_roles": list(THREE_VIEW_ROLES),
@@ -150,6 +156,19 @@ def build_depth_camera_inventory(config_path: str | Path | None = None) -> dict[
             "two_camera_next": "Add a front or side camera for height/silhouette cross-checks.",
             "three_camera_target": "Top + front + left/right views enable conservative fusion for bulky irregular parts.",
             "better_camera_later": "Keep the same camera_id/role contract and swap backend/model per device.",
+        },
+        "ros2_multi_camera": {
+            "device_num": config["target_camera_count"],
+            "serial_required_when_multiple": config["target_camera_count"] > 1,
+            "list_devices_command": "ros2 run astra_camera list_devices_node",
+            "cleanup_command": "ros2 run astra_camera cleanup_shm_node",
+            "single_launch": "ros2 launch astra_camera astra_pro.launch.xml",
+            "multi_launch": "ros2 launch astra_camera multi_astra.launch.xml",
+            "notes": [
+                "Bind PackVision roles with serial_hint before multi-camera production use.",
+                "Run cleanup_shm_node after failed ROS2 multi-camera startups.",
+                "Keep depth APIs stable by calling cameras through camera_id or role.",
+            ],
         },
     }
 
@@ -236,11 +255,13 @@ def _normalize_depth_camera_config(raw: dict[str, Any], path: Path, source: str)
     if not isinstance(cameras_raw, list) or not cameras_raw:
         cameras_raw = build_default_depth_camera_config().get("cameras", [])
 
+    target_camera_count = int(raw.get("target_camera_count") or len(cameras_raw) or 1)
     cameras = []
     for index, item in enumerate(cameras_raw):
         if not isinstance(item, dict):
             continue
         role = _normalize_role(item.get("role"), _role_hint_from_index(index))
+        camera_id = str(item.get("camera_id") or f"depth-camera-{index + 1:02d}")
         vendor_root = Path(item.get("vendor_root") or resolve_astra_root())
         runtime_dir = Path(item.get("runtime_dir") or default_openni_runtime_dir(vendor_root))
         intrinsics = item.get("intrinsics") if isinstance(item.get("intrinsics"), dict) else {}
@@ -248,9 +269,17 @@ def _normalize_depth_camera_config(raw: dict[str, Any], path: Path, source: str)
         height = int(intrinsics.get("height") or 480)
         default_intrinsics = astra_depth_intrinsics_from_fov(width, height)
         default_intrinsics.update({key: value for key, value in intrinsics.items() if value is not None})
+        ros2_profile = build_astra_ros2_camera_profile(
+            camera_id,
+            role,
+            device_num=target_camera_count,
+            serial_number=item.get("serial_hint"),
+        )
+        if isinstance(item.get("ros2_profile"), dict):
+            ros2_profile.update({key: value for key, value in item["ros2_profile"].items() if value is not None})
         cameras.append(
             {
-                "camera_id": str(item.get("camera_id") or f"depth-camera-{index + 1:02d}"),
+                "camera_id": camera_id,
                 "role": role,
                 "enabled": bool(item.get("enabled", True)),
                 "backend": str(item.get("backend") or "openni2_primesense"),
@@ -260,10 +289,10 @@ def _normalize_depth_camera_config(raw: dict[str, Any], path: Path, source: str)
                 "runtime_dir": str(runtime_dir),
                 "mount": item.get("mount") if isinstance(item.get("mount"), dict) else {},
                 "intrinsics": default_intrinsics,
+                "ros2_profile": ros2_profile,
             }
         )
 
-    target_camera_count = int(raw.get("target_camera_count") or len(cameras) or 1)
     return {
         "version": int(raw.get("version") or 1),
         "rig_id": str(raw.get("rig_id") or "packvision-depth-rig"),

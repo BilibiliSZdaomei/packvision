@@ -4,6 +4,8 @@ import os
 from pathlib import Path
 from typing import Any
 
+from packvision.services.astra_tutorials import build_astra_tutorial_playbook
+
 
 BAIDU_VENDOR_ROOT = Path(r"D:\BaiduNetdiskDownload\奥比中光Astra Pro")
 PROJECT_VENDOR_ROOT = Path(__file__).resolve().parents[2] / "奥比中光Astra Pro"
@@ -92,6 +94,7 @@ def astra_vendor_profile(vendor_root: str | Path | None = None) -> dict[str, Any
                 "depth_frame_plus_engineer_verified_intrinsics",
             ],
         },
+        "tutorial_playbook": build_astra_tutorial_playbook(),
         "material_depth_risks": [
             "black_or_dark_surface_absorbs_infrared",
             "mirror_or_glossy_surface_reflects_infrared",

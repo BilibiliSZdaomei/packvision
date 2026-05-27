@@ -231,3 +231,46 @@ flowchart TD
 - UI 增加“设备验收/工程调试”入口，但仓库主界面保持自动测量。
 - 测量算法优先使用点云主轴/包围盒，而不是单目像素比例。
 - 将棋盘格标定保留为工程师工具，并明确标注“不用于仓库日常操作”。
+
+## 二次审计补充
+
+这次又把 ROS2 README 和 `astra_pro.launch.xml`、`multi_astra.launch.xml` 对了一遍，补上了之前没有完全进入项目的几块：
+
+### ROS2 控制服务
+
+需要记录进工程调试目录：
+
+- 曝光：`set_ir_exposure`、`set_color_exposure`、自动曝光开关。
+- 增益：`set_ir_gain`、`get_ir_gain`。
+- 白平衡：`set_color_auto_white_balance`。
+- 镜像：`set_depth_mirror`、`set_color_mirror`。
+- 发射器与流：`set_laser_enable`、`toggle_depth`、`toggle_color`。
+
+这些全部映射到：
+
+```text
+GET /api/depth/astra/tutorial-playbook
+```
+
+仓库员工不看这些参数；工程师用于解释光照、反光、黑色材质、画面翻转、流掉线等问题。
+
+### 多相机关键点
+
+厂商多相机教程里最重要的是：
+
+- 用 `list_devices_node` 查设备。
+- 用 serial number 固定相机角色。
+- `device_num` 必须等于启用相机数量。
+- 多相机启动失败后先跑 `cleanup_shm_node`。
+
+PackVision 现在在 `GET /api/depth/cameras` 里返回这些命令，并在每台相机配置里生成 `ros2_profile`。
+
+### 标定 URL
+
+`ir_info_url`、`color_info_url` 和 `camera_name` 规则已经接入项目策略：
+
+- 深度/IR 用 `ir_camera`。
+- 彩色/RGB 用 `rgb_camera`。
+- 通过 `/api/depth/camera-info/normalize` 转成测量内参。
+
+结论还是一样：仓库员工不输入内参；设备或 YAML 给内参。
