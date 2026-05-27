@@ -693,6 +693,7 @@ summary:focus-visible,
 }
 
 .industry-card div,
+.depth-workflow-card div,
 .validation-plan-card div,
 .depth-demo-card div {
   display: grid;
@@ -700,6 +701,7 @@ summary:focus-visible,
 }
 
 .industry-card span,
+.depth-workflow-card span,
 .validation-plan-card span,
 .depth-demo-card span {
   color: var(--muted);
@@ -707,6 +709,7 @@ summary:focus-visible,
 }
 
 .industry-card strong,
+.depth-workflow-card strong,
 .validation-plan-card strong,
 .depth-demo-card strong {
   font-size: 0.94rem;
@@ -805,6 +808,17 @@ summary:focus-visible,
 
 .depth-panel {
   scroll-margin-top: 18px;
+}
+
+.workflow-controls {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) minmax(110px, 0.42fr);
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface-2) 74%, transparent);
 }
 
 .depth-status-grid {
@@ -1053,9 +1067,11 @@ summary:focus-visible,
   .field-grid,
   .metrics,
   .depth-status-grid,
+  .workflow-controls,
   .usage-summary-grid,
   .usage-row,
   .industry-card,
+  .depth-workflow-card,
   .validation-plan-card,
   .depth-demo-card,
   .order-card,

@@ -33,6 +33,7 @@ const translations = {
     carton: "标准纸箱",
     longPart: "长条件",
     irregular: "异形件",
+    bulkyIrregular: "大件异形",
     softPack: "软包",
     reflectiveMaterial: "反光/金属",
     transparentMaterial: "透明/灯罩",
@@ -165,6 +166,7 @@ const translations = {
     carton: "Carton",
     longPart: "Long part",
     irregular: "Irregular",
+    bulkyIrregular: "Bulky irregular",
     softPack: "Soft pack",
     reflectiveMaterial: "Reflective / metal",
     transparentMaterial: "Transparent / lens",
@@ -297,6 +299,7 @@ const translations = {
     carton: "Коробка",
     longPart: "Довга деталь",
     irregular: "Нерівна",
+    bulkyIrregular: "Габаритна нерівна",
     softPack: "М'який пак",
     reflectiveMaterial: "Відбивний / метал",
     transparentMaterial: "Прозорий / лінза",
@@ -685,6 +688,27 @@ const captureModeLabels = {
   },
 };
 
+const cameraPoseLabels = {
+  zh: {
+    standard_carton: "顶部深度 ROI，侧面照或深度高度复核",
+    long_part: "抬高俯拍或斜拍，保证完整长度进入画面",
+    irregular_or_soft_pack: "深度对象掩膜采集，人工复核边界",
+    bulky_irregular: "大范围 ROI，轮廓不完整时第二角度复核",
+  },
+  en: {
+    standard_carton: "Top-down depth ROI with optional side-view height cross-check",
+    long_part: "Raised top-down or oblique view covering the full length",
+    irregular_or_soft_pack: "Object-mask depth capture with manual boundary review",
+    bulky_irregular: "Wide ROI with a second-angle check when the silhouette is incomplete",
+  },
+  uk: {
+    standard_carton: "Верхній ROI глибини з бічною перевіркою висоти",
+    long_part: "Піднятий або косий вид з повною довжиною в кадрі",
+    irregular_or_soft_pack: "Маска об'єкта з ручною перевіркою меж",
+    bulky_irregular: "Широкий ROI і другий кут, якщо контур неповний",
+  },
+};
+
 const probeStatusLabels = {
   zh: {
     ready_for_capture: "可采集",
@@ -763,10 +787,19 @@ const workflowLabels = {
     lighting_control: "稳定室内光线",
     barcode_input_ready: "扫码枪或条码图片入口",
     vendor_viewer_depth_check: "官方上位机深度图检查",
+    top_depth_roi: "顶部深度 ROI",
+    side_height_cross_check: "侧面高度交叉复核",
     long_item_depth_roi: "长条件深度 ROI",
     end_to_end_truth_check: "端到端人工真值复核",
+    object_mask_depth_capture: "异形件深度掩膜采集",
+    manual_mask_review: "人工复核掩膜边界",
+    wide_roi_depth_capture: "大范围深度 ROI 采集",
+    second_angle_cross_check: "第二角度交叉复核",
     separate_usb_controller_or_powered_hub_check: "不同 USB 口或有源 Hub 检查",
     reflective_surface_cross_check: "反光表面交叉复核",
+    transparent_depth_dropout_review: "透明材质深度空洞复核",
+    dark_surface_depth_dropout_review: "深色材质深度空洞复核",
+    deformable_shape_repeat_capture: "易变形件重复采集",
     manual_review_required: "人工复核",
     direct_usb_port: "电脑直连 USB 口",
     short_data_cable: "短数据线",
@@ -774,6 +807,9 @@ const workflowLabels = {
     install_orbbec_driver: "安装 Orbbec 驱动",
     open_vendor_viewer: "打开官方上位机",
     confirm_depth_frame: "确认深度画面",
+    run_packvision_depth_status: "运行 PackVision 深度状态",
+    probe_capture_backend: "探测采集后端",
+    measure_validation_csv_samples: "采集验收 CSV 样本",
   },
   en: {
     administrator_rights: "Windows administrator rights",
@@ -786,10 +822,19 @@ const workflowLabels = {
     lighting_control: "Stable indoor lighting",
     barcode_input_ready: "Scanner or barcode upload",
     vendor_viewer_depth_check: "Vendor viewer depth check",
+    top_depth_roi: "Top depth ROI",
+    side_height_cross_check: "Side-height cross-check",
     long_item_depth_roi: "Long-item depth ROI",
     end_to_end_truth_check: "End-to-end truth check",
+    object_mask_depth_capture: "Irregular object-mask depth capture",
+    manual_mask_review: "Manual mask boundary review",
+    wide_roi_depth_capture: "Wide depth ROI capture",
+    second_angle_cross_check: "Second-angle cross-check",
     separate_usb_controller_or_powered_hub_check: "Separate USB port or powered hub",
     reflective_surface_cross_check: "Reflective surface cross-check",
+    transparent_depth_dropout_review: "Transparent depth-dropout review",
+    dark_surface_depth_dropout_review: "Dark-surface depth-dropout review",
+    deformable_shape_repeat_capture: "Repeat capture for deformable parts",
     manual_review_required: "Manual review",
     direct_usb_port: "Direct PC USB port",
     short_data_cable: "Short data cable",
@@ -797,6 +842,9 @@ const workflowLabels = {
     install_orbbec_driver: "Install Orbbec driver",
     open_vendor_viewer: "Open vendor viewer",
     confirm_depth_frame: "Confirm depth frame",
+    run_packvision_depth_status: "Run PackVision depth status",
+    probe_capture_backend: "Probe capture backend",
+    measure_validation_csv_samples: "Capture validation CSV samples",
   },
   uk: {
     administrator_rights: "Права адміністратора Windows",
@@ -809,10 +857,19 @@ const workflowLabels = {
     lighting_control: "Стабільне освітлення",
     barcode_input_ready: "Сканер або фото штрихкоду",
     vendor_viewer_depth_check: "Перевірка глибини у Viewer",
+    top_depth_roi: "Верхній ROI глибини",
+    side_height_cross_check: "Бічна перевірка висоти",
     long_item_depth_roi: "ROI довгої деталі",
     end_to_end_truth_check: "Контроль ручного еталона",
+    object_mask_depth_capture: "Маска нерівного об'єкта",
+    manual_mask_review: "Ручна перевірка меж маски",
+    wide_roi_depth_capture: "Широкий ROI глибини",
+    second_angle_cross_check: "Перевірка з другого кута",
     separate_usb_controller_or_powered_hub_check: "Окремий USB або Hub",
     reflective_surface_cross_check: "Перевірка відблиску",
+    transparent_depth_dropout_review: "Перевірка втрати глибини прозорого",
+    dark_surface_depth_dropout_review: "Перевірка втрати глибини темного",
+    deformable_shape_repeat_capture: "Повторний знімок деформівного",
     manual_review_required: "Ручна перевірка",
     direct_usb_port: "Прямий USB порт ПК",
     short_data_cable: "Короткий кабель даних",
@@ -820,6 +877,9 @@ const workflowLabels = {
     install_orbbec_driver: "Встановити драйвер Orbbec",
     open_vendor_viewer: "Відкрити Viewer",
     confirm_depth_frame: "Підтвердити кадр глибини",
+    run_packvision_depth_status: "Запустити статус глибини PackVision",
+    probe_capture_backend: "Перевірити бекенд збору",
+    measure_validation_csv_samples: "Зняти зразки CSV приймання",
   },
 };
 
@@ -876,6 +936,9 @@ const depthStatusGrid = document.querySelector("#depthStatusGrid");
 const refreshDepthStatusButton = document.querySelector("#refreshDepthStatusButton");
 const probeDepthCaptureButton = document.querySelector("#probeDepthCaptureButton");
 const loadDepthWorkflowButton = document.querySelector("#loadDepthWorkflowButton");
+const workflowPackageSelect = document.querySelector("#workflowPackageSelect");
+const workflowMaterialSelect = document.querySelector("#workflowMaterialSelect");
+const workflowCameraCountSelect = document.querySelector("#workflowCameraCountSelect");
 const loadValidationPlanButton = document.querySelector("#loadValidationPlanButton");
 const runDepthDemoButton = document.querySelector("#runDepthDemoButton");
 const saveDepthDemoButton = document.querySelector("#saveDepthDemoButton");
@@ -1178,6 +1241,7 @@ function renderIndustrySummary(profile) {
   if (!profile) {
     return;
   }
+  syncWorkflowControls(profile);
   const card = document.createElement("div");
   card.className = "industry-card";
   appendSummaryCell(card, t("packageClass"), labelFrom(packageClassLabels, profile.package_class));
@@ -1381,7 +1445,14 @@ function renderDepthProbe(data) {
 async function loadDepthWorkflow() {
   loadDepthWorkflowButton.disabled = true;
   try {
-    const response = await fetch("/api/depth/workflow-guide?package_class=long_part&material_class=reflective&camera_count=2");
+    const params = new URLSearchParams({
+      package_class: workflowPackageSelect?.value || "standard_carton",
+      camera_count: workflowCameraCountSelect?.value || "1",
+    });
+    if (workflowMaterialSelect?.value) {
+      params.set("material_class", workflowMaterialSelect.value);
+    }
+    const response = await fetch(`/api/depth/workflow-guide?${params.toString()}`);
     const data = await response.json();
     if (!response.ok) {
       throw new Error(data.detail || response.statusText);
@@ -1399,6 +1470,23 @@ async function loadDepthWorkflow() {
   }
 }
 
+function syncWorkflowControls(profile) {
+  if (!profile || !workflowPackageSelect || !workflowMaterialSelect) {
+    return;
+  }
+  if (profile.package_class && optionExists(workflowPackageSelect, profile.package_class)) {
+    workflowPackageSelect.value = profile.package_class;
+  }
+  const materialClass = profile.material_class || "";
+  if (optionExists(workflowMaterialSelect, materialClass)) {
+    workflowMaterialSelect.value = materialClass;
+  }
+}
+
+function optionExists(select, value) {
+  return Array.from(select.options).some((option) => option.value === value);
+}
+
 function renderDepthWorkflow(data) {
   depthWorkflowSummary.innerHTML = "";
   const workflow = data.recommended_workflow || {};
@@ -1414,7 +1502,8 @@ function renderDepthWorkflow(data) {
   const readiness = document.createElement("div");
   readiness.className = "depth-workflow-card";
   appendSummaryCell(readiness, t("arrivalKit"), firstLabels(workflow.readiness_item_ids, workflowLabels, 4));
-  appendSummaryCell(readiness, t("captureMode"), workflow.camera_pose || "--");
+  const cameraPose = workflow.package_class ? labelFrom(cameraPoseLabels, workflow.package_class) : workflow.camera_pose;
+  appendSummaryCell(readiness, t("captureMode"), cameraPose || "--");
   appendSummaryCell(readiness, t("nextAction"), firstLabels(guide.first_hour_steps, workflowLabels, 3));
   depthWorkflowSummary.appendChild(readiness);
 
@@ -1870,6 +1959,13 @@ refreshUsageButton.addEventListener("click", loadUsageSummary);
 refreshDepthStatusButton.addEventListener("click", loadDepthStatus);
 probeDepthCaptureButton.addEventListener("click", probeDepthCapture);
 loadDepthWorkflowButton.addEventListener("click", loadDepthWorkflow);
+for (const select of [workflowPackageSelect, workflowMaterialSelect, workflowCameraCountSelect]) {
+  select.addEventListener("change", () => {
+    if (state.depthWorkflow) {
+      loadDepthWorkflow();
+    }
+  });
+}
 loadValidationPlanButton.addEventListener("click", loadValidationPlan);
 runDepthDemoButton.addEventListener("click", runDepthDemo);
 saveDepthDemoButton.addEventListener("click", saveDepthDemo);
