@@ -27,6 +27,7 @@ from packvision.services.depth_capture import (
     probe_depth_capture,
 )
 from packvision.services.depth_devices import build_depth_camera_inventory
+from packvision.services.depth_extrinsics import validate_multiview_extrinsics
 from packvision.services.depth_fusion import DepthFusionError, fuse_depth_measurements
 from packvision.services.depth_geometry import (
     DepthObjectConfig,
@@ -172,6 +173,14 @@ class DepthMeasureCapturePayload(DepthTraceabilityPayload):
 class DepthFusionPayload(DepthTraceabilityPayload):
     view_measurements: list[dict[str, Any]]
     strategy: str = "conservative_max"
+    disagreement_ratio: float = 0.12
+
+
+class DepthExtrinsicsValidationPayload(BaseModel):
+    cameras: list[dict[str, Any]]
+    validation_measurements: list[dict[str, Any]] = []
+    required_roles: list[str] = ["top", "front", "side"]
+    reference_role: str = "top"
     disagreement_ratio: float = 0.12
 
 
@@ -627,6 +636,16 @@ def create_app() -> FastAPI:
             return finalized
         except DepthFusionError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post("/api/depth/extrinsics/validate")
+    def depth_extrinsics_validate(payload: DepthExtrinsicsValidationPayload) -> dict[str, object]:
+        return validate_multiview_extrinsics(
+            payload.cameras,
+            validation_measurements=payload.validation_measurements,
+            required_roles=payload.required_roles,
+            reference_role=payload.reference_role,
+            disagreement_ratio=payload.disagreement_ratio,
+        )
 
     @app.post("/api/depth/quality")
     def depth_quality(payload: DepthQualityPayload) -> dict[str, object]:

@@ -4,7 +4,7 @@ from typing import Any
 
 
 DIMENSION_KEYS = ("length_mm", "width_mm", "height_mm")
-THREE_VIEW_ROLES = {"top", "front", "left", "right"}
+SIDE_VIEW_ROLES = {"side", "left", "right"}
 
 
 class DepthFusionError(RuntimeError):
@@ -64,7 +64,7 @@ def fuse_depth_measurements(
     roles = [view["role"] for view in usable_views]
     flags = _unique_flags(usable_views)
     flags.append("multi_view_fusion" if len(usable_views) >= 2 else "single_view_fallback")
-    if {"top", "front"}.issubset(set(roles)) and ("left" in roles or "right" in roles):
+    if _has_three_view_roles(roles):
         flags.append("three_view_ready")
     if disagreements:
         flags.append("view_disagreement_risk")
@@ -183,9 +183,14 @@ def _recommendations(views: list[dict[str, Any]], disagreements: dict[str, Any],
         recommendations.append("review_multi_view_disagreement")
     if len(views) == 1:
         recommendations.append("add_side_or_front_camera_for_cross_check")
-    elif not ({"top", "front"}.issubset(set(roles)) and ("left" in roles or "right" in roles)):
+    elif not _has_three_view_roles(roles):
         recommendations.append("complete_three_view_camera_layout")
     return sorted(set(recommendations))
+
+
+def _has_three_view_roles(roles: list[str]) -> bool:
+    role_set = set(roles)
+    return {"top", "front"}.issubset(role_set) and bool(role_set & SIDE_VIEW_ROLES)
 
 
 def _optional_float(value: Any) -> float | None:

@@ -389,6 +389,41 @@ def test_depth_fuse_measurements_endpoint_saves_traceable_result():
     assert "multi_view_fusion" in body["quality_flags"]
 
 
+def test_depth_extrinsics_validate_endpoint_checks_three_view_rig():
+    client = TestClient(create_app())
+    response = client.post(
+        "/api/depth/extrinsics/validate",
+        json={
+            "cameras": [
+                {"camera_id": "top-01", "role": "top", "serial_hint": "TOP"},
+                {
+                    "camera_id": "front-01",
+                    "role": "front",
+                    "serial_hint": "FRONT",
+                    "extrinsics": {"translation_mm": [0, -650, 420], "rotation_deg": [65, 0, 0]},
+                },
+                {
+                    "camera_id": "side-01",
+                    "role": "side",
+                    "serial_hint": "SIDE",
+                    "extrinsics": {"translation_mm": [-520, 0, 430], "rotation_deg": [65, 0, -90]},
+                },
+            ],
+            "validation_measurements": [
+                {"role": "top", "status": "measured", "confidence": 0.82, "dimensions": {"length_mm": 820, "width_mm": 320, "height_mm": 180}},
+                {"role": "front", "status": "measured", "confidence": 0.8, "dimensions": {"length_mm": 825, "width_mm": 318, "height_mm": 182}},
+                {"role": "side", "status": "measured", "confidence": 0.78, "dimensions": {"length_mm": 823, "width_mm": 322, "height_mm": 181}},
+            ],
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["status"] == "ready"
+    assert body["rig"]["ready_for_three_view_validation"] is True
+    assert body["conservative_policy"]["strategy"] == "conservative_max"
+
+
 def test_review_samples_collects_low_confidence_and_view_conflicts():
     client = TestClient(create_app())
     order_id = f"RV-{uuid4().hex[:8]}"

@@ -48,6 +48,20 @@ def test_fuse_depth_measurements_flags_large_view_disagreement():
     assert "review_multi_view_disagreement" in result["recommendation_codes"]
 
 
+def test_fuse_depth_measurements_treats_side_as_three_view_role():
+    result = fuse_depth_measurements(
+        [
+            {"role": "top", "status": "measured", "dimensions": {"length_mm": 800, "width_mm": 300, "height_mm": 180}},
+            {"role": "front", "status": "measured", "dimensions": {"length_mm": 805, "width_mm": 300, "height_mm": 181}},
+            {"role": "side", "status": "measured", "dimensions": {"length_mm": 802, "width_mm": 302, "height_mm": 180}},
+        ],
+        disagreement_ratio=0.2,
+    )
+
+    assert "three_view_ready" in result["quality_flags"]
+    assert "complete_three_view_camera_layout" not in result["recommendation_codes"]
+
+
 def test_fuse_depth_measurements_requires_usable_views():
     with pytest.raises(DepthFusionError):
         fuse_depth_measurements([])

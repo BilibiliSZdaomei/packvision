@@ -222,6 +222,7 @@ PowerShell -ExecutionPolicy Bypass -File .\scripts\check_astra_depth_status.ps1
 | `POST /api/depth/measure-object` | 用 object mask 测异形件。 |
 | `POST /api/depth/quality` | 深度质量门控。 |
 | `POST /api/depth/fuse-measurements` | 多视角结果保守融合。 |
+| `POST /api/depth/extrinsics/validate` | 两台/三台相机外参、角色、序列号和视角冲突验收。 |
 
 ### 现场验证
 
@@ -248,6 +249,7 @@ flowchart TD
   I --> J["OpenNI/ROS/camera_info"]
   I --> K["多相机角色和融合"]
   E --> L["可选 AI 插件状态"]
+  K --> M["外参验收和视角冲突复核"]
 ```
 
 主要技术：
@@ -256,6 +258,7 @@ flowchart TD
 - OpenCV ArUco、轮廓、条码/二维码。
 - SQLite 本地历史和统计。
 - OpenNI/PrimeSense Astra Pro 采集后端。
+- 多相机外参验收、角色绑定和保守融合冲突检查。
 - 可选 AI 插件协议，默认不携带 YOLO/SAM/Depth 模型权重。
 - PyInstaller Windows EXE。
 - PowerShell 交付和体检脚本。
@@ -287,7 +290,7 @@ PackVision 借鉴但不直接复制这些方向：
 | Astra Pro 真实硬件未连接验证 | 待相机到货 | 到货后先跑 OrbbecViewer，再跑 readiness 和 capture probe。 |
 | 单目照片精度有限 | 已在文档和置信度中说明 | 图片版作为兜底，真实尺寸主线切深度相机。 |
 | 异形件/异常材质样本不足 | 待现场采集 | 建立复核样本池和真值模板。 |
-| 多相机外参未验证 | 预留架构 | 后续开 `codex/packvision-multiview-extrinsics` 分支探索。 |
+| 多相机外参未真实验证 | 已有外参验收接口 | 相机到货和支架固定后，用已知纸箱跑 `/api/depth/extrinsics/validate`。 |
 | AI 模型可能导致包变重 | 已做轻量插件协议 | 基础包不带权重；`models/` 只维护插件清单和可选模型入口。 |
 
 ## 12. 开发自动化和分支策略
@@ -364,10 +367,12 @@ D:\Documents\包装尺寸检测\docs_obsidian\PackVision
 - `docs_cn\24_厂商资料包Git维护策略.md`
 - `docs_cn\25_复核样本池与真值闭环.md`
 - `docs_cn\26_AI插件接口与轻量部署策略.md`
+- `docs_cn\27_多相机外参与三视图验收方案.md`
 - `docs_obsidian\PackVision\14 PackVision 完整项目报告.md`
 - `docs_obsidian\PackVision\15 厂商资料包 Git 维护策略.md`
 - `docs_obsidian\PackVision\16 复核样本池与真值闭环.md`
 - `docs_obsidian\PackVision\17 AI 插件接口与轻量部署策略.md`
+- `docs_obsidian\PackVision\18 多相机外参与三视图验收方案.md`
 
 ## 15. 厂商资料包维护策略
 
