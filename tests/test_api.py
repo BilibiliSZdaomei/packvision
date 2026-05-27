@@ -162,6 +162,95 @@ def test_depth_status_endpoint_reports_vendor_assets():
     assert response.status_code == 200
     assert "recommended_backend" in body
     assert "openni2" in body
+    assert "vendor_profile" in body
+    assert body["calibration_strategy"]["warehouse_worker"] == "No manual focal length, aperture, or intrinsic entry."
+
+
+def test_depth_vendor_profile_endpoint_prefers_vendor_camera_info():
+    client = TestClient(create_app())
+    response = client.get("/api/depth/vendor-profile")
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["hardware_profile"]["model"] == "Orbbec Astra Pro"
+    assert "/camera/depth/camera_info" in body["ros_interfaces"]["camera_info_topics"]
+    assert body["vendor_first_calibration_strategy"]["warehouse_worker"]
+
+
+def test_depth_camera_info_normalize_accepts_ros_camera_info():
+    client = TestClient(create_app())
+    response = client.post(
+        "/api/depth/camera-info/normalize",
+        json={
+            "stream": "depth",
+            "depth_scale": 1.0,
+            "camera_info": {
+                "width": 640,
+                "height": 480,
+                "camera_name": "ir_camera",
+                "k": [517.3, 0, 326.8, 0, 519.2, 244.6, 0, 0, 1],
+                "d": [-0.4, 0.3, 0.0, 0.0, 0.0],
+                "distortion_model": "plumb_bob",
+            },
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["source"] == "ros_camera_info_topic"
+    assert body["intrinsics"]["fx"] == 517.3
+    assert body["intrinsics"]["width"] == 640
+    assert "manual_intrinsics_not_required" in body["quality_flags"]
+
+
+def test_depth_camera_info_normalize_accepts_get_camera_info_service_shape():
+    client = TestClient(create_app())
+    response = client.post(
+        "/api/depth/camera-info/normalize",
+        json={
+            "stream": "depth",
+            "camera_info": {
+                "success": True,
+                "message": "",
+                "info": {
+                    "width": 640,
+                    "height": 480,
+                    "camera_name": "ir_camera",
+                    "k": [517.3, 0, 326.8, 0, 519.2, 244.6, 0, 0, 1],
+                },
+            },
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["intrinsics"]["cy"] == 244.6
+
+
+def test_depth_camera_info_normalize_accepts_calibration_yaml_shape():
+    client = TestClient(create_app())
+    response = client.post(
+        "/api/depth/camera-info/normalize",
+        json={
+            "stream": "color",
+            "camera_info": {
+                "image_width": 1280,
+                "image_height": 720,
+                "camera_name": "rgb_camera",
+                "camera_matrix": {
+                    "rows": 3,
+                    "cols": 3,
+                    "data": [900.0, 0, 640.0, 0, 902.0, 360.0, 0, 0, 1],
+                },
+            },
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["source"] == "ros_calibration_yaml"
+    assert body["intrinsics"]["fy"] == 902.0
+    assert body["intrinsics"]["height"] == 720
 
 
 def test_depth_capture_capabilities_endpoint_reports_optional_backends():

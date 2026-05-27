@@ -15,6 +15,7 @@ from pydantic import BaseModel
 
 from packvision import __version__
 from packvision.services.barcode import detect_codes
+from packvision.services.astra_vendor import AstraVendorError, astra_vendor_profile, normalize_camera_info
 from packvision.services.capture_quality import CaptureQualityError, analyze_capture_quality
 from packvision.services.depth_camera import depth_camera_status
 from packvision.services.depth_capture import (
@@ -122,6 +123,12 @@ class DepthObjectMeasurePayload(DepthTraceabilityPayload):
 class DepthCaptureProbePayload(BaseModel):
     backend: str = "auto"
     timeout_ms: int = 1500
+
+
+class CameraInfoNormalizePayload(BaseModel):
+    camera_info: dict[str, Any]
+    stream: str = "depth"
+    depth_scale: float = 1.0
 
 
 class DepthQualityPayload(BaseModel):
@@ -421,6 +428,21 @@ def create_app() -> FastAPI:
     @app.get("/api/depth/status")
     def depth_status() -> dict[str, object]:
         return depth_camera_status()
+
+    @app.get("/api/depth/vendor-profile")
+    def depth_vendor_profile() -> dict[str, object]:
+        return astra_vendor_profile()
+
+    @app.post("/api/depth/camera-info/normalize")
+    def depth_camera_info_normalize(payload: CameraInfoNormalizePayload) -> dict[str, object]:
+        try:
+            return normalize_camera_info(
+                payload.camera_info,
+                stream=payload.stream,
+                depth_scale=payload.depth_scale,
+            )
+        except AstraVendorError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     @app.get("/api/depth/workflow-guide")
     def depth_workflow_guide(

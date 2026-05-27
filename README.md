@@ -92,6 +92,8 @@ D:\BaiduNetdiskDownload\奥比中光Astra Pro
 本分支新增：
 
 - `GET /api/depth/status`：检查 Astra Pro 教程资料、OpenNI2 运行时、Windows 驱动和可选 `pyorbbecsdk`。
+- `GET /api/depth/vendor-profile`：返回 Astra Pro 厂商规格、上位机验收流程、厂商优先标定策略和 ROS/OpenNI 推荐接口。
+- `POST /api/depth/camera-info/normalize`：把 ROS `/camera/depth/camera_info` 或标定 YAML 转成测量接口可直接使用的 `fx/fy/cx/cy` 内参，避免仓库员工手动输入参数。
 - `GET /api/depth/workflow-guide`：按包装类型、材质和相机数量返回到货调试清单、USB/支架/线材准备项和采集步骤；默认不要求购买主板。
 - `GET /api/depth/capture/capabilities`：报告可选采集后端、OpenNI2/OpenCV 探测能力和当前推荐路径。
 - `POST /api/depth/capture/probe`：到货前后都可运行的采集探测接口，返回状态、选中后端和下一步动作。
@@ -110,3 +112,4 @@ D:\BaiduNetdiskDownload\奥比中光Astra Pro
 - `docs_cn\08_Astra_Pro_深度相机分支计划.md`：到货后的驱动、上位机、SDK、实测清单。
 - `docs_cn\09_汽车备件测量落地方案.md`：汽车备件仓库的普通包装、异形包装和异常材质落地流程。
 - `docs_cn\10_Astra_Pro_到货验收与现场试运行.md`：两台 Astra Pro 到货后的第一小时验收、标准纸箱/长条件/异形件试运行流程。
+- `docs_cn\16_Astra_Pro_厂商资料学习笔记.md`：基于店铺附赠资料包重新梳理的厂商工具链、标定策略和 PackVision 修正方向。
