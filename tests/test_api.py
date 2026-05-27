@@ -110,6 +110,37 @@ def test_capture_quality_endpoint_flags_overexposed_upload():
 
 
 @pytest.mark.skipif(not opencv_ready(), reason="OpenCV is unavailable")
+def test_measure_endpoint_auto_material_signal_when_worker_does_not_choose_material():
+    import cv2
+    import numpy as np
+
+    image = np.full((360, 480, 3), 255, dtype=np.uint8)
+    ok, encoded = cv2.imencode(".jpg", image)
+    assert ok
+
+    client = TestClient(create_app())
+    response = client.post(
+        "/api/measure",
+        files={"top_image": ("glare.jpg", encoded.tobytes(), "image/jpeg")},
+        data={
+            "manual_height_mm": "120",
+            "camera_distance_mm": "1000",
+            "focal_length_35mm": "35",
+            "top_box_json": "[[80, 80], [360, 260]]",
+            "order_id": "AUTO-MAT-001",
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["material_hint"] == "reflective"
+    assert body["material_hint_source"] == "capture_quality"
+    assert body["industry_profile"]["material_class"] == "reflective"
+    assert body["industry_profile"]["material_hint_source"] == "capture_quality"
+    assert "reflective_depth_noise_risk" in body["industry_profile"]["handling_flags"]
+
+
+@pytest.mark.skipif(not opencv_ready(), reason="OpenCV is unavailable")
 def test_decode_order_image_endpoint_accepts_image():
     client = TestClient(create_app())
     demo = client.get("/api/demo-image.jpg")

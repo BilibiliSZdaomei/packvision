@@ -8,6 +8,50 @@ STANDARD_RATIO_LIMIT = 4.0
 VOLUMETRIC_DIVISOR_L_PER_KG = 6.0
 
 
+def infer_material_hint_from_capture_quality(
+    capture_quality: dict[str, Any] | None,
+    quality_flags: list[str] | None = None,
+) -> dict[str, Any]:
+    flags = set(quality_flags or [])
+    metrics: list[dict[str, Any]] = []
+    for quality in _capture_quality_views(capture_quality):
+        flags.update(quality.get("quality_flags") or [])
+        if isinstance(quality.get("metrics"), dict):
+            metrics.append(quality["metrics"])
+
+    max_overexposed = max((_number(item.get("overexposed_ratio")) or 0 for item in metrics), default=0)
+    max_underexposed = max((_number(item.get("underexposed_ratio")) or 0 for item in metrics), default=0)
+    min_contrast = min((_number(item.get("contrast_std")) or 999 for item in metrics), default=999)
+
+    if "low_contrast_capture" in flags and (
+        "package_contour_not_found" in flags or (min_contrast <= 6 and max_overexposed < 0.25 and max_underexposed < 0.25)
+    ):
+        return _material_signal(
+            "transparent",
+            0.56,
+            ["low_contrast_capture", "possible_clear_or_lens_surface"],
+        )
+    if "lighting_overexposed" in flags or max_overexposed >= 0.12:
+        return _material_signal(
+            "reflective",
+            0.58,
+            ["lighting_overexposed", "possible_glare_or_metal_surface"],
+        )
+    if "lighting_underexposed" in flags or max_underexposed >= 0.35:
+        return _material_signal(
+            "dark_absorbing",
+            0.54,
+            ["lighting_underexposed", "possible_dark_absorbing_surface"],
+        )
+
+    return {
+        "material_hint": None,
+        "source": None,
+        "confidence": 0.0,
+        "reason_codes": [],
+    }
+
+
 def build_packaging_profile(
     dimensions: dict[str, Any],
     *,
@@ -189,6 +233,27 @@ def _volumetric_weight(
 def _chargeable_weight(actual_weight_kg: float | None, volumetric_weight_kg: float | None) -> float | None:
     values = [value for value in [_number(actual_weight_kg), volumetric_weight_kg] if value is not None]
     return max(values) if values else None
+
+
+def _capture_quality_views(capture_quality: dict[str, Any] | None) -> list[dict[str, Any]]:
+    if not isinstance(capture_quality, dict):
+        return []
+    if "metrics" in capture_quality or "quality_flags" in capture_quality:
+        return [capture_quality]
+    return [
+        view
+        for key in ("top", "side")
+        if isinstance((view := capture_quality.get(key)), dict)
+    ]
+
+
+def _material_signal(material_hint: str, confidence: float, reason_codes: list[str]) -> dict[str, Any]:
+    return {
+        "material_hint": material_hint,
+        "source": "capture_quality",
+        "confidence": round(confidence, 2),
+        "reason_codes": reason_codes,
+    }
 
 
 def _number(value: Any) -> float | None:

@@ -1,4 +1,4 @@
-from packvision.services.industry import build_packaging_profile
+from packvision.services.industry import build_packaging_profile, infer_material_hint_from_capture_quality
 
 
 def test_standard_carton_profile():
@@ -66,3 +66,44 @@ def test_reflective_material_profile_adds_surface_check_flow():
     assert "reflective_depth_noise_risk" in profile["handling_flags"]
     assert "material_surface_check" in profile["workflow"]
     assert "retake_or_manual_verify" in profile["workflow"]
+
+
+def test_capture_quality_can_infer_reflective_material_risk():
+    signal = infer_material_hint_from_capture_quality(
+        {
+            "top": {
+                "quality_flags": ["lighting_overexposed"],
+                "metrics": {
+                    "mean_luma": 248,
+                    "contrast_std": 22,
+                    "overexposed_ratio": 0.18,
+                    "underexposed_ratio": 0,
+                },
+            }
+        },
+        ["lighting_overexposed"],
+    )
+
+    assert signal["material_hint"] == "reflective"
+    assert signal["source"] == "capture_quality"
+    assert "possible_glare_or_metal_surface" in signal["reason_codes"]
+
+
+def test_capture_quality_can_infer_transparent_material_when_edges_are_missing():
+    signal = infer_material_hint_from_capture_quality(
+        {
+            "top": {
+                "quality_flags": ["low_contrast_capture"],
+                "metrics": {
+                    "mean_luma": 180,
+                    "contrast_std": 4,
+                    "overexposed_ratio": 0,
+                    "underexposed_ratio": 0,
+                },
+            }
+        },
+        ["low_contrast_capture", "package_contour_not_found"],
+    )
+
+    assert signal["material_hint"] == "transparent"
+    assert "possible_clear_or_lens_surface" in signal["reason_codes"]

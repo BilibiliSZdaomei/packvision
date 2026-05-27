@@ -40,7 +40,7 @@ from packvision.services.history import (
     list_measurements,
     save_measurement,
 )
-from packvision.services.industry import build_packaging_profile
+from packvision.services.industry import build_packaging_profile, infer_material_hint_from_capture_quality
 from packvision.services.measurement import (
     MeasurementConfig,
     MeasurementError,
@@ -292,7 +292,14 @@ def create_app() -> FastAPI:
         result["barcode_text"] = _clean_text(barcode_text)
         result["part_category"] = _clean_text(part_category)
         result["package_hint"] = _clean_text(package_hint)
-        result["material_hint"] = _clean_text(material_hint)
+        explicit_material_hint = _clean_text(material_hint)
+        auto_material_signal = infer_material_hint_from_capture_quality(
+            result.get("capture_quality") if isinstance(result.get("capture_quality"), dict) else None,
+            result.get("quality_flags") if isinstance(result.get("quality_flags"), list) else None,
+        )
+        result["material_hint"] = explicit_material_hint or auto_material_signal.get("material_hint")
+        result["material_hint_source"] = "manual" if explicit_material_hint else auto_material_signal.get("source")
+        result["auto_material_signal"] = auto_material_signal
         result["actual_weight_kg"] = actual_weight_kg if actual_weight_kg and actual_weight_kg > 0 else None
         result["industry_profile"] = build_packaging_profile(
             result["dimensions"],
@@ -301,6 +308,8 @@ def create_app() -> FastAPI:
             material_hint=result["material_hint"],
             actual_weight_kg=result["actual_weight_kg"],
         )
+        result["industry_profile"]["material_hint_source"] = result["material_hint_source"]
+        result["industry_profile"]["auto_material_signal"] = auto_material_signal
         result["artifacts"] = {
             "top_upload": str(top_path),
             "side_upload": str(side_path) if side_path else None,
@@ -655,6 +664,13 @@ def _finalize_depth_result(
     result["part_category"] = _clean_text(payload.part_category)
     result["package_hint"] = _clean_text(payload.package_hint)
     result["material_hint"] = _clean_text(payload.material_hint)
+    result["material_hint_source"] = "manual" if result["material_hint"] else None
+    result["auto_material_signal"] = {
+        "material_hint": None,
+        "source": None,
+        "confidence": 0.0,
+        "reason_codes": [],
+    }
     result["actual_weight_kg"] = actual_weight
     result["measurement_source"] = measurement_source
     result["artifacts"] = {"depth_source": measurement_source}
@@ -665,6 +681,8 @@ def _finalize_depth_result(
         material_hint=result["material_hint"],
         actual_weight_kg=actual_weight,
     )
+    result["industry_profile"]["material_hint_source"] = result["material_hint_source"]
+    result["industry_profile"]["auto_material_signal"] = result["auto_material_signal"]
     should_save = payload.save_to_history if save_to_history is None else save_to_history
     result["history_saved"] = bool(should_save)
     if should_save:
