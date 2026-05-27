@@ -102,6 +102,7 @@ const translations = {
     refreshDepth: "刷新状态",
     probeDepthCapture: "采集探测",
     workflowGuide: "调试清单",
+    autoWorkflow: "自动识别流程",
     arrivalKit: "到货准备",
     captureSteps: "采集步骤",
     cameraCount: "相机数",
@@ -235,6 +236,7 @@ const translations = {
     refreshDepth: "Refresh status",
     probeDepthCapture: "Probe capture",
     workflowGuide: "Setup guide",
+    autoWorkflow: "Auto workflow",
     arrivalKit: "Arrival kit",
     captureSteps: "Capture steps",
     cameraCount: "Cameras",
@@ -368,6 +370,7 @@ const translations = {
     refreshDepth: "Оновити статус",
     probeDepthCapture: "Перевірити збір",
     workflowGuide: "Підготовка",
+    autoWorkflow: "Авто процес",
     arrivalKit: "Комплект",
     captureSteps: "Кроки зйомки",
     cameraCount: "Камери",
@@ -936,6 +939,7 @@ const depthStatusGrid = document.querySelector("#depthStatusGrid");
 const refreshDepthStatusButton = document.querySelector("#refreshDepthStatusButton");
 const probeDepthCaptureButton = document.querySelector("#probeDepthCaptureButton");
 const loadDepthWorkflowButton = document.querySelector("#loadDepthWorkflowButton");
+const workflowAutoSummary = document.querySelector("#workflowAutoSummary");
 const workflowPackageSelect = document.querySelector("#workflowPackageSelect");
 const workflowMaterialSelect = document.querySelector("#workflowMaterialSelect");
 const workflowCameraCountSelect = document.querySelector("#workflowCameraCountSelect");
@@ -982,6 +986,7 @@ function applyLanguage() {
   localStorage.setItem("packvision.lang", state.lang);
   setFileName(topImage, topFileName, "noFile");
   setFileName(sideImage, sideFileName, "optional");
+  updateWorkflowAutoSummary();
   if (state.lastResult) {
     renderResult(state.lastResult, { keepView: true });
   } else {
@@ -1202,7 +1207,7 @@ function renderResult(data, options = {}) {
   showSideViewButton.classList.toggle("is-active", state.activeView === "side");
   renderStageImage();
   renderSideSummary(data);
-  renderIndustrySummary(data.industry_profile);
+  renderIndustrySummary(data.industry_profile, { autoLoadWorkflow: !options.keepView });
   renderFlags(data);
 }
 
@@ -1236,12 +1241,15 @@ function renderSideSummary(data) {
   sideSummary.textContent = `${t("sideSummary")}: ${formatMm(side.height_candidate_mm)} (${side.scale_source})`;
 }
 
-function renderIndustrySummary(profile) {
+function renderIndustrySummary(profile, options = {}) {
   industrySummary.innerHTML = "";
   if (!profile) {
     return;
   }
   syncWorkflowControls(profile);
+  if (options.autoLoadWorkflow) {
+    void loadDepthWorkflow({ auto: true });
+  }
   const card = document.createElement("div");
   card.className = "industry-card";
   appendSummaryCell(card, t("packageClass"), labelFrom(packageClassLabels, profile.package_class));
@@ -1442,16 +1450,10 @@ function renderDepthProbe(data) {
   });
 }
 
-async function loadDepthWorkflow() {
+async function loadDepthWorkflow(options = {}) {
   loadDepthWorkflowButton.disabled = true;
   try {
-    const params = new URLSearchParams({
-      package_class: workflowPackageSelect?.value || "standard_carton",
-      camera_count: workflowCameraCountSelect?.value || "1",
-    });
-    if (workflowMaterialSelect?.value) {
-      params.set("material_class", workflowMaterialSelect.value);
-    }
+    const params = buildWorkflowParams();
     const response = await fetch(`/api/depth/workflow-guide?${params.toString()}`);
     const data = await response.json();
     if (!response.ok) {
@@ -1459,6 +1461,7 @@ async function loadDepthWorkflow() {
     }
     state.depthWorkflow = data;
     renderDepthWorkflow(data);
+    updateWorkflowAutoSummary(data.recommended_workflow);
   } catch (error) {
     depthWorkflowSummary.innerHTML = "";
     const item = document.createElement("div");
@@ -1468,6 +1471,17 @@ async function loadDepthWorkflow() {
   } finally {
     loadDepthWorkflowButton.disabled = false;
   }
+}
+
+function buildWorkflowParams() {
+  const params = new URLSearchParams({
+    package_class: workflowPackageSelect?.value || "standard_carton",
+    camera_count: workflowCameraCountSelect?.value || "1",
+  });
+  if (workflowMaterialSelect?.value) {
+    params.set("material_class", workflowMaterialSelect.value);
+  }
+  return params;
 }
 
 function syncWorkflowControls(profile) {
@@ -1481,10 +1495,33 @@ function syncWorkflowControls(profile) {
   if (optionExists(workflowMaterialSelect, materialClass)) {
     workflowMaterialSelect.value = materialClass;
   }
+  if (workflowCameraCountSelect) {
+    workflowCameraCountSelect.value = autoCameraCountForProfile(profile);
+  }
+  updateWorkflowAutoSummary(profile);
 }
 
 function optionExists(select, value) {
   return Array.from(select.options).some((option) => option.value === value);
+}
+
+function autoCameraCountForProfile(profile) {
+  return ["long_part", "bulky_irregular"].includes(profile.package_class) ? "2" : "1";
+}
+
+function updateWorkflowAutoSummary(source) {
+  if (!workflowAutoSummary) {
+    return;
+  }
+  const packageClass = source?.package_class || workflowPackageSelect?.value || "standard_carton";
+  const materialClass = source?.material_class || workflowMaterialSelect?.value || "";
+  const cameraCount = source?.camera_count || workflowCameraCountSelect?.value || "1";
+  const parts = [
+    labelFrom(scenarioLabels, packageClass),
+    materialClass ? labelFrom(materialClassLabels, materialClass) : t("autoMaterial"),
+    `${cameraCount} x Astra Pro`,
+  ];
+  workflowAutoSummary.textContent = parts.join(" / ");
 }
 
 function renderDepthWorkflow(data) {
@@ -1961,6 +1998,7 @@ probeDepthCaptureButton.addEventListener("click", probeDepthCapture);
 loadDepthWorkflowButton.addEventListener("click", loadDepthWorkflow);
 for (const select of [workflowPackageSelect, workflowMaterialSelect, workflowCameraCountSelect]) {
   select.addEventListener("change", () => {
+    updateWorkflowAutoSummary();
     if (state.depthWorkflow) {
       loadDepthWorkflow();
     }

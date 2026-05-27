@@ -811,14 +811,35 @@ summary:focus-visible,
 }
 
 .workflow-controls {
-  display: grid;
-  grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) minmax(110px, 0.42fr);
-  gap: 12px;
   margin-bottom: 14px;
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--surface-2) 74%, transparent);
+}
+
+.workflow-controls summary {
+  min-height: 44px;
+  display: grid;
+  grid-template-columns: minmax(120px, 0.35fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  color: var(--muted);
+  cursor: pointer;
+  list-style-position: outside;
+}
+
+.workflow-controls summary strong {
+  color: var(--text);
+  font-size: 0.98rem;
+  overflow-wrap: anywhere;
+}
+
+.workflow-fields {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) minmax(110px, 0.42fr);
+  gap: 12px;
+  margin-top: 12px;
 }
 
 .depth-status-grid {
@@ -1050,6 +1071,10 @@ summary:focus-visible,
     word-break: break-all;
   }
 
+  .workflow-controls summary {
+    grid-template-columns: 1fr;
+  }
+
   .result-panel .panel-head {
     display: grid;
   }
@@ -1067,7 +1092,7 @@ summary:focus-visible,
   .field-grid,
   .metrics,
   .depth-status-grid,
-  .workflow-controls,
+  .workflow-fields,
   .usage-summary-grid,
   .usage-row,
   .industry-card,

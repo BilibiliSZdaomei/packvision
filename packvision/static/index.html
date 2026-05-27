@@ -252,34 +252,40 @@
               <button class="tool-button" type="button" id="saveDepthDemoButton" data-i18n="saveDepthDemo">保存演示记录</button>
             </div>
           </div>
-          <div class="workflow-controls" aria-label="Depth workflow options">
-            <label class="select-label">
-              <span data-i18n="packageHint">包装类型</span>
-              <select id="workflowPackageSelect">
-                <option value="standard_carton" data-i18n="carton">标准纸箱</option>
-                <option value="long_part" data-i18n="longPart" selected>长条件</option>
-                <option value="irregular_or_soft_pack" data-i18n="irregular">异形件</option>
-                <option value="bulky_irregular" data-i18n="bulkyIrregular">大件异形</option>
-              </select>
-            </label>
-            <label class="select-label">
-              <span data-i18n="materialHint">材质/表面</span>
-              <select id="workflowMaterialSelect">
-                <option value="" data-i18n="autoMaterial">自动/普通</option>
-                <option value="reflective" data-i18n="reflectiveMaterial" selected>反光/金属</option>
-                <option value="transparent" data-i18n="transparentMaterial">透明/灯罩</option>
-                <option value="dark_absorbing" data-i18n="darkMaterial">深黑吸光</option>
-                <option value="deformable" data-i18n="deformableMaterial">易变形软材</option>
-              </select>
-            </label>
-            <label class="select-label">
-              <span data-i18n="cameraCount">相机数</span>
-              <select id="workflowCameraCountSelect">
-                <option value="1">1</option>
-                <option value="2" selected>2</option>
-              </select>
-            </label>
-          </div>
+          <details class="workflow-controls" id="workflowControls">
+            <summary>
+              <span data-i18n="autoWorkflow">自动识别流程</span>
+              <strong id="workflowAutoSummary">--</strong>
+            </summary>
+            <div class="workflow-fields" aria-label="Advanced depth workflow override">
+              <label class="select-label">
+                <span data-i18n="packageHint">包装类型</span>
+                <select id="workflowPackageSelect">
+                  <option value="standard_carton" data-i18n="carton">标准纸箱</option>
+                  <option value="long_part" data-i18n="longPart">长条件</option>
+                  <option value="irregular_or_soft_pack" data-i18n="irregular">异形件</option>
+                  <option value="bulky_irregular" data-i18n="bulkyIrregular">大件异形</option>
+                </select>
+              </label>
+              <label class="select-label">
+                <span data-i18n="materialHint">材质/表面</span>
+                <select id="workflowMaterialSelect">
+                  <option value="" data-i18n="autoMaterial">自动/普通</option>
+                  <option value="reflective" data-i18n="reflectiveMaterial">反光/金属</option>
+                  <option value="transparent" data-i18n="transparentMaterial">透明/灯罩</option>
+                  <option value="dark_absorbing" data-i18n="darkMaterial">深黑吸光</option>
+                  <option value="deformable" data-i18n="deformableMaterial">易变形软材</option>
+                </select>
+              </label>
+              <label class="select-label">
+                <span data-i18n="cameraCount">相机数</span>
+                <select id="workflowCameraCountSelect">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                </select>
+              </label>
+            </div>
+          </details>
           <div class="depth-status-grid" id="depthStatusGrid"></div>
           <div class="depth-workflow-summary" id="depthWorkflowSummary"></div>
           <div class="validation-plan-summary" id="validationPlanSummary"></div>
