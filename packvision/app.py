@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import base64
 import json
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Annotated, Any
 from uuid import uuid4
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -49,6 +50,14 @@ from packvision.services.measurement import (
     opencv_ready,
 )
 from packvision.services.storage import ensure_data_dirs, resource_path, write_bytes
+from packvision.services.usage import (
+    export_usage_csv,
+    init_usage_db,
+    list_usage_events,
+    record_usage_event,
+    should_record_usage,
+    usage_summary,
+)
 from packvision.services.validation import (
     build_trial_plan,
     build_trial_template_csv,
@@ -141,8 +150,36 @@ def create_app() -> FastAPI:
     app = FastAPI(title="PackVision Local", version=__version__)
     dirs = ensure_data_dirs()
     init_db()
+    init_usage_db()
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
     app.mount("/results", StaticFiles(directory=dirs["results"]), name="results")
+
+    @app.middleware("http")
+    async def usage_logging_middleware(request: Request, call_next):
+        endpoint = request.url.path
+        should_log = should_record_usage(endpoint)
+        started_at = time.perf_counter()
+        try:
+            response = await call_next(request)
+        except Exception as exc:
+            if should_log:
+                record_usage_event(
+                    endpoint=endpoint,
+                    method=request.method,
+                    status_code=500,
+                    success=False,
+                    duration_ms=(time.perf_counter() - started_at) * 1000,
+                    error_message=str(exc),
+                )
+            raise
+        if should_log:
+            record_usage_event(
+                endpoint=endpoint,
+                method=request.method,
+                status_code=response.status_code,
+                duration_ms=(time.perf_counter() - started_at) * 1000,
+            )
+        return response
 
     @app.get("/", include_in_schema=False)
     def index() -> FileResponse:
@@ -284,6 +321,53 @@ def create_app() -> FastAPI:
         if not result:
             raise HTTPException(status_code=404, detail="Measurement not found.")
         return result
+
+    @app.get("/api/usage/summary")
+    def usage_report(
+        endpoint: str | None = None,
+        date_from: str | None = None,
+        date_to: str | None = None,
+    ) -> dict[str, object]:
+        return usage_summary(
+            endpoint=_clean_text(endpoint),
+            date_from=_clean_text(date_from),
+            date_to=_clean_text(date_to),
+        )
+
+    @app.get("/api/usage/events")
+    def usage_events(
+        limit: int = 100,
+        endpoint: str | None = None,
+        date_from: str | None = None,
+        date_to: str | None = None,
+    ) -> dict[str, object]:
+        return {
+            "items": list_usage_events(
+                limit=limit,
+                endpoint=_clean_text(endpoint),
+                date_from=_clean_text(date_from),
+                date_to=_clean_text(date_to),
+            )
+        }
+
+    @app.get("/api/usage/export.csv")
+    def usage_export(
+        limit: int = 1000,
+        endpoint: str | None = None,
+        date_from: str | None = None,
+        date_to: str | None = None,
+    ) -> Response:
+        csv_text = export_usage_csv(
+            limit=limit,
+            endpoint=_clean_text(endpoint),
+            date_from=_clean_text(date_from),
+            date_to=_clean_text(date_to),
+        )
+        return Response(
+            content=csv_text,
+            media_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": 'attachment; filename="packvision-usage.csv"'},
+        )
 
     @app.post("/api/orders/scan")
     def scan_order(payload: ScanPayload) -> dict[str, object]:

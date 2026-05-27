@@ -49,6 +49,9 @@ D:\Documents\包装尺寸检测\dist\PackVision.exe
 - `GET /api/history`：历史记录列表。
 - `GET /api/history/export.csv`：按单号筛选导出 CSV。
 - `GET /api/history/{measurement_id}`：单条记录详情。
+- `GET /api/usage/summary`：后台使用统计，返回总调用次数、测量次数、成功/失败次数、按接口和日期汇总。
+- `GET /api/usage/events`：后台调用日志明细。
+- `GET /api/usage/export.csv`：导出使用日志 CSV，方便汇报。
 - `POST /api/orders/scan`：扫码枪/手工单号标准化接口。
 - `POST /api/orders/decode-image`：上传条码或二维码图片识别单号。
 

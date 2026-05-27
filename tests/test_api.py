@@ -331,6 +331,71 @@ def test_depth_measure_object_endpoint_accepts_principal_axis_footprint():
     assert "principal_axis_extent_used" in body["quality_flags"]
 
 
+def test_usage_summary_counts_depth_measurement_calls():
+    client = TestClient(create_app())
+    before = client.get("/api/usage/summary").json()
+    before_measurements = before["measurement_calls"]
+    before_endpoint_calls = _endpoint_call_count(before, "/api/depth/measure-roi")
+
+    depth = [[1000.0 for _ in range(8)] for _ in range(8)]
+    for y in range(2, 6):
+        for x in range(2, 6):
+            depth[y][x] = 800.0
+
+    response = client.post(
+        "/api/depth/measure-roi",
+        json={
+            "depth_frame": depth,
+            "intrinsics": {
+                "fx": 100.0,
+                "fy": 100.0,
+                "cx": 4.0,
+                "cy": 4.0,
+                "width": 8,
+                "height": 8,
+            },
+            "roi": [2, 2, 6, 6],
+            "background_roi": [0, 0, 2, 2],
+        },
+    )
+    assert response.status_code == 200
+
+    after = client.get("/api/usage/summary").json()
+    assert after["measurement_calls"] == before_measurements + 1
+    assert _endpoint_call_count(after, "/api/depth/measure-roi") == before_endpoint_calls + 1
+
+
+def test_usage_events_and_export_include_api_call_logs():
+    client = TestClient(create_app())
+    depth = [[0.0 for _ in range(8)] for _ in range(8)]
+    for y in range(2, 6):
+        for x in range(2, 4):
+            depth[y][x] = 800.0
+
+    response = client.post(
+        "/api/depth/quality",
+        json={
+            "depth_frame": depth,
+            "roi": [2, 2, 6, 6],
+            "min_valid_depth_mm": 50,
+            "max_valid_depth_mm": 6000,
+        },
+    )
+    assert response.status_code == 200
+
+    events = client.get("/api/usage/events", params={"limit": 5, "endpoint": "/api/depth/quality"})
+    assert events.status_code == 200
+    items = events.json()["items"]
+    assert items
+    assert items[0]["endpoint"] == "/api/depth/quality"
+    assert items[0]["success"] is True
+
+    export = client.get("/api/usage/export.csv", params={"endpoint": "/api/depth/quality"})
+    assert export.status_code == 200
+    assert "endpoint" in export.text
+    assert "/api/depth/quality" in export.text
+
+
 def test_industry_profile_endpoint_classifies_auto_parts_package():
     client = TestClient(create_app())
     response = client.post(
@@ -455,3 +520,11 @@ def test_depth_workflow_guide_endpoint_returns_camera_arrival_plan():
     assert "powered_usb_hub" in body["recommended_workflow"]["readiness_item_ids"]
     assert "reflective_surface_cross_check" in body["recommended_workflow"]["capture_step_ids"]
     assert body["guide"]["motherboard_required_now"] is False
+
+
+def _endpoint_call_count(summary: dict[str, object], endpoint: str) -> int:
+    by_endpoint = summary.get("by_endpoint") or []
+    for item in by_endpoint:
+        if item["endpoint"] == endpoint:
+            return int(item["call_count"])
+    return 0
