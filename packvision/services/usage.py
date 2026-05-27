@@ -18,6 +18,7 @@ MEASUREMENT_ENDPOINTS = {
     "/api/depth/demo-object/save",
     "/api/depth/measure-roi",
     "/api/depth/measure-object",
+    "/api/depth/simulate-from-image",
 }
 
 USAGE_COLUMNS = (

@@ -100,6 +100,7 @@ D:\BaiduNetdiskDownload\奥比中光Astra Pro
 - `POST /api/depth/capture/probe`：到货前后都可运行的采集探测接口，返回状态、选中后端和下一步动作。
 - `GET /api/depth/demo-object`：无硬件时运行合成异形件深度测量演示。
 - `POST /api/depth/demo-object/save`：把深度演示按单号保存到历史记录，方便验证追溯流程。
+- `POST /api/depth/simulate-from-image`：上传真实 RGB 图片，用 Astra Pro 近似内参和合成深度帧跑硬件到货前干测，输出标注图和深度预览图。
 - `POST /api/depth/measure-roi`：用深度图、相机内参、ROI 和桌面深度计算真实长宽高。
 - `POST /api/depth/quality`：检查深度孔洞、稀疏有效点、ROI 噪声和台面背景稳定性，提前暴露反光、透明、深黑材质风险。
 - `POST /api/depth/measure-object`：用桌面深度分离物体 mask，再用点云范围测异形件；长条件可传 `footprint_method=principal_axes` 按主轴方向测真实长度。
@@ -114,3 +115,4 @@ D:\BaiduNetdiskDownload\奥比中光Astra Pro
 - `docs_cn\09_汽车备件测量落地方案.md`：汽车备件仓库的普通包装、异形包装和异常材质落地流程。
 - `docs_cn\10_Astra_Pro_到货验收与现场试运行.md`：两台 Astra Pro 到货后的第一小时验收、标准纸箱/长条件/异形件试运行流程。
 - `docs_cn\16_Astra_Pro_厂商资料学习笔记.md`：基于店铺附赠资料包重新梳理的厂商工具链、标定策略和 PackVision 修正方向。
+- `docs_cn\19_真实样例图_Astra_深度模拟干跑.md`：使用 CLUBS 真实箱内场景图做 Astra 深度模拟测量的说明。

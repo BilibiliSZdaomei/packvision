@@ -44,6 +44,7 @@ flowchart LR
 | `POST /api/depth/capture/probe` | 探测相机能不能采集 |
 | `POST /api/depth/capture/frame` | 采集一帧深度数据 |
 | `POST /api/depth/measure-capture` | 采集并直接测量 |
+| `POST /api/depth/simulate-from-image` | 上传真实图片，用 Astra 模拟内参和合成深度帧做硬件到货前干跑 |
 
 ## 测量接口
 
@@ -116,5 +117,23 @@ flowchart LR
 - 点云、彩色点云、D2C 对齐何时启用。
 
 原则：员工只负责扫码、放货、自动采集、确认保存；工程师才处理 ROS2 参数。
+
+## 真实图片模拟深度
+
+硬件没到货时，可以先用公开真实箱内场景图跑完整链路：
+
+```powershell
+.\scripts\run_real_sample_simulation.ps1
+```
+
+默认样例来自 CLUBS Dataset：
+
+`https://clubs.github.io/gif/box_000.gif`
+
+输出在：
+
+`D:\Documents\包装尺寸检测\data\simulation_samples\clubs_box_000`
+
+这不是最终精度证明，只是验证真实 RGB 图片、Astra 近似内参、合成深度帧、object-mask 测量、标注图和后台统计能连起来。
 
 继续读：[[06 多相机三视图方案]]

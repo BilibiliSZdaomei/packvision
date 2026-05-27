@@ -37,6 +37,10 @@ from packvision.services.depth_geometry import (
 )
 from packvision.services.depth_quality import DepthQualityError, analyze_depth_quality
 from packvision.services.astra_tutorials import build_astra_tutorial_playbook
+from packvision.services.depth_simulation import (
+    DepthSimulationError,
+    simulate_astra_depth_measurement_from_image,
+)
 from packvision.services.depth_workflow import build_depth_workflow_guide, recommend_capture_workflow
 from packvision.services.history import (
     export_measurements_csv,
@@ -648,6 +652,72 @@ def create_app() -> FastAPI:
         _set_usage_trace(request, result)
         return result
 
+    @app.post("/api/depth/simulate-from-image")
+    async def depth_simulate_from_image(
+        request: Request,
+        image: Annotated[UploadFile, File()],
+        order_id: Annotated[str | None, Form()] = None,
+        barcode_text: Annotated[str | None, Form()] = None,
+        part_category: Annotated[str | None, Form()] = None,
+        package_hint: Annotated[str | None, Form()] = None,
+        material_hint: Annotated[str | None, Form()] = None,
+        actual_weight_kg: Annotated[float | None, Form()] = None,
+        roi_json: Annotated[str | None, Form()] = None,
+        table_depth_mm: Annotated[float, Form()] = 1200.0,
+        object_depth_mm: Annotated[float, Form()] = 850.0,
+        frame_index: Annotated[int, Form()] = 0,
+        save_to_history: Annotated[bool, Form()] = False,
+        source_url: Annotated[str | None, Form()] = None,
+    ) -> dict[str, object]:
+        content = await image.read()
+        if not content:
+            raise HTTPException(status_code=422, detail="image is required.")
+        if len(content) > MAX_UPLOAD_BYTES:
+            raise HTTPException(status_code=413, detail="Image must be 15 MB or smaller.")
+        try:
+            simulated = simulate_astra_depth_measurement_from_image(
+                content,
+                filename=image.filename,
+                source_url=source_url,
+                roi=_parse_roi_json(roi_json),
+                table_depth_mm=table_depth_mm,
+                object_depth_mm=object_depth_mm,
+                frame_index=frame_index,
+            )
+        except DepthSimulationError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+        source_path = write_bytes(dirs["results"], ".png", simulated.artifacts.source_png)
+        overlay_path = write_bytes(dirs["results"], ".png", simulated.artifacts.overlay_png)
+        depth_preview_path = write_bytes(dirs["results"], ".png", simulated.artifacts.depth_preview_png)
+        payload = DepthTraceabilityPayload(
+            order_id=order_id,
+            barcode_text=barcode_text,
+            part_category=part_category,
+            package_hint=package_hint,
+            material_hint=material_hint,
+            actual_weight_kg=actual_weight_kg,
+            save_to_history=False,
+        )
+        result = _finalize_depth_result(
+            simulated.result,
+            payload,
+            measurement_source="depth_simulated_real_image",
+            save_to_history=False,
+        )
+        result["artifacts"].update(
+            {
+                "source_image_url": f"/results/{source_path.name}",
+                "simulation_overlay_url": f"/results/{overlay_path.name}",
+                "depth_preview_url": f"/results/{depth_preview_path.name}",
+            }
+        )
+        if save_to_history:
+            result["history_saved"] = True
+            save_measurement(result)
+        _set_usage_trace(request, result)
+        return result
+
     @app.post("/api/depth/measure-roi")
     def depth_measure_roi(request: Request, payload: DepthMeasurePayload) -> dict[str, object]:
         try:
@@ -755,6 +825,21 @@ def _parse_points(raw: str | None, field_name: str) -> list[list[float]] | None:
     if len(points) not in {2, 4}:
         raise HTTPException(status_code=422, detail=f"{field_name} must contain 2 or 4 points.")
     return points
+
+
+def _parse_roi_json(raw: str | None) -> list[int] | None:
+    if not raw:
+        return None
+    try:
+        value = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=422, detail="roi_json must be valid JSON.") from exc
+    if not isinstance(value, list) or len(value) != 4:
+        raise HTTPException(status_code=422, detail="roi_json must be [x1, y1, x2, y2].")
+    try:
+        return [int(round(float(item))) for item in value]
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail="roi_json values must be numbers.") from exc
 
 
 def _clean_text(value: Any) -> str | None:

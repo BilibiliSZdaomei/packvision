@@ -1,4 +1,6 @@
 from fastapi.testclient import TestClient
+from io import BytesIO
+from PIL import Image, ImageDraw
 import pytest
 from uuid import uuid4
 
@@ -447,6 +449,35 @@ def test_depth_demo_object_save_persists_to_history():
     saved = next(item for item in history.json()["items"] if item["measurement_id"] == body["measurement_id"])
     assert saved["measurement_method"] == "depth_object_mask_projection"
     assert saved["package_class"] == "irregular_or_soft_pack"
+
+
+def test_depth_simulate_from_image_endpoint_runs_astra_dry_run():
+    client = TestClient(create_app())
+    image = Image.new("RGB", (320, 220), (176, 170, 155))
+    draw = ImageDraw.Draw(image)
+    draw.rectangle([55, 45, 265, 175], fill=(205, 198, 170), outline=(90, 78, 55), width=4)
+    draw.ellipse([90, 70, 230, 160], fill=(35, 95, 170), outline=(20, 50, 90), width=3)
+    buffer = BytesIO()
+    image.save(buffer, format="PNG")
+
+    response = client.post(
+        "/api/depth/simulate-from-image",
+        files={"image": ("sample.png", buffer.getvalue(), "image/png")},
+        data={
+            "table_depth_mm": "1200",
+            "object_depth_mm": "850",
+            "part_category": "simulation_fixture",
+            "source_url": "https://clubs.github.io/gif/box_000.gif",
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["measurement_source"] == "depth_simulated_real_image"
+    assert body["dimensions"]["height_mm"] == pytest.approx(350.0, abs=8.0)
+    assert body["simulation"]["mode"] == "real_image_plus_synthetic_astra_depth"
+    assert "real_rgb_image_used" in body["quality_flags"]
+    assert body["artifacts"]["simulation_overlay_url"].startswith("/results/")
 
 
 def test_depth_measure_roi_endpoint_accepts_synthetic_frame():
