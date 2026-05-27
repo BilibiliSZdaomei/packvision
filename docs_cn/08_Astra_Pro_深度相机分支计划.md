@@ -47,6 +47,7 @@ D:\BaiduNetdiskDownload\奥比中光Astra Pro
 
 ```text
 GET /api/depth/status
+GET /api/depth/workflow-guide
 ```
 
 返回内容包括：
@@ -57,6 +58,8 @@ GET /api/depth/status
 - 是否发现 Windows 驱动安装包
 - 是否安装了可选 Python SDK `pyorbbecsdk`
 - 推荐后端：`pyorbbecsdk`、`openni2_vendor_runtime` 或 `not_ready`
+
+`GET /api/depth/workflow-guide` 用于到货前后准备现场调试。它会根据包装类型、材质和相机数量返回 USB 数据线、有源 USB 3.0 Hub、支架、卷尺/卡尺、光线和官方上位机验证步骤。两台相机优先用直连 USB、短数据线和有源 Hub 排查，不默认要求购买主板；只有这些方案都不稳定时，再考虑 PCIe USB 扩展卡或更强主机。
 
 ### 2. 深度 ROI 测量算法
 

@@ -88,3 +88,19 @@ POST /api/validation/evaluate-csv
 `POST /api/validation/evaluate` 输入每件的 `measured` 和人工真值 `truth`，会返回每件误差、失败样本、复核样本和是否可以进入现场试运行。
 
 如果现场人员习惯用 WPS/Excel，可以先下载 `GET /api/validation/trial-template.csv`。模板已经按普通纸箱、长条件、异形/软包、大件异形，以及反光、透明、深黑吸光、易变形材质预留样本行。现场只需要填写单号、系统测量值、卷尺/卡尺真值和备注，再把 CSV 上传到 `POST /api/validation/evaluate-csv`，系统会复用同一套容差规则给出批量验收结论。
+
+## 9. 到货调试清单接口
+
+```text
+GET /api/depth/workflow-guide
+```
+
+这个接口把摄像头到货前后的准备工作落到软件里：USB 数据延长线、有源 USB 3.0 Hub、固定支架、卷尺/卡尺、哑光桌面、稳定室内光线、官方 Viewer 先验深度图。它也会按 `package_class`、`material_class`、`camera_count` 给出采集步骤。
+
+示例：
+
+```text
+GET /api/depth/workflow-guide?package_class=long_part&material_class=reflective&camera_count=2
+```
+
+返回结果会提示两台相机优先准备有源 Hub 和 1-2 米数据线，长条件走 `long_item_depth_roi`，反光件增加 `reflective_surface_cross_check`。当前结论是：调试初期不需要买主板；只有直连 USB、短数据线、有源 Hub 和不同 USB 口都不稳定时，再考虑 PCIe USB 扩展卡或更强主机。

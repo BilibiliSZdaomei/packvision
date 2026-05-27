@@ -361,3 +361,18 @@ def test_validation_evaluate_csv_endpoint_accepts_uploaded_csv():
     assert body["summary"]["failed_samples"] == 1
     assert body["samples"][0]["sample_id"] == "MAT-CSV-001"
     assert body["samples"][0]["order_id"] == "SO-CSV-001"
+
+
+def test_depth_workflow_guide_endpoint_returns_camera_arrival_plan():
+    client = TestClient(create_app())
+    response = client.get(
+        "/api/depth/workflow-guide",
+        params={"package_class": "long_part", "material_class": "reflective", "camera_count": 2},
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["recommended_workflow"]["package_class"] == "long_part"
+    assert "powered_usb_hub" in body["recommended_workflow"]["readiness_item_ids"]
+    assert "reflective_surface_cross_check" in body["recommended_workflow"]["capture_step_ids"]
+    assert body["guide"]["motherboard_required_now"] is False

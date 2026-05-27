@@ -596,6 +596,7 @@ input {
 }
 
 .industry-summary,
+.depth-workflow-summary,
 .validation-plan-summary,
 .depth-probe-summary,
 .depth-demo-summary {
@@ -605,6 +606,7 @@ input {
 }
 
 .industry-card,
+.depth-workflow-card,
 .validation-plan-card,
 .depth-demo-card {
   display: grid;
@@ -625,6 +627,10 @@ input {
 
 .validation-plan-card {
   grid-template-columns: minmax(0, 1.25fr) minmax(96px, 0.55fr) minmax(0, 1.2fr);
+}
+
+.depth-workflow-card {
+  grid-template-columns: minmax(0, 1fr) minmax(96px, 0.45fr) minmax(0, 1.45fr);
 }
 
 .validation-plan-card.is-total {

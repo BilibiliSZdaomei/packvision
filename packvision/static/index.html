@@ -241,6 +241,7 @@
             <div class="result-tools">
               <button class="tool-button" type="button" id="refreshDepthStatusButton" data-i18n="refreshDepth">刷新状态</button>
               <button class="tool-button" type="button" id="probeDepthCaptureButton" data-i18n="probeDepthCapture">采集探测</button>
+              <button class="tool-button" type="button" id="loadDepthWorkflowButton" data-i18n="workflowGuide">调试清单</button>
               <button class="tool-button" type="button" id="loadValidationPlanButton" data-i18n="validationPlan">验收计划</button>
               <a class="tool-button" href="/api/validation/trial-template.csv" target="_blank" rel="noopener" data-i18n="validationTemplate">验收模板</a>
               <button class="tool-button" type="button" id="runDepthDemoButton" data-i18n="runDepthDemo">运行深度演示</button>
@@ -248,6 +249,7 @@
             </div>
           </div>
           <div class="depth-status-grid" id="depthStatusGrid"></div>
+          <div class="depth-workflow-summary" id="depthWorkflowSummary"></div>
           <div class="validation-plan-summary" id="validationPlanSummary"></div>
           <div class="depth-probe-summary" id="depthProbeSummary"></div>
           <div class="depth-demo-summary" id="depthDemoSummary"></div>
@@ -273,7 +275,7 @@
             <p class="section-label" data-i18n="api">API</p>
             <h3>POST /api/measure</h3>
           </div>
-          <code>order_id, barcode_text, top_image, side_image?, marker_size_mm, manual_height_mm?, camera_distance_mm?, focal_length_35mm?, top_box_json?, GET /api/depth/status, POST /api/depth/measure-object, GET /api/history/export.csv, GET /api/validation/trial-template.csv</code>
+          <code>order_id, barcode_text, top_image, side_image?, marker_size_mm, manual_height_mm?, camera_distance_mm?, focal_length_35mm?, top_box_json?, GET /api/depth/status, GET /api/depth/workflow-guide, POST /api/depth/measure-object, GET /api/history/export.csv, GET /api/validation/trial-template.csv</code>
         </section>
       </main>
     </div>

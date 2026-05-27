@@ -29,6 +29,7 @@ from packvision.services.depth_geometry import (
     measure_depth_object_mask,
     measure_depth_roi,
 )
+from packvision.services.depth_workflow import build_depth_workflow_guide, recommend_capture_workflow
 from packvision.services.history import (
     export_measurements_csv,
     get_measurement,
@@ -295,6 +296,21 @@ def create_app() -> FastAPI:
     @app.get("/api/depth/status")
     def depth_status() -> dict[str, object]:
         return depth_camera_status()
+
+    @app.get("/api/depth/workflow-guide")
+    def depth_workflow_guide(
+        package_class: str = "standard_carton",
+        material_class: str | None = None,
+        camera_count: int = 1,
+    ) -> dict[str, object]:
+        return {
+            "guide": build_depth_workflow_guide(),
+            "recommended_workflow": recommend_capture_workflow(
+                package_class=package_class,
+                material_class=material_class,
+                camera_count=camera_count,
+            ),
+        }
 
     @app.get("/api/depth/capture/capabilities")
     def depth_capture_capability_report() -> dict[str, object]:

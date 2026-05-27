@@ -87,6 +87,13 @@ const translations = {
     depthTitle: "Astra Pro 深度相机工作区",
     refreshDepth: "刷新状态",
     probeDepthCapture: "采集探测",
+    workflowGuide: "调试清单",
+    arrivalKit: "到货准备",
+    captureSteps: "采集步骤",
+    cameraCount: "相机数",
+    motherboard: "主板",
+    required: "需要",
+    notRequired: "暂不需要",
     validationPlan: "验收计划",
     validationTemplate: "验收模板",
     minSamples: "最少样本",
@@ -199,6 +206,13 @@ const translations = {
     depthTitle: "Astra Pro depth camera workspace",
     refreshDepth: "Refresh status",
     probeDepthCapture: "Probe capture",
+    workflowGuide: "Setup guide",
+    arrivalKit: "Arrival kit",
+    captureSteps: "Capture steps",
+    cameraCount: "Cameras",
+    motherboard: "Motherboard",
+    required: "Required",
+    notRequired: "Not needed",
     validationPlan: "Trial plan",
     validationTemplate: "Trial CSV",
     minSamples: "Min samples",
@@ -311,6 +325,13 @@ const translations = {
     depthTitle: "Робоча зона Astra Pro",
     refreshDepth: "Оновити статус",
     probeDepthCapture: "Перевірити збір",
+    workflowGuide: "Підготовка",
+    arrivalKit: "Комплект",
+    captureSteps: "Кроки зйомки",
+    cameraCount: "Камери",
+    motherboard: "Плата",
+    required: "Потрібно",
+    notRequired: "Не потрібно",
     validationPlan: "План приймання",
     validationTemplate: "CSV приймання",
     minSamples: "Мін. зразків",
@@ -634,6 +655,78 @@ const probeActionLabels = {
   },
 };
 
+const workflowLabels = {
+  zh: {
+    administrator_rights: "Windows 管理员权限",
+    orbbec_viewer_driver: "Orbbec 驱动和上位机",
+    usb_data_extension_cable: "USB 数据延长线",
+    powered_usb_hub: "有源 USB 3.0 Hub",
+    stable_mount_or_tripod: "三脚架/固定支架",
+    truth_measurement_tools: "卷尺/游标卡尺",
+    matte_work_surface: "哑光平整桌面",
+    lighting_control: "稳定室内光线",
+    barcode_input_ready: "扫码枪或条码图片入口",
+    vendor_viewer_depth_check: "官方上位机深度图检查",
+    long_item_depth_roi: "长条件深度 ROI",
+    end_to_end_truth_check: "端到端人工真值复核",
+    separate_usb_controller_or_powered_hub_check: "不同 USB 口或有源 Hub 检查",
+    reflective_surface_cross_check: "反光表面交叉复核",
+    manual_review_required: "人工复核",
+    direct_usb_port: "电脑直连 USB 口",
+    short_data_cable: "短数据线",
+    separate_pc_usb_ports: "不同电脑 USB 口",
+    install_orbbec_driver: "安装 Orbbec 驱动",
+    open_vendor_viewer: "打开官方上位机",
+    confirm_depth_frame: "确认深度画面",
+  },
+  en: {
+    administrator_rights: "Windows administrator rights",
+    orbbec_viewer_driver: "Orbbec driver and viewer",
+    usb_data_extension_cable: "USB data extension cables",
+    powered_usb_hub: "Powered USB 3.0 hub",
+    stable_mount_or_tripod: "Tripod or fixed mount",
+    truth_measurement_tools: "Tape measure and caliper",
+    matte_work_surface: "Flat matte work surface",
+    lighting_control: "Stable indoor lighting",
+    barcode_input_ready: "Scanner or barcode upload",
+    vendor_viewer_depth_check: "Vendor viewer depth check",
+    long_item_depth_roi: "Long-item depth ROI",
+    end_to_end_truth_check: "End-to-end truth check",
+    separate_usb_controller_or_powered_hub_check: "Separate USB port or powered hub",
+    reflective_surface_cross_check: "Reflective surface cross-check",
+    manual_review_required: "Manual review",
+    direct_usb_port: "Direct PC USB port",
+    short_data_cable: "Short data cable",
+    separate_pc_usb_ports: "Separate PC USB ports",
+    install_orbbec_driver: "Install Orbbec driver",
+    open_vendor_viewer: "Open vendor viewer",
+    confirm_depth_frame: "Confirm depth frame",
+  },
+  uk: {
+    administrator_rights: "Права адміністратора Windows",
+    orbbec_viewer_driver: "Драйвер і переглядач Orbbec",
+    usb_data_extension_cable: "USB кабелі даних",
+    powered_usb_hub: "USB 3.0 Hub з живленням",
+    stable_mount_or_tripod: "Штатив або кріплення",
+    truth_measurement_tools: "Рулетка і штангенциркуль",
+    matte_work_surface: "Матова рівна поверхня",
+    lighting_control: "Стабільне освітлення",
+    barcode_input_ready: "Сканер або фото штрихкоду",
+    vendor_viewer_depth_check: "Перевірка глибини у Viewer",
+    long_item_depth_roi: "ROI довгої деталі",
+    end_to_end_truth_check: "Контроль ручного еталона",
+    separate_usb_controller_or_powered_hub_check: "Окремий USB або Hub",
+    reflective_surface_cross_check: "Перевірка відблиску",
+    manual_review_required: "Ручна перевірка",
+    direct_usb_port: "Прямий USB порт ПК",
+    short_data_cable: "Короткий кабель даних",
+    separate_pc_usb_ports: "Окремі USB порти ПК",
+    install_orbbec_driver: "Встановити драйвер Orbbec",
+    open_vendor_viewer: "Відкрити Viewer",
+    confirm_depth_frame: "Підтвердити кадр глибини",
+  },
+};
+
 const localeMap = { zh: "zh-CN", en: "en-US", uk: "uk-UA" };
 
 const state = {
@@ -642,6 +735,7 @@ const state = {
   lastResult: null,
   depthStatus: null,
   depthProbe: null,
+  depthWorkflow: null,
   validationPlan: null,
   lastDepthDemo: null,
   activeView: "top",
@@ -684,10 +778,12 @@ const industrySummary = document.querySelector("#industrySummary");
 const depthStatusGrid = document.querySelector("#depthStatusGrid");
 const refreshDepthStatusButton = document.querySelector("#refreshDepthStatusButton");
 const probeDepthCaptureButton = document.querySelector("#probeDepthCaptureButton");
+const loadDepthWorkflowButton = document.querySelector("#loadDepthWorkflowButton");
 const loadValidationPlanButton = document.querySelector("#loadValidationPlanButton");
 const runDepthDemoButton = document.querySelector("#runDepthDemoButton");
 const saveDepthDemoButton = document.querySelector("#saveDepthDemoButton");
 const validationPlanSummary = document.querySelector("#validationPlanSummary");
+const depthWorkflowSummary = document.querySelector("#depthWorkflowSummary");
 const depthProbeSummary = document.querySelector("#depthProbeSummary");
 const depthDemoSummary = document.querySelector("#depthDemoSummary");
 const historySearch = document.querySelector("#historySearch");
@@ -732,6 +828,9 @@ function applyLanguage() {
   }
   if (state.depthProbe) {
     renderDepthProbe(state.depthProbe);
+  }
+  if (state.depthWorkflow) {
+    renderDepthWorkflow(state.depthWorkflow);
   }
   if (state.validationPlan) {
     renderValidationPlan(state.validationPlan);
@@ -1174,6 +1273,59 @@ function renderDepthProbe(data) {
   });
 }
 
+async function loadDepthWorkflow() {
+  loadDepthWorkflowButton.disabled = true;
+  try {
+    const response = await fetch("/api/depth/workflow-guide?package_class=long_part&material_class=reflective&camera_count=2");
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.detail || response.statusText);
+    }
+    state.depthWorkflow = data;
+    renderDepthWorkflow(data);
+  } catch (error) {
+    depthWorkflowSummary.innerHTML = "";
+    const item = document.createElement("div");
+    item.className = "recommendation";
+    item.textContent = String(error.message || error);
+    depthWorkflowSummary.appendChild(item);
+  } finally {
+    loadDepthWorkflowButton.disabled = false;
+  }
+}
+
+function renderDepthWorkflow(data) {
+  depthWorkflowSummary.innerHTML = "";
+  const workflow = data.recommended_workflow || {};
+  const guide = data.guide || {};
+
+  const lead = document.createElement("div");
+  lead.className = "depth-workflow-card";
+  appendSummaryCell(lead, t("workflowGuide"), labelFrom(scenarioLabels, workflow.package_class) || "--");
+  appendSummaryCell(lead, t("cameraCount"), String(workflow.camera_count || "--"));
+  appendSummaryCell(lead, t("motherboard"), workflow.upgrade_advice?.motherboard_required_now ? t("required") : t("notRequired"));
+  depthWorkflowSummary.appendChild(lead);
+
+  const readiness = document.createElement("div");
+  readiness.className = "depth-workflow-card";
+  appendSummaryCell(readiness, t("arrivalKit"), firstLabels(workflow.readiness_item_ids, workflowLabels, 4));
+  appendSummaryCell(readiness, t("captureMode"), workflow.camera_pose || "--");
+  appendSummaryCell(readiness, t("nextAction"), firstLabels(guide.first_hour_steps, workflowLabels, 3));
+  depthWorkflowSummary.appendChild(readiness);
+
+  const steps = document.createElement("div");
+  steps.className = "depth-workflow-card";
+  appendSummaryCell(steps, t("captureSteps"), firstLabels(workflow.capture_step_ids, workflowLabels, 5));
+  appendSummaryCell(steps, t("materialClass"), labelFrom(scenarioLabels, workflow.material_class) || "--");
+  appendSummaryCell(steps, t("nextAction"), firstLabels(workflow.upgrade_advice?.try_before_upgrade, workflowLabels, 4));
+  depthWorkflowSummary.appendChild(steps);
+}
+
+function firstLabels(ids = [], dictionary = null, limit = 4) {
+  const values = ids.slice(0, limit).map((id) => (dictionary ? labelFrom(dictionary, id) : id.replaceAll("_", " ")));
+  return values.length ? values.join(" / ") : "--";
+}
+
 async function loadValidationPlan() {
   loadValidationPlanButton.disabled = true;
   try {
@@ -1546,6 +1698,7 @@ orderImage.addEventListener("change", decodeBarcodeImage);
 refreshHistoryButton.addEventListener("click", loadHistory);
 refreshDepthStatusButton.addEventListener("click", loadDepthStatus);
 probeDepthCaptureButton.addEventListener("click", probeDepthCapture);
+loadDepthWorkflowButton.addEventListener("click", loadDepthWorkflow);
 loadValidationPlanButton.addEventListener("click", loadValidationPlan);
 runDepthDemoButton.addEventListener("click", runDepthDemo);
 saveDepthDemoButton.addEventListener("click", saveDepthDemo);
