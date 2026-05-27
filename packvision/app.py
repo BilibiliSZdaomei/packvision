@@ -107,6 +107,7 @@ class DepthObjectMeasurePayload(DepthTraceabilityPayload):
     max_valid_depth_mm: float = 6000.0
     object_min_height_mm: float = 30.0
     trim_quantile: float = 0.02
+    footprint_method: str = "axis_aligned"
 
 
 class DepthCaptureProbePayload(BaseModel):
@@ -429,6 +430,7 @@ def create_app() -> FastAPI:
                     max_valid_depth_mm=payload.max_valid_depth_mm,
                     object_min_height_mm=payload.object_min_height_mm,
                     trim_quantile=payload.trim_quantile,
+                    footprint_method=payload.footprint_method,
                 ),
             )
             return _finalize_depth_result(result, payload, measurement_source="depth_object_api")

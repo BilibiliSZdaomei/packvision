@@ -38,6 +38,7 @@ class DepthObjectConfig:
     max_valid_depth_mm: float = 6000.0
     object_min_height_mm: float = 30.0
     trim_quantile: float = 0.02
+    footprint_method: str = "axis_aligned"
 
 
 class DepthMeasurementError(RuntimeError):
@@ -162,6 +163,7 @@ def measure_depth_object_mask(
 ) -> dict[str, Any]:
     depth_mm = _normalize_depth_frame(depth_frame, intrinsics.depth_scale)
     roi = _clip_roi(config.roi, intrinsics.width, intrinsics.height, "roi")
+    footprint_method = _normalize_footprint_method(config.footprint_method)
     quality = _analyze_depth_quality(
         depth_mm,
         roi=roi,
@@ -208,8 +210,12 @@ def measure_depth_object_mask(
     world_x = (image_x - float(intrinsics.cx)) * z / float(intrinsics.fx)
     world_y = (image_y - float(intrinsics.cy)) * z / float(intrinsics.fy)
 
-    x_extent = _trimmed_extent(world_x, config.trim_quantile)
-    y_extent = _trimmed_extent(world_y, config.trim_quantile)
+    x_extent, y_extent, orientation_deg = _footprint_extents(
+        world_x,
+        world_y,
+        footprint_method,
+        config.trim_quantile,
+    )
     height_mm = max(0.0, float(table_depth_mm) - _robust_depth(z, 0.08))
     length_mm = max(x_extent, y_extent)
     width_mm = min(x_extent, y_extent)
@@ -219,6 +225,10 @@ def measure_depth_object_mask(
     roi_pixel_count = max(1, (x2 - x1) * (y2 - y1))
     object_ratio = object_pixel_count / roi_pixel_count
     flags = ["depth_camera_measurement", "depth_object_mask_used", "background_depth_used"]
+    if footprint_method == "principal_axes":
+        flags.append("principal_axis_extent_used")
+    else:
+        flags.append("axis_aligned_extent_used")
     if object_ratio < 0.08:
         flags.append("small_object_mask")
     if config.trim_quantile:
@@ -243,6 +253,8 @@ def measure_depth_object_mask(
             "object_pixel_ratio": round(float(object_ratio), 3),
             "roi": roi,
             "background_roi": config.background_roi,
+            "footprint_method": footprint_method,
+            "orientation_deg": round(float(orientation_deg), 1) if orientation_deg is not None else None,
             "x_extent_mm": round(float(x_extent), 1),
             "y_extent_mm": round(float(y_extent), 1),
             "intrinsics": {
@@ -310,6 +322,13 @@ def _depth_recommendations(base_recommendations: list[str], flags: list[str]) ->
     return sorted(set(recommendations))
 
 
+def _normalize_footprint_method(method: str) -> str:
+    normalized = str(method or "axis_aligned").strip().lower()
+    if normalized not in {"axis_aligned", "principal_axes"}:
+        raise DepthMeasurementError("footprint_method must be axis_aligned or principal_axes.")
+    return normalized
+
+
 def _clip_roi(roi: list[int], width: int, height: int, field_name: str) -> list[int]:
     if len(roi) != 4:
         raise DepthMeasurementError(f"{field_name} must contain [x1, y1, x2, y2].")
@@ -361,3 +380,37 @@ def _trimmed_extent(values: np.ndarray, trim_quantile: float) -> float:
     lower = float(np.quantile(values, lower_q))
     upper = float(np.quantile(values, upper_q))
     return max(0.0, upper - lower)
+
+
+def _footprint_extents(
+    world_x: np.ndarray,
+    world_y: np.ndarray,
+    footprint_method: str,
+    trim_quantile: float,
+) -> tuple[float, float, float | None]:
+    if footprint_method == "axis_aligned" or world_x.size < 2:
+        return (
+            _trimmed_extent(world_x, trim_quantile),
+            _trimmed_extent(world_y, trim_quantile),
+            None,
+        )
+
+    points = np.column_stack((world_x, world_y)).astype(np.float32)
+    centered = points - points.mean(axis=0)
+    if not np.any(centered):
+        return 0.0, 0.0, 0.0
+
+    covariance = np.cov(centered, rowvar=False)
+    eigenvalues, eigenvectors = np.linalg.eigh(covariance)
+    order = np.argsort(eigenvalues)[::-1]
+    axes = eigenvectors[:, order]
+    projections = centered @ axes
+    major_extent = _trimmed_extent(projections[:, 0], trim_quantile)
+    minor_extent = _trimmed_extent(projections[:, 1], trim_quantile)
+    major_axis = axes[:, 0]
+    orientation_deg = float(np.degrees(np.arctan2(major_axis[1], major_axis[0])))
+    if orientation_deg <= -90.0:
+        orientation_deg += 180.0
+    elif orientation_deg > 90.0:
+        orientation_deg -= 180.0
+    return major_extent, minor_extent, orientation_deg

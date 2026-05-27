@@ -96,3 +96,32 @@ def test_measure_depth_roi_merges_depth_quality_recommendations():
     assert "sparse_depth_frame" in result["quality_flags"]
     assert "depth_hole_risk" in result["quality_flags"]
     assert "retake_depth_with_less_reflection" in result["recommendation_codes"]
+
+
+def test_measure_depth_object_mask_principal_axes_handles_diagonal_long_part():
+    import numpy as np
+
+    depth = np.full((24, 24), 1000.0, dtype=np.float32)
+    for y in range(4, 20):
+        for x in range(4, 20):
+            if abs(x - y) <= 1:
+                depth[y, x] = 760.0
+
+    result = measure_depth_object_mask(
+        depth,
+        DepthIntrinsics(fx=100, fy=100, cx=12, cy=12, width=24, height=24),
+        DepthObjectConfig(
+            roi=[3, 3, 21, 21],
+            background_roi=[0, 0, 3, 3],
+            object_min_height_mm=80,
+            trim_quantile=0.0,
+            footprint_method="principal_axes",
+        ),
+    )
+
+    assert result["status"] == "measured"
+    assert result["dimensions"]["length_mm"] == pytest.approx(161.2, abs=1.5)
+    assert result["dimensions"]["width_mm"] == pytest.approx(10.7, abs=1.5)
+    assert result["depth"]["footprint_method"] == "principal_axes"
+    assert result["depth"]["orientation_deg"] == pytest.approx(45.0, abs=1.0)
+    assert "principal_axis_extent_used" in result["quality_flags"]

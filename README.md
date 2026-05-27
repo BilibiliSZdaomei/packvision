@@ -95,7 +95,8 @@ D:\BaiduNetdiskDownload\奥比中光Astra Pro
 - `GET /api/depth/demo-object`：无硬件时运行合成异形件深度测量演示。
 - `POST /api/depth/demo-object/save`：把深度演示按单号保存到历史记录，方便验证追溯流程。
 - `POST /api/depth/measure-roi`：用深度图、相机内参、ROI 和桌面深度计算真实长宽高。
-- `POST /api/depth/measure-object`：用桌面深度分离物体 mask，再用点云范围测异形件。
+- `POST /api/depth/quality`：检查深度孔洞、稀疏有效点、ROI 噪声和台面背景稳定性，提前暴露反光、透明、深黑材质风险。
+- `POST /api/depth/measure-object`：用桌面深度分离物体 mask，再用点云范围测异形件；长条件可传 `footprint_method=principal_axes` 按主轴方向测真实长度。
 - `POST /api/depth/measure-roi` 和 `POST /api/depth/measure-object` 支持 `order_id`、`barcode_text`、`part_category`、`package_hint`、`material_hint`、`actual_weight_kg`、`save_to_history`，真实相机接入后可直接进入同一套历史追溯和 CSV 导出。
 - `POST /api/industry/profile`：按汽车备件场景判断标准纸箱、长条件、软包/异形件、异常材质风险和计费重。
 - `GET /api/validation/trial-plan`：返回 Astra Pro 到货后普通纸箱、长条件、异形件和异常材质的最小抽检计划。

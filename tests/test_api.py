@@ -296,6 +296,41 @@ def test_depth_measure_object_endpoint_accepts_synthetic_frame():
     assert "depth_object_mask_used" in body["quality_flags"]
 
 
+def test_depth_measure_object_endpoint_accepts_principal_axis_footprint():
+    client = TestClient(create_app())
+    depth = [[1000.0 for _ in range(12)] for _ in range(12)]
+    for y in range(2, 10):
+        for x in range(2, 10):
+            if abs(x - y) <= 1:
+                depth[y][x] = 760.0
+
+    response = client.post(
+        "/api/depth/measure-object",
+        json={
+            "depth_frame": depth,
+            "intrinsics": {
+                "fx": 100.0,
+                "fy": 100.0,
+                "cx": 6.0,
+                "cy": 6.0,
+                "width": 12,
+                "height": 12,
+            },
+            "roi": [1, 1, 11, 11],
+            "background_roi": [0, 0, 1, 1],
+            "object_min_height_mm": 80,
+            "trim_quantile": 0.0,
+            "footprint_method": "principal_axes",
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["depth"]["footprint_method"] == "principal_axes"
+    assert body["depth"]["orientation_deg"] == pytest.approx(45.0, abs=1.0)
+    assert "principal_axis_extent_used" in body["quality_flags"]
+
+
 def test_industry_profile_endpoint_classifies_auto_parts_package():
     client = TestClient(create_app())
     response = client.post(
