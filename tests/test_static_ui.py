@@ -25,7 +25,9 @@ def test_static_ui_exposes_review_sample_pool_workspace():
     assert 'id="reviewList"' in html
     assert 'id="refreshReviewButton"' in html
     assert 'id="exportReviewLink"' in html
+    assert 'id="exportReviewTruthLink"' in html
     assert "/api/review/samples" in js
+    assert "/api/review/truth-template.csv" in js
     assert "loadReviewSamples()" in js
     assert ".review-priority-high" in css
 

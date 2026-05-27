@@ -313,6 +313,7 @@
               <input id="reviewSearch" type="search" placeholder="Order ID" />
               <button class="tool-button" type="button" id="refreshReviewButton" data-i18n="refreshReview">刷新复核</button>
               <a class="tool-button" id="exportReviewLink" href="/api/review/export.csv" target="_blank" rel="noopener" data-i18n="exportReview">导出复核 CSV</a>
+              <a class="tool-button" id="exportReviewTruthLink" href="/api/review/truth-template.csv" target="_blank" rel="noopener" data-i18n="exportReviewTruth">导出真值模板</a>
             </div>
           </div>
           <div class="usage-summary-grid" id="reviewSummaryGrid"></div>
@@ -339,7 +340,7 @@
             <p class="section-label" data-i18n="api">API</p>
             <h3>POST /api/measure</h3>
           </div>
-          <code>order_id, barcode_text, top_image, side_image?, marker_size_mm, manual_height_mm?, camera_distance_mm?, focal_length_35mm?, top_box_json?, GET /api/depth/status, GET /api/depth/workflow-guide, POST /api/depth/measure-object, GET /api/history/export.csv, GET /api/review/samples, GET /api/validation/trial-template.csv</code>
+          <code>order_id, barcode_text, top_image, side_image?, marker_size_mm, manual_height_mm?, camera_distance_mm?, focal_length_35mm?, top_box_json?, GET /api/depth/status, GET /api/depth/workflow-guide, POST /api/depth/measure-object, GET /api/history/export.csv, GET /api/review/samples, GET /api/review/truth-template.csv, GET /api/validation/trial-template.csv</code>
         </section>
       </main>
     </div>

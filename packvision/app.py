@@ -61,7 +61,11 @@ from packvision.services.measurement import (
     measure_images,
     opencv_ready,
 )
-from packvision.services.review_pool import export_review_samples_csv, list_review_samples
+from packvision.services.review_pool import (
+    export_review_samples_csv,
+    export_review_truth_template_csv,
+    list_review_samples,
+)
 from packvision.services.storage import ensure_data_dirs, resource_path, write_bytes
 from packvision.services.usage import (
     export_usage_csv,
@@ -417,6 +421,15 @@ def create_app() -> FastAPI:
             content=csv_text,
             media_type="text/csv; charset=utf-8",
             headers={"Content-Disposition": 'attachment; filename="packvision-review-samples.csv"'},
+        )
+
+    @app.get("/api/review/truth-template.csv")
+    def review_truth_template(limit: int = 500, order_id: str | None = None) -> Response:
+        csv_text = export_review_truth_template_csv(limit=limit, order_id=_clean_text(order_id))
+        return Response(
+            content=csv_text,
+            media_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": 'attachment; filename="packvision-review-truth-template.csv"'},
         )
 
     @app.get("/api/usage/summary")

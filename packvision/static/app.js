@@ -83,6 +83,7 @@ const translations = {
     reviewTitle: "失败和低置信样本池",
     refreshReview: "刷新复核",
     exportReview: "导出复核 CSV",
+    exportReviewTruth: "导出真值模板",
     reviewSamples: "复核样本",
     highPriority: "高优先级",
     topReviewReason: "主要原因",
@@ -237,6 +238,7 @@ const translations = {
     reviewTitle: "Failure and low-confidence sample pool",
     refreshReview: "Refresh review",
     exportReview: "Export review CSV",
+    exportReviewTruth: "Export truth template",
     reviewSamples: "Review samples",
     highPriority: "High priority",
     topReviewReason: "Top reason",
@@ -391,6 +393,7 @@ const translations = {
     reviewTitle: "Зразки помилок і низької довіри",
     refreshReview: "Оновити перевірку",
     exportReview: "Експорт CSV",
+    exportReviewTruth: "Експорт шаблону",
     reviewSamples: "Зразки перевірки",
     highPriority: "Високий пріоритет",
     topReviewReason: "Головна причина",
@@ -1023,6 +1026,7 @@ const reviewSummaryGrid = document.querySelector("#reviewSummaryGrid");
 const reviewList = document.querySelector("#reviewList");
 const refreshReviewButton = document.querySelector("#refreshReviewButton");
 const exportReviewLink = document.querySelector("#exportReviewLink");
+const exportReviewTruthLink = document.querySelector("#exportReviewTruthLink");
 const usageSummaryGrid = document.querySelector("#usageSummaryGrid");
 const usageEndpointList = document.querySelector("#usageEndpointList");
 const refreshUsageButton = document.querySelector("#refreshUsageButton");
@@ -1919,6 +1923,9 @@ function updateReviewExportLink(params) {
   const exportParams = new URLSearchParams(params);
   exportParams.set("limit", "500");
   exportReviewLink.href = `/api/review/export.csv?${exportParams}`;
+  if (exportReviewTruthLink) {
+    exportReviewTruthLink.href = `/api/review/truth-template.csv?${exportParams}`;
+  }
 }
 
 function renderReviewSamples(data) {

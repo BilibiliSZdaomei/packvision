@@ -232,6 +232,7 @@ PowerShell -ExecutionPolicy Bypass -File .\scripts\check_astra_depth_status.ps1
 | `GET /api/validation/trial-template.csv` | WPS/Excel 可填写真值模板。 |
 | `POST /api/validation/evaluate` | 评估人工真值和系统测量误差。 |
 | `POST /api/validation/evaluate-csv` | 批量评估试运行 CSV。 |
+| `GET /api/review/truth-template.csv` | 从复核样本池导出 WPS/Excel 真值填写模板。 |
 | `GET /api/ai/plugins` | 可选 AI 模型插件清单、依赖和模型文件体检；基础包不内置重模型。 |
 
 ## 9. 技术架构

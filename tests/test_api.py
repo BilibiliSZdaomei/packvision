@@ -474,6 +474,12 @@ def test_review_samples_collects_low_confidence_and_view_conflicts():
     assert "measurement_id,created_at,order_id,status,priority" in export.text
     assert order_id in export.text
 
+    truth_template = client.get("/api/review/truth-template.csv", params={"order_id": order_id})
+    assert truth_template.status_code == 200
+    assert "sample_id,order_id,package_class,material_class,measured_length_mm" in truth_template.text
+    assert measured["measurement_id"] in truth_template.text
+    assert "truth_length_mm" in truth_template.text
+
 
 def test_depth_quality_endpoint_flags_sparse_synthetic_frame():
     client = TestClient(create_app())

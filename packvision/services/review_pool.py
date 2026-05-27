@@ -56,6 +56,21 @@ CSV_COLUMNS = (
     "suggested_action",
 )
 
+REVIEW_TRUTH_TEMPLATE_COLUMNS = (
+    "sample_id",
+    "order_id",
+    "package_class",
+    "material_class",
+    "measured_length_mm",
+    "measured_width_mm",
+    "measured_height_mm",
+    "truth_length_mm",
+    "truth_width_mm",
+    "truth_height_mm",
+    "actual_weight_kg",
+    "notes",
+)
+
 
 def list_review_samples(limit: int = 50, order_id: str | None = None) -> dict[str, Any]:
     limit = max(1, min(int(limit or 50), 500))
@@ -82,6 +97,33 @@ def export_review_samples_csv(limit: int = 500, order_id: str | None = None) -> 
         flattened.update({key: dimensions.get(key) for key in DIMENSION_KEYS})
         flattened["review_reasons"] = "|".join(row.get("review_reasons") or [])
         writer.writerow({column: flattened.get(column) for column in CSV_COLUMNS})
+    return output.getvalue()
+
+
+def export_review_truth_template_csv(limit: int = 500, order_id: str | None = None) -> str:
+    rows = list_review_samples(limit=limit, order_id=order_id)["items"]
+    output = io.StringIO()
+    output.write("\ufeff")
+    writer = csv.DictWriter(output, fieldnames=REVIEW_TRUTH_TEMPLATE_COLUMNS, lineterminator="\n")
+    writer.writeheader()
+    for row in rows:
+        dimensions = row.get("dimensions") or {}
+        writer.writerow(
+            {
+                "sample_id": row.get("measurement_id"),
+                "order_id": row.get("order_id"),
+                "package_class": row.get("package_class") or "standard_carton",
+                "material_class": row.get("material_class"),
+                "measured_length_mm": dimensions.get("length_mm"),
+                "measured_width_mm": dimensions.get("width_mm"),
+                "measured_height_mm": dimensions.get("height_mm"),
+                "truth_length_mm": "",
+                "truth_width_mm": "",
+                "truth_height_mm": "",
+                "actual_weight_kg": "",
+                "notes": _truth_template_notes(row),
+            }
+        )
     return output.getvalue()
 
 
@@ -225,6 +267,12 @@ def _load_recent_measurement_results(scan_limit: int, order_id: str | None) -> l
         if isinstance(parsed, dict):
             results.append(parsed)
     return results
+
+
+def _truth_template_notes(row: dict[str, Any]) -> str:
+    reasons = "|".join(row.get("review_reasons") or [])
+    suggested = row.get("suggested_action") or ""
+    return f"measurement_id={row.get('measurement_id')}; review_reasons={reasons}; suggested_action={suggested}"
 
 
 def _matches_any(value: str, keywords: tuple[str, ...]) -> bool:
