@@ -3035,7 +3035,7 @@ async function startDepthLive(options = {}) {
       body: JSON.stringify({
         backend: "auto",
         interval_ms: 700,
-        allow_simulation: true,
+        allow_simulation: false,
         measurement_mode: "auto",
         stable_required_frames: 3,
       }),

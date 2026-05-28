@@ -4,13 +4,14 @@ import copy
 import queue
 import threading
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from typing import Any, Callable
 
 import numpy as np
 
 from packvision.services.depth_capture import DepthCaptureConfig, DepthCaptureError, DepthFrameBundle
+from packvision.services.depth_devices import DepthDeviceError, load_depth_camera_config
 from packvision.services.depth_geometry import (
     DepthIntrinsics,
     DepthMeasurementConfig,
@@ -62,6 +63,7 @@ class DepthLiveManager:
         self._stable_bundle: DepthFrameBundle | None = None
         self._latest_result: dict[str, Any] | None = None
         self._stable_result: dict[str, Any] | None = None
+        self._camera_results: list[dict[str, Any]] = []
         self._last_error: str | None = None
         self._simulation_active = False
         self._simulation_fallback_reason: str | None = None
@@ -84,6 +86,7 @@ class DepthLiveManager:
             self._stable_bundle = None
             self._latest_result = None
             self._stable_result = None
+            self._camera_results = []
             self._last_error = None
             self._simulation_active = False
             self._simulation_fallback_reason = None
@@ -129,6 +132,7 @@ class DepthLiveManager:
                 "config": _config_summary(self._config),
                 "latest_result": _result_summary(self._latest_result),
                 "stable_result": _result_summary(self._stable_result),
+                "camera_results": [_result_summary(result) for result in self._camera_results],
                 "can_confirm": self._stable_result is not None,
             }
 
@@ -170,7 +174,9 @@ class DepthLiveManager:
                 self._updated_at = _now()
 
             if region.get("source") != "auto_depth_foreground":
-                self._set_waiting(region)
+                result = _waiting_result(region, bundle, simulation_active, config)
+                camera_results = [result, *self._capture_secondary_camera_results(config, bundle)]
+                self._set_waiting(result, camera_results)
                 return
 
             result = self._measure_bundle(bundle, region, config)
@@ -181,10 +187,12 @@ class DepthLiveManager:
                 "stable_required_frames": config.stable_required_frames,
                 "simulation_active": simulation_active,
             }
+            camera_results = [result, *self._capture_secondary_camera_results(config, bundle)]
             with self._lock:
                 self._measurement_count += 1
                 self._latest_result = result
                 self._latest_bundle = copy.deepcopy(bundle)
+                self._camera_results = copy.deepcopy(camera_results)
                 if stable:
                     self._stable_result = copy.deepcopy(result)
                     self._stable_bundle = copy.deepcopy(bundle)
@@ -288,19 +296,67 @@ class DepthLiveManager:
         result["capture_regions"] = region
         return result
 
-    def _set_waiting(self, region: dict[str, Any]) -> None:
+    def _capture_secondary_camera_results(
+        self,
+        config: DepthLiveConfig,
+        primary_bundle: DepthFrameBundle,
+    ) -> list[dict[str, Any]]:
+        if config.camera_id or config.role:
+            return []
+        backend = str(config.backend or "auto").strip().lower()
+        if backend in {"simulated", "simulation", "dry_run"}:
+            return []
+        try:
+            cameras = [
+                camera
+                for camera in load_depth_camera_config().get("cameras", [])
+                if camera.get("enabled")
+            ]
+        except DepthDeviceError as exc:
+            return [_camera_error_result({"role": "aux"}, str(exc), config)]
+
+        results: list[dict[str, Any]] = []
+        primary_camera_id = primary_bundle.camera_id
+        primary_role = primary_bundle.role
+        for camera in cameras:
+            if camera.get("camera_id") == primary_camera_id or camera.get("role") == primary_role:
+                continue
+            role_config = replace(
+                config,
+                camera_id=str(camera.get("camera_id") or "") or None,
+                role=str(camera.get("role") or "") or None,
+            )
+            try:
+                bundle, simulation_active, _capture_error = self._capture_bundle(role_config)
+                region = detect_depth_object_region(
+                    bundle.depth_frame,
+                    bundle.intrinsics,
+                    min_valid_depth_mm=role_config.min_valid_depth_mm,
+                    max_valid_depth_mm=role_config.max_valid_depth_mm,
+                    object_min_height_mm=role_config.object_min_height_mm,
+                )
+                if region.get("source") != "auto_depth_foreground":
+                    results.append(_waiting_result(region, bundle, simulation_active, role_config))
+                else:
+                    result = self._measure_bundle(bundle, region, role_config)
+                    result["live_capture"] = {
+                        "status": "secondary_measuring",
+                        "stable_frame_count": 0,
+                        "stable_required_frames": role_config.stable_required_frames,
+                        "simulation_active": simulation_active,
+                    }
+                    results.append(result)
+            except (DepthCaptureError, DepthMeasurementError, ValueError) as exc:
+                results.append(_camera_error_result(camera, str(exc), role_config))
+        return results
+
+    def _set_waiting(self, result: dict[str, Any], camera_results: list[dict[str, Any]]) -> None:
         with self._lock:
             self._status = "waiting_for_object"
             self._stable_frame_count = 0
             self._last_dimensions = None
-            self._latest_result = {
-                "status": "waiting_for_object",
-                "confidence": 0.0,
-                "capture_regions": region,
-                "dimensions": {},
-                "quality_flags": ["waiting_for_depth_foreground"],
-                "recommendation_codes": ["place_package_under_depth_camera"],
-            }
+            self._latest_result = result
+            self._camera_results = copy.deepcopy(camera_results)
             self._updated_at = _now()
 
     def _update_stability(self, result: dict[str, Any]) -> bool:
@@ -360,6 +416,55 @@ def _synthetic_live_bundle(frame_index: int) -> DepthFrameBundle:
         frame_index=frame_index,
         timestamp_us=int(time.time() * 1_000_000),
     )
+
+
+def _waiting_result(
+    region: dict[str, Any],
+    bundle: DepthFrameBundle,
+    simulation_active: bool,
+    config: DepthLiveConfig,
+) -> dict[str, Any]:
+    return {
+        "status": "waiting_for_object",
+        "confidence": 0.0,
+        "capture_regions": region,
+        "dimensions": {},
+        "quality_flags": ["waiting_for_depth_foreground"],
+        "recommendation_codes": ["place_package_under_depth_camera"],
+        "camera_capture": _bundle_summary(bundle),
+        "live_capture": {
+            "status": "waiting_for_object",
+            "stable_frame_count": 0,
+            "stable_required_frames": config.stable_required_frames,
+            "simulation_active": simulation_active,
+        },
+    }
+
+
+def _camera_error_result(camera: dict[str, Any], message: str, config: DepthLiveConfig) -> dict[str, Any]:
+    return {
+        "status": "camera_error",
+        "confidence": 0.0,
+        "dimensions": {},
+        "quality_flags": ["camera_capture_error"],
+        "recommendation_codes": ["check_depth_camera_connection"],
+        "capture_regions": {},
+        "camera_capture": {
+            "status": "error",
+            "backend": config.backend,
+            "camera_id": camera.get("camera_id"),
+            "role": camera.get("role"),
+            "serial_number": camera.get("serial_hint"),
+            "frame_shape": {},
+            "error": message,
+        },
+        "live_capture": {
+            "status": "camera_error",
+            "stable_frame_count": 0,
+            "stable_required_frames": config.stable_required_frames,
+            "simulation_active": False,
+        },
+    }
 
 
 def _bundle_summary(bundle: DepthFrameBundle) -> dict[str, Any]:

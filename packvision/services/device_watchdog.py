@@ -39,6 +39,16 @@ def build_device_watchdog(
     simulation_active = bool(live.get("simulation_active"))
     stale = _live_is_stale(live, now=now)
     last_error = str(live.get("last_error") or "").strip()
+    live_real_capture_active = (
+        live_running
+        and not simulation_active
+        and not stale
+        and not last_error
+        and _as_int(live.get("frame_count")) > 0
+        and live_status in {"measuring", "stable_ready", "needs_review", "waiting_for_object"}
+    )
+    live_camera_count = _live_camera_count(live)
+    effective_device_count = max(device_count, live_camera_count if live_real_capture_active else 0)
 
     issues: list[dict[str, Any]] = []
     if not runtime_ready:
@@ -59,7 +69,7 @@ def build_device_watchdog(
                 "Install the lightweight capture dependency or use photo fallback until engineering fixes the runtime.",
             )
         )
-    if runtime_ready and device_count == 0:
+    if runtime_ready and effective_device_count == 0:
         issues.append(
             _issue(
                 "no_depth_camera_detected",
@@ -96,25 +106,27 @@ def build_device_watchdog(
                 "This is acceptable before the camera arrives, but shipping measurements need real camera capture.",
             )
         )
-    if target_count >= 3 and device_count < target_count:
+    if target_count >= 3 and effective_device_count < target_count:
         issues.append(
             _issue(
                 "multiview_camera_count_incomplete",
                 "warning",
                 "Configured multi-view station has fewer detected cameras than target roles.",
                 "Bind top/front/side camera serial numbers and rerun multi-camera validation.",
-                detail=f"detected={device_count}, target={target_count}, missing={','.join(missing_roles)}",
+                detail=f"detected={effective_device_count}, target={target_count}, missing={','.join(missing_roles)}",
             )
         )
 
     severity = _overall_severity(issues)
-    status = _watchdog_status(severity, runtime_ready, device_count, simulation_active, live_status, stale)
+    status = _watchdog_status(severity, runtime_ready, effective_device_count, simulation_active, live_status, stale)
     recovery_steps = _recovery_steps(status, issues)
     return {
         "status": status,
         "severity": severity,
         "checked_at": (now or datetime.now(timezone.utc)).isoformat(),
-        "safe_to_record_live": bool(live.get("can_confirm") and not simulation_active and device_count > 0 and severity != "critical"),
+        "safe_to_record_live": bool(
+            live.get("can_confirm") and not simulation_active and effective_device_count > 0 and severity != "critical"
+        ),
         "dry_run_record_available": bool(live.get("can_confirm")),
         "photo_fallback_available": True,
         "operator_mode": _operator_mode(status),
@@ -123,6 +135,8 @@ def build_device_watchdog(
             "runtime_ready": runtime_ready,
             "capture_backend_ready": capture_backend_ready,
             "device_count": device_count,
+            "effective_device_count": effective_device_count,
+            "live_camera_count": live_camera_count,
             "configured_camera_count": configured_count,
             "target_camera_count": target_count,
             "missing_three_view_roles": missing_roles,
@@ -274,6 +288,27 @@ def _live_is_stale(live: dict[str, Any], *, now: datetime | None = None) -> bool
     interval_seconds = max(0.25, min(5.0, _as_int(config.get("interval_ms"), default=700) / 1000.0))
     threshold = max(MIN_STALE_SECONDS, interval_seconds * STALE_MULTIPLIER)
     return ((now or datetime.now(timezone.utc)) - updated).total_seconds() > threshold
+
+
+def _live_camera_count(live: dict[str, Any]) -> int:
+    results = live.get("camera_results")
+    if not isinstance(results, list):
+        results = []
+    camera_ids: set[str] = set()
+    for result in results:
+        if not isinstance(result, dict):
+            continue
+        capture = result.get("camera_capture") if isinstance(result.get("camera_capture"), dict) else {}
+        if capture.get("status") != "captured":
+            continue
+        camera_id = str(capture.get("camera_id") or capture.get("role") or "").strip()
+        if camera_id:
+            camera_ids.add(camera_id)
+    if camera_ids:
+        return len(camera_ids)
+    latest = live.get("latest_result") if isinstance(live.get("latest_result"), dict) else {}
+    capture = latest.get("camera_capture") if isinstance(latest.get("camera_capture"), dict) else {}
+    return 1 if capture.get("status") == "captured" else 0
 
 
 def _as_int(value: Any, *, default: int = 0) -> int:

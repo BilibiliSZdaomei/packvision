@@ -72,3 +72,43 @@ def test_device_watchdog_allows_real_live_recording_only_with_camera_and_stable_
     assert result["severity"] == "ok"
     assert result["safe_to_record_live"] is True
     assert result["operator_mode"] == "live_camera_measurement"
+
+
+def test_device_watchdog_trusts_active_real_live_camera_when_probe_is_transiently_empty():
+    live_state = {
+        "running": True,
+        "status": "stable_ready",
+        "updated_at": datetime(2026, 5, 28, 8, 0, 0, tzinfo=timezone.utc).isoformat(),
+        "config": {"interval_ms": 700},
+        "frame_count": 4,
+        "can_confirm": True,
+        "simulation_active": False,
+        "camera_results": [
+            {
+                "camera_capture": {
+                    "status": "captured",
+                    "camera_id": "astra-pro-top-01",
+                    "role": "top",
+                }
+            },
+            {
+                "camera_capture": {
+                    "status": "captured",
+                    "camera_id": "astra-pro-front-01",
+                    "role": "front",
+                }
+            },
+        ],
+    }
+    result = build_device_watchdog(
+        live_state=live_state,
+        capture_status=_capture_status(device_count=0),
+        now=datetime(2026, 5, 28, 8, 0, 1, tzinfo=timezone.utc),
+    )
+
+    assert result["status"] == "live_camera_active"
+    assert result["severity"] == "ok"
+    assert result["safe_to_record_live"] is True
+    assert result["signals"]["device_count"] == 0
+    assert result["signals"]["effective_device_count"] == 2
+    assert "no_depth_camera_detected" not in {issue["code"] for issue in result["issues"]}
