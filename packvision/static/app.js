@@ -3146,7 +3146,7 @@ async function loadStationSnapshot() {
 }
 
 async function loadDeploymentReadiness() {
-  const response = await fetch("/api/deployment/readiness");
+  const response = await fetch("/api/deployment/readiness-summary");
   if (!response.ok) {
     return;
   }

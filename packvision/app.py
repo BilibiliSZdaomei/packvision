@@ -47,7 +47,7 @@ from packvision.services.depth_simulation import (
     simulate_astra_depth_measurement_from_image,
 )
 from packvision.services.depth_workflow import build_depth_workflow_guide, recommend_capture_workflow
-from packvision.services.deployment import build_deployment_readiness
+from packvision.services.deployment import build_deployment_readiness, build_deployment_readiness_summary
 from packvision.services.history import (
     export_measurements_csv,
     get_measurement,
@@ -307,6 +307,10 @@ def create_app() -> FastAPI:
     @app.get("/api/deployment/readiness")
     def deployment_readiness() -> dict[str, object]:
         return build_deployment_readiness()
+
+    @app.get("/api/deployment/readiness-summary")
+    def deployment_readiness_summary() -> dict[str, object]:
+        return build_deployment_readiness_summary()
 
     @app.get("/api/deployment/support-bundle.zip")
     def deployment_support_bundle() -> FileResponse:

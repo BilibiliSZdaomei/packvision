@@ -72,6 +72,43 @@ def build_deployment_readiness(
     }
 
 
+def build_deployment_readiness_summary(
+    vendor_root: str | Path | None = None,
+    *,
+    package_root: str | Path | None = None,
+    max_handoff_mb: int = DEFAULT_MAX_HANDOFF_MB,
+) -> dict[str, Any]:
+    readiness = build_deployment_readiness(
+        vendor_root,
+        package_root=package_root,
+        max_handoff_mb=max_handoff_mb,
+    )
+    return {
+        "status": readiness["status"],
+        "version": readiness["version"],
+        "max_handoff_mb": readiness["max_handoff_mb"],
+        "summary": readiness["summary"],
+        "readiness_modes": readiness["readiness_modes"],
+        "blockers": _compact_checks(readiness.get("blockers") or []),
+        "warnings": _compact_checks(readiness.get("warnings") or []),
+        "manual_required": _compact_checks(readiness.get("manual_required") or []),
+        "transfer_package": readiness["transfer_package"],
+        "local_paths": readiness["local_paths"],
+    }
+
+
+def _compact_checks(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [
+        {
+            "id": item.get("id"),
+            "label": item.get("label"),
+            "status": item.get("status"),
+            "next_action": item.get("next_action"),
+        }
+        for item in items
+    ]
+
+
 def _data_dir_status() -> dict[str, Any]:
     dirs = ensure_data_dirs()
     entries = {}

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import queue
 import threading
 import time
 from dataclasses import dataclass
@@ -206,14 +207,12 @@ class DepthLiveManager:
         if config.allow_simulation and fallback_reason:
             return _synthetic_live_bundle(self._frame_count + 1), True, fallback_reason
         try:
-            return self._capture_fn(
-                DepthCaptureConfig(
-                    backend=config.backend,
-                    timeout_ms=config.timeout_ms,
-                    camera_id=config.camera_id,
-                    role=config.role,
-                )
-            ), False, None
+            bundle = (
+                self._capture_with_timeout(config)
+                if config.allow_simulation
+                else self._capture_fn(_capture_config(config))
+            )
+            return bundle, False, None
         except DepthCaptureError as exc:
             if not config.allow_simulation:
                 raise
@@ -221,6 +220,31 @@ class DepthLiveManager:
             with self._lock:
                 self._simulation_fallback_reason = message
             return _synthetic_live_bundle(self._frame_count + 1), True, message
+
+    def _capture_with_timeout(self, config: DepthLiveConfig) -> DepthFrameBundle:
+        results: queue.Queue[tuple[DepthFrameBundle | None, BaseException | None]] = queue.Queue(maxsize=1)
+
+        def worker() -> None:
+            try:
+                results.put((self._capture_fn(_capture_config(config)), None))
+            except BaseException as exc:  # pragma: no cover - defensive around optional hardware SDKs
+                results.put((None, exc))
+
+        thread = threading.Thread(target=worker, name="packvision-depth-capture-probe", daemon=True)
+        thread.start()
+        try:
+            bundle, error = results.get(timeout=max(0.1, config.timeout_ms / 1000.0))
+        except queue.Empty as exc:
+            raise DepthCaptureError(
+                f"Depth capture timed out after {config.timeout_ms} ms; live view is using simulation fallback."
+            ) from exc
+        if error is not None:
+            if isinstance(error, DepthCaptureError):
+                raise error
+            raise DepthCaptureError(str(error)) from error
+        if bundle is None:
+            raise DepthCaptureError("Depth capture returned no frame.")
+        return bundle
 
     def _measure_bundle(
         self,
@@ -306,6 +330,15 @@ def _normalized_config(config: DepthLiveConfig) -> DepthLiveConfig:
         trim_ratio=float(config.trim_ratio),
         trim_quantile=float(config.trim_quantile),
         stable_required_frames=max(1, min(12, int(config.stable_required_frames))),
+    )
+
+
+def _capture_config(config: DepthLiveConfig) -> DepthCaptureConfig:
+    return DepthCaptureConfig(
+        backend=config.backend,
+        timeout_ms=config.timeout_ms,
+        camera_id=config.camera_id,
+        role=config.role,
     )
 
 

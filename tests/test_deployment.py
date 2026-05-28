@@ -37,5 +37,19 @@ def test_deployment_readiness_endpoint_is_actionable():
     assert any(check["id"] == "field_accessories" for check in body["checks"])
 
 
+def test_deployment_readiness_summary_endpoint_keeps_workbench_payload_light():
+    client = TestClient(create_app())
+    response = client.get("/api/deployment/readiness-summary")
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["status"] in {"ready", "needs_attention"}
+    assert "summary" in body
+    assert "readiness_modes" in body
+    assert "hardware_status" not in body
+    assert "capture_status" not in body
+    assert "ai_plugins" not in body
+
+
 def test_development_cycle_script_exists():
     assert Path("scripts/dev_cycle.ps1").exists()
