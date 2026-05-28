@@ -25,14 +25,16 @@ status: active
 - 检查脚本：`D:\app\orbbec-astra-pro\检查Astra安装.ps1`
 - 相机配置：`D:\app\orbbec-astra-pro\packvision-depth-cameras.json`
 - 安装说明：`D:\app\orbbec-astra-pro\安装说明.md`
+- Windows 驱动：已检测到 `SensorDriver V4.3.0.17`，DriverStore 为 `oem221.inf` / `obdrv4.inf`
 
 ## 到货后 10 分钟检查
 
 1. 插上 Astra Pro。
 2. 优先插电脑本体 USB 口；不稳再用有源 USB Hub。
 3. 双击 `D:\app\orbbec-astra-pro\启动上位机.bat`。
-4. 在 OrbbecViewer 里确认 Color 和 Depth 都有画面。
-5. 运行检查脚本：
+4. 在 OrbbecViewer 里确认 Color、Depth、IR、Point Cloud 都有画面。
+5. 关闭 OrbbecViewer，避免它占用相机。
+6. 运行检查脚本：
 
 ```powershell
 PowerShell -ExecutionPolicy Bypass -File "D:\app\orbbec-astra-pro\检查Astra安装.ps1"
@@ -44,6 +46,8 @@ PowerShell -ExecutionPolicy Bypass -File "D:\app\orbbec-astra-pro\检查Astra安
 - Windows 驱动库能看到 Orbbec。
 - OpenNI runtime 显示初始化成功。
 - 插相机后 `device_count` 应该从 `0` 变成 `1`。
+
+上位机只是验机工具，日常测量、记录、体积重、历史和统计仍在 PackVision 里完成。详细解释见 [[26 Astra Pro 驱动与上位机说明]]。
 
 ## PackVision 接口检查
 

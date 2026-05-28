@@ -45,6 +45,24 @@ Astra Pro 分支要以厂商链路为主：Windows 驱动和 OrbbecViewer 做硬
 5. 红外异常时，选择 `640*480@30 (RGB 888)`。
 6. 四路图像都正常，再进入 PackVision 调试。
 
+## 本机驱动与上位机状态
+
+2026-05-28 已复核当前电脑：
+
+- Windows 已安装 `SensorDriver V4.3.0.17`。
+- DriverStore 中可见 `oem221.inf` / `obdrv4.inf`，Provider 为 `Orbbec`。
+- 上位机已整理到 `D:\app\orbbec-astra-pro\viewer\OrbbecViewer.exe`。
+- 启动脚本为 `D:\app\orbbec-astra-pro\启动上位机.bat`。
+- 当前没有真实 Astra Pro 接入，所以只能确认驱动预装和工具链，不能确认深度画面。
+
+上位机 `OrbbecViewer` 的定位是官方验机工具：先证明驱动、USB、Color、Depth、IR、Point Cloud 正常。PackVision 的定位是仓库测量工作台：实时测量、扫码单号、体积重、历史、统计和 WMS/TMS 队列。现场排错时，先看上位机；上位机正常但 PackVision 不正常，才查 PackVision 采集后端。
+
+详细说明见：
+
+```text
+D:\Documents\包装尺寸检测\docs_cn\35_Astra_Pro_驱动与上位机说明.md
+```
+
 ## 标定策略修正
 
 ROS 标定教程命令：

@@ -89,6 +89,8 @@ const translations = {
     scaleAutoReady: "电子秤已读数",
     scaleAdapterWaiting: "等待电子秤读数",
     scaleSource: "称重来源",
+    scaleDetail: "称重详情",
+    readScale: "读取电子秤",
     deviceWatchdog: "设备守护",
     watchdogAction: "恢复动作",
     liveMonitor: "采集监控",
@@ -330,6 +332,8 @@ const translations = {
     scaleAutoReady: "Scale weight ready",
     scaleAdapterWaiting: "Waiting for scale",
     scaleSource: "Scale source",
+    scaleDetail: "Scale detail",
+    readScale: "Read scale",
     deviceWatchdog: "Device watchdog",
     watchdogAction: "Recovery action",
     liveMonitor: "Capture monitor",
@@ -571,6 +575,8 @@ const translations = {
     scaleAutoReady: "Вага зчитана",
     scaleAdapterWaiting: "Очікування ваги",
     scaleSource: "Джерело ваги",
+    scaleDetail: "Деталі ваги",
+    readScale: "Зчитати вагу",
     deviceWatchdog: "Нагляд пристрою",
     watchdogAction: "Дія відновлення",
     liveMonitor: "Монітор збору",
@@ -1160,17 +1166,26 @@ const scaleStatusLabels = {
   zh: {
     manual_ready: "手动实重兜底",
     auto_weight_ready: "电子秤已读数",
+    auto_weight_unstable: "电子秤读数未稳定",
     adapter_configured_waiting: "等待电子秤读数",
+    adapter_dependency_missing: "电子秤依赖缺失",
+    adapter_error: "电子秤异常",
   },
   en: {
     manual_ready: "Manual weight fallback",
     auto_weight_ready: "Scale weight ready",
+    auto_weight_unstable: "Scale unstable",
     adapter_configured_waiting: "Waiting for scale",
+    adapter_dependency_missing: "Scale dependency missing",
+    adapter_error: "Scale adapter error",
   },
   uk: {
     manual_ready: "Ручний резерв",
     auto_weight_ready: "Вага зчитана",
+    auto_weight_unstable: "Вага нестабільна",
     adapter_configured_waiting: "Очікування ваги",
+    adapter_dependency_missing: "Немає залежності ваги",
+    adapter_error: "Помилка адаптера ваги",
   },
 };
 
@@ -1451,6 +1466,7 @@ const actualWeightInput = document.querySelector("#actualWeightInput");
 const volumetricRuleSelect = document.querySelector("#volumetricRuleSelect");
 const weightMonitorPanel = document.querySelector("#weightMonitorPanel");
 const scaleStatusPanel = document.querySelector("#scaleStatusPanel");
+const readScaleButton = document.querySelector("#readScaleButton");
 const orderImage = document.querySelector("#orderImage");
 const decodeBarcodeButton = document.querySelector("#decodeBarcodeButton");
 const topBoxJson = document.querySelector("#topBoxJson");
@@ -2454,6 +2470,38 @@ async function loadScaleStatus() {
   renderScaleStatus(state.scaleStatus);
 }
 
+async function readScaleWeight() {
+  if (readScaleButton) {
+    readScaleButton.disabled = true;
+  }
+  try {
+    const response = await fetch("/api/scale/read", { method: "POST" });
+    if (!response.ok) {
+      return;
+    }
+    const data = await response.json();
+    state.scaleStatus = {
+      status:
+        data.status === "measured"
+          ? data.stable === false
+            ? "auto_weight_unstable"
+            : "auto_weight_ready"
+          : data.status || "adapter_error",
+      source: data.source,
+      stable: Boolean(data.stable),
+      weight_kg: data.weight_kg,
+      read_at: data.read_at,
+      raw_reading: data.raw_reading,
+      adapter_error: data.adapter_error,
+    };
+    renderScaleStatus(state.scaleStatus);
+  } finally {
+    if (readScaleButton) {
+      readScaleButton.disabled = false;
+    }
+  }
+}
+
 function renderScaleStatus(data) {
   if (!scaleStatusPanel) {
     return;
@@ -2461,10 +2509,27 @@ function renderScaleStatus(data) {
   scaleStatusPanel.innerHTML = "";
   appendSummaryCell(scaleStatusPanel, t("scaleStatus"), labelFrom(scaleStatusLabels, data.status));
   appendSummaryCell(scaleStatusPanel, t("scaleSource"), data.source || "--");
+  appendSummaryCell(scaleStatusPanel, t("scaleDetail"), scaleDetailText(data));
   if (Number(data.weight_kg) > 0 && data.source !== "manual_entry") {
     actualWeightInput.value = Number(data.weight_kg).toFixed(3);
     renderWeightMonitorFromCurrentState();
   }
+}
+
+function scaleDetailText(data) {
+  if (data.adapter_error) {
+    return data.adapter_error;
+  }
+  if (data.raw_reading) {
+    return data.raw_reading;
+  }
+  if (data.read_at) {
+    return formatDate(data.read_at);
+  }
+  if (data.adapter_config?.port) {
+    return `${data.adapter_config.port} / ${data.adapter_config.baudrate || 9600}`;
+  }
+  return "--";
 }
 
 function previewChargeableWeight() {
@@ -3758,6 +3823,7 @@ decodeBarcodeButton.addEventListener("click", () => orderImage.click());
 orderImage.addEventListener("change", decodeBarcodeImage);
 actualWeightInput?.addEventListener("input", renderWeightMonitorFromCurrentState);
 volumetricRuleSelect?.addEventListener("change", renderWeightMonitorFromCurrentState);
+readScaleButton?.addEventListener("click", readScaleWeight);
 refreshHistoryButton.addEventListener("click", loadHistory);
 refreshReviewButton.addEventListener("click", loadReviewSamples);
 refreshUsageButton.addEventListener("click", loadUsageSummary);

@@ -171,6 +171,8 @@ def _checklist(
     vendor_files = depth_status.get("vendor_profile", {}).get("vendor_files", {})
     openni = depth_status.get("openni2", {})
     inventory = depth_status.get("camera_inventory", {})
+    windows_driver = depth_status.get("windows_driver", {})
+    windows_driver_installation = windows_driver.get("installation", {})
     package_status = app_status["package"]
     runtime_status = app_status["runtime"]
     platform_status = app_status["platform"]
@@ -230,10 +232,18 @@ def _checklist(
         _check(
             "windows_driver_installer",
             "Astra Windows driver installer",
-            "pass" if depth_status.get("windows_driver", {}).get("found") else "warning",
+            "pass" if windows_driver.get("found") else "warning",
             "Other warehouses should install the vendor driver before you arrive.",
             "Install SensorDriver on the target PC, then confirm Device Manager shows Orbbec.",
-            details=depth_status.get("windows_driver", {}),
+            details=windows_driver,
+        ),
+        _check(
+            "windows_driver_installed",
+            "Astra Windows driver installed",
+            "pass" if windows_driver_installation.get("installed") else "manual_required",
+            "The installer file only proves we have the package; Windows must also have the Orbbec driver registered.",
+            "Run SensorDriver_V4.3.0.17.exe, then rerun the readiness check and OrbbecViewer.",
+            details=windows_driver_installation,
         ),
         _check(
             "vendor_viewer",
@@ -301,10 +311,12 @@ def _readiness_modes(
     image_only_ready = all(check_by_id[item]["status"] == "pass" for item in image_only_required)
 
     openni = depth_status.get("openni2", {})
+    windows_driver_installation = depth_status.get("windows_driver", {}).get("installation", {})
     depth_preinstall_ready = bool(
         image_only_ready
         and depth_status.get("vendor_root_exists")
         and depth_status.get("windows_driver", {}).get("found")
+        and windows_driver_installation.get("installed")
         and depth_status.get("vendor_viewer", {}).get("found")
         and openni.get("openni_dll_found")
         and openni.get("orbbec_driver_found")
@@ -334,6 +346,7 @@ def _readiness_modes(
             "ready": depth_preinstall_ready,
             "purpose": "Target warehouse has installed the Astra Pro driver/viewer/runtime before arrival.",
             "requires_camera_connected": False,
+            "windows_driver_installed": bool(windows_driver_installation.get("installed")),
             "recommended_backend": capture_status.get("recommended_capture_backend"),
         },
         "camera_trial": {

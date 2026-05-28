@@ -73,6 +73,18 @@ source_folder: D:\Documents\包装尺寸检测\奥比中光Astra Pro
 > [!note] 对 PackVision 的含义
 > OrbbecViewer 不是我们最终仓库员工使用的软件，但它应该成为“到货验收”和“售后排查”的标准工具。PackVision 里要提供一个上位机验收清单入口，提示工程师先用厂商工具确认硬件正常，再进入自动测量。
 
+### 本机已确认状态
+
+2026-05-28 复核：
+
+- Windows 已安装 `SensorDriver V4.3.0.17`。
+- DriverStore 可见 `oem221.inf` / `obdrv4.inf`，Provider 为 `Orbbec`。
+- 上位机已整理到 `D:\app\orbbec-astra-pro\viewer\OrbbecViewer.exe`。
+- 启动脚本是 `D:\app\orbbec-astra-pro\启动上位机.bat`。
+- 当前没有真实 Astra Pro 接入，所以只能确认驱动预装，不能确认深度画面。
+
+更多解释见 [[26 Astra Pro 驱动与上位机说明]]。
+
 ## 标定资料
 
 厂商随包标定教程走的是 ROS `camera_calibration` 流程：

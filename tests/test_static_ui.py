@@ -90,6 +90,7 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert 'id="volumetricRuleSelect"' in html
     assert 'id="weightMonitorPanel"' in html
     assert 'id="scaleStatusPanel"' in html
+    assert 'id="readScaleButton"' in html
     assert 'id="integrationOutbox"' in html
     assert 'id="integrationSummaryGrid"' in html
     assert 'id="integrationOutboxList"' in html
@@ -106,6 +107,7 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert "/api/depth/live/confirm" in js
     assert "/api/weight/volumetric-rules" in js
     assert "/api/scale/status" in js
+    assert "/api/scale/read" in js
     assert "/api/station/snapshot" in js
     assert "/api/device/watchdog" in js
     assert "/api/integrations/outbox" in js

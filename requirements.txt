@@ -8,3 +8,4 @@ primesense==2.2.0.30.post5
 pyinstaller==6.15.0
 pytest==8.4.1
 httpx==0.28.1
+pyserial==3.5
