@@ -36,7 +36,7 @@ PackVision 不是单纯的“拍照量尺寸 Demo”，而是给海外汽车备�
 | 单号和条码 | 已完成 | 支持手动单号、扫码枪文本、上传条码/二维码图片识别。 |
 | 历史追溯 | 已完成 | SQLite 保存时间戳、单号、尺寸、置信度、上传图、标注图。 |
 | 使用次数统计 | 已完成 | 后台记录接口调用次数、测量次数、成功/失败次数，可导出 CSV。 |
-| WMS/TMS 本地集成队列 | 已完成底座 | 每次保存测量记录时同步写入本地 outbox，WMS/TMS 不在线也不影响现场继续测量；数据中心可查看和导出 CSV。 |
+| WMS/TMS 本地集成队列 | 已完成轻量推送层 | 每次保存测量记录时同步写入本地 outbox；可配置 HTTP URL 后批量推送，失败保留重试，不配置时继续离线测量和 CSV 导出。 |
 | 实时采集监控 | 已完成并升级 | Astra Pro 实时流持续测量，按钮只负责记录稳定结果；UI 显示顶部/正面/侧面多相机监控矩阵、FPS、运行时长、测量次数和采集后端。 |
 | 体积重/计费重 | 已完成 | 支持手动输入实重，按体积重规则表计算体积重和计费重，并保存计费来源。 |
 | 电子秤适配接口 | 已完成轻量底座 | 基础包保留手动实重兜底，支持 mock 和 RS232 串口电子秤，USB HID 作为后续插件。 |
@@ -52,7 +52,7 @@ PackVision 不是单纯的“拍照量尺寸 Demo”，而是给海外汽车备�
 当前验证结果：
 
 ```text
-121 passed in 6.71s
+128 passed in 9.56s
 ```
 
 最新已验证交付包：
@@ -64,7 +64,7 @@ D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_*.zip
 大小约：
 
 ```text
-73.61 MB
+73.62 MB
 ```
 
 ## 4. 运行方式
@@ -227,14 +227,17 @@ PowerShell -ExecutionPolicy Bypass -File .\scripts\check_astra_depth_status.ps1
 | --- | --- |
 | `GET /api/integrations/outbox` | 查看待推送、失败、已推送的本地集成事件。 |
 | `GET /api/integrations/outbox/summary` | 查看本地 outbox 汇总、最新事件和重试状态。 |
+| `GET /api/integrations/dispatch/status` | 查看 WMS/TMS HTTP 推送器是否配置。 |
+| `POST /api/integrations/outbox/dispatch` | 推送到期 outbox 事件；成功标记 sent，失败标记 failed 并设置重试时间。 |
 | `GET /api/integrations/outbox/export.csv` | 导出本地集成队列 CSV，方便先交给 WMS/TMS 或 Excel 对账。 |
-| `POST /api/integrations/outbox/{event_id}` | 更新事件状态，为后续真实连接器和重试 worker 预留。 |
+| `POST /api/integrations/outbox/{event_id}` | 手动更新事件状态，用于现场排错和对账。 |
 
 ### Astra Pro 深度相机
 
 | 接口 | 用途 |
 | --- | --- |
 | `GET /api/depth/status` | 驱动、OpenNI、厂商资料状态。 |
+| `POST /api/depth/vendor-viewer/open` | 从本地 PackVision 启动 OrbbecViewer，用于工程师到货验机；验完需关闭上位机再采集。 |
 | `GET /api/depth/vendor-profile` | Astra Pro 厂商参数和标定策略。 |
 | `GET /api/depth/astra/tutorial-playbook` | 厂商教程二次审计后的控制、标定、多相机说明。 |
 | `GET /api/depth/cameras` | 相机配置、角色、三视图缺口。 |

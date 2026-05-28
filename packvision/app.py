@@ -19,7 +19,7 @@ from packvision.services.ai_plugins import build_ai_plugin_inventory
 from packvision.services.barcode import detect_codes
 from packvision.services.astra_vendor import AstraVendorError, astra_vendor_profile, normalize_camera_info, resolve_astra_root
 from packvision.services.capture_quality import CaptureQualityError, analyze_capture_quality
-from packvision.services.depth_camera import depth_camera_status
+from packvision.services.depth_camera import VendorViewerLaunchError, depth_camera_status, launch_vendor_viewer
 from packvision.services.depth_capture import (
     capture_depth_once,
     DepthCaptureConfig,
@@ -58,9 +58,11 @@ from packvision.services.history import (
     save_measurement,
 )
 from packvision.services.integrations import (
+    dispatch_outbox_events,
     enqueue_measurement_event,
     export_outbox_csv,
     init_integration_db,
+    integration_dispatch_status,
     list_outbox_events,
     outbox_summary,
     update_outbox_event,
@@ -260,6 +262,10 @@ class OutboxUpdatePayload(BaseModel):
     response: str | None = None
     error: str | None = None
     retry_after_seconds: int | None = None
+
+
+class OutboxDispatchPayload(BaseModel):
+    limit: int = 20
 
 
 def create_app() -> FastAPI:
@@ -544,6 +550,10 @@ def create_app() -> FastAPI:
     def integration_outbox_summary() -> dict[str, object]:
         return outbox_summary()
 
+    @app.get("/api/integrations/dispatch/status")
+    def integration_dispatch() -> dict[str, object]:
+        return integration_dispatch_status()
+
     @app.get("/api/integrations/outbox/export.csv")
     def integration_outbox_export(limit: int = 500, status: str | None = None) -> Response:
         csv_text = export_outbox_csv(limit=limit, status=_clean_text(status))
@@ -552,6 +562,10 @@ def create_app() -> FastAPI:
             media_type="text/csv; charset=utf-8",
             headers={"Content-Disposition": 'attachment; filename="packvision-integration-outbox.csv"'},
         )
+
+    @app.post("/api/integrations/outbox/dispatch")
+    def integration_outbox_dispatch(payload: OutboxDispatchPayload) -> dict[str, object]:
+        return dispatch_outbox_events(limit=payload.limit)
 
     @app.post("/api/integrations/outbox/{event_id}")
     def integration_outbox_update(event_id: str, payload: OutboxUpdatePayload) -> dict[str, object]:
@@ -673,6 +687,13 @@ def create_app() -> FastAPI:
     @app.get("/api/depth/status")
     def depth_status() -> dict[str, object]:
         return depth_camera_status()
+
+    @app.post("/api/depth/vendor-viewer/open")
+    def depth_open_vendor_viewer() -> dict[str, object]:
+        try:
+            return launch_vendor_viewer()
+        except VendorViewerLaunchError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
 
     @app.get("/api/depth/vendor-profile")
     def depth_vendor_profile() -> dict[str, object]:

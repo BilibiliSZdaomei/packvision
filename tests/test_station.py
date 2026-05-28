@@ -45,7 +45,7 @@ def test_station_snapshot_scores_professional_dws_capabilities():
     assert snapshot["scale_status"]["source"] == "mock"
     assert snapshot["integration_outbox"]["pending"] == 1
     assert next(item for item in snapshot["dws_capabilities"] if item["id"] == "weighing")["status"] == "auto_ready"
-    assert next(item for item in snapshot["dws_capabilities"] if item["id"] == "integration")["status"] == "outbox_ready"
+    assert next(item for item in snapshot["dws_capabilities"] if item["id"] == "integration")["status"] == "retry_attention"
     assert next(item for item in snapshot["dws_capabilities"] if item["id"] == "device_health")["status"] == "watchdog_ready"
     assert {item["id"] for item in snapshot["dws_capabilities"]} == {
         "dimensioning",
@@ -70,3 +70,21 @@ def test_station_snapshot_reports_pilot_gaps_when_no_record_exists():
     assert snapshot["professional_score"]["level"] == "prototype_to_pilot"
     assert any(gap["code"] == "scale_adapter_pending" for gap in snapshot["production_gaps"])
     assert "wms_tms_push_and_retry_queue" in snapshot["next_upgrade_tracks"]
+
+
+def test_station_snapshot_reports_http_push_integration_ready():
+    snapshot = build_station_snapshot(
+        integration_outbox={
+            "delivery_mode": "http_push",
+            "pending": 0,
+            "failed": 0,
+            "due_for_retry": 0,
+            "total": 3,
+            "dispatch": {"status": "ready", "endpoint_configured": True},
+        }
+    )
+
+    integration = next(item for item in snapshot["dws_capabilities"] if item["id"] == "integration")
+    assert integration["status"] == "http_push_ready"
+    assert snapshot["integration_outbox"]["endpoint_configured"] is True
+    assert not any(gap["code"] == "wms_connector_pending" for gap in snapshot["production_gaps"])

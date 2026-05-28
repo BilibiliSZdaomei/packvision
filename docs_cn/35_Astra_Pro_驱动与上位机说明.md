@@ -63,8 +63,14 @@ D:\app\orbbec-astra-pro\检查Astra安装.ps1
 D:\app\orbbec-astra-pro\启动上位机.bat
 ```
 
+也可以在 PackVision 工作台的 Astra Pro 状态区点击“打开官方上位机”，它会调用本机接口：
+
+```text
+POST /api/depth/vendor-viewer/open
+```
+
 3. 在 OrbbecViewer 中确认 Color、Depth、IR、Point Cloud 都能出图。
-4. 关闭 OrbbecViewer，避免它占用相机。
+4. 关闭 OrbbecViewer，避免它占用相机。上位机和 PackVision 同时抢相机时，PackVision 采集可能失败。
 5. 启动 PackVision。
 6. 运行 PackVision 的到货验收、设备守护和采集探测。
 7. 用已知纸箱、长条件、异形件、黑色/反光/透明件做第一批真值验收。
@@ -76,6 +82,7 @@ PackVision 应该把 OrbbecViewer 当成“官方验机工具”，而不是日�
 PackVision 已经接入：
 
 - `/api/depth/status`：检查资料包、驱动安装包、驱动安装状态、上位机、OpenNI 运行库。
+- `/api/depth/vendor-viewer/open`：从 PackVision 本地启动官方上位机，方便工程师验机。
 - `/api/deployment/readiness`：海外仓开箱即用体检。
 - `/api/device/watchdog`：设备守护和恢复动作。
 - `/api/depth/capture/probe`：相机采集后端探测。

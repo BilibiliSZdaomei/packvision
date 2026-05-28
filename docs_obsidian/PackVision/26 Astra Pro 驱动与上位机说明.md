@@ -50,6 +50,12 @@ D:\app\orbbec-astra-pro\启动上位机.bat
 D:\app\orbbec-astra-pro\viewer\OrbbecViewer.exe
 ```
 
+PackVision 工作台也增加了“打开官方上位机”入口，本地调用：
+
+```text
+POST /api/depth/vendor-viewer/open
+```
+
 ## 和 PackVision 的边界
 
 | 工具 | 用途 |
@@ -66,7 +72,7 @@ D:\app\orbbec-astra-pro\viewer\OrbbecViewer.exe
 1. 直连电脑 USB 口。
 2. 打开 `D:\app\orbbec-astra-pro\启动上位机.bat`。
 3. 确认 Color、Depth、IR、Point Cloud。
-4. 关闭 OrbbecViewer，释放相机。
+4. 关闭 OrbbecViewer，释放相机。它只是验机工具，不要和 PackVision 实时采集同时运行。
 5. 启动 PackVision。
 6. 看设备守护、采集探测和到货验收。
 7. 用已知纸箱和汽车备件真值样本做验收。

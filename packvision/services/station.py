@@ -120,8 +120,8 @@ def _capability_statuses(
         {
             "id": "integration",
             "label": "Integration",
-            "status": "outbox_ready" if outbox.get("delivery_mode") == "local_outbox" else "local_ready",
-            "source": "local_api_sqlite_csv_outbox",
+            "status": _integration_status(outbox),
+            "source": "local_api_sqlite_csv_outbox_http_dispatch",
         },
         {
             "id": "device_health",
@@ -140,6 +140,8 @@ def _professional_score(capabilities: list[dict[str, Any]]) -> dict[str, Any]:
         "manual_or_image_ready",
         "local_ready",
         "outbox_ready",
+        "http_push_ready",
+        "retry_attention",
         "watchdog_ready",
         "watchdog_warning",
     }
@@ -192,8 +194,11 @@ def _scale_summary(scale: dict[str, Any]) -> dict[str, Any]:
 
 
 def _outbox_summary(outbox: dict[str, Any]) -> dict[str, Any]:
+    dispatch = outbox.get("dispatch") if isinstance(outbox.get("dispatch"), dict) else {}
     return {
         "delivery_mode": outbox.get("delivery_mode") or "local_outbox",
+        "dispatch_status": dispatch.get("status") or "not_configured",
+        "endpoint_configured": bool(dispatch.get("endpoint_configured")),
         "total": int(outbox.get("total") or 0),
         "pending": int(outbox.get("pending") or 0),
         "failed": int(outbox.get("failed") or 0),
@@ -242,10 +247,11 @@ def _production_gaps(
         gaps.append(_gap("wms_order_binding_pending", "Order binding should be driven by scanner or WMS lookup."))
     if any(item["status"].endswith("pending") for item in capabilities):
         gaps.append(_gap("operator_exception_flow_pending", "Pending states need clear operator recovery prompts."))
-    if outbox.get("delivery_mode") == "local_outbox":
+    dispatch = outbox.get("dispatch") if isinstance(outbox.get("dispatch"), dict) else {}
+    if dispatch.get("status") != "ready":
         gaps.append(_gap("wms_connector_pending", "Local WMS/TMS outbox is ready; add the target warehouse connector URL and credentials."))
-    else:
-        gaps.append(_gap("wms_push_retry_pending", "Industrial deployment needs WMS/TMS push with retry queue."))
+    elif int(outbox.get("failed") or 0) > 0 or int(outbox.get("due_for_retry") or 0) > 0:
+        gaps.append(_gap("wms_push_retry_attention", "WMS/TMS push is configured, but failed or retry-due events need attention."))
     if watchdog.get("severity") in {"warning", "critical"}:
         gaps.append(_gap("hardware_watchdog_attention", "Device watchdog found camera/runtime conditions that need field recovery."))
     return gaps
@@ -253,6 +259,15 @@ def _production_gaps(
 
 def _gap(code: str, message: str) -> dict[str, str]:
     return {"code": code, "message": message}
+
+
+def _integration_status(outbox: dict[str, Any]) -> str:
+    dispatch = outbox.get("dispatch") if isinstance(outbox.get("dispatch"), dict) else {}
+    if dispatch.get("status") == "ready" and int(outbox.get("failed") or 0) == 0:
+        return "http_push_ready"
+    if int(outbox.get("failed") or 0) > 0 or int(outbox.get("due_for_retry") or 0) > 0:
+        return "retry_attention"
+    return "outbox_ready"
 
 
 def _device_health_status(watchdog: dict[str, Any]) -> str:

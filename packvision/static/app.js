@@ -13,11 +13,15 @@ const translations = {
     integrationOutbox: "集成队列",
     integrationTitle: "WMS/TMS 本地待推送记录",
     refreshIntegration: "刷新队列",
+    dispatchIntegration: "推送到 WMS/TMS",
     exportIntegration: "导出队列 CSV",
     pendingEvents: "待推送",
     failedEvents: "失败",
     sentEvents: "已推送",
     retryDue: "可重试",
+    dispatchStatus: "推送状态",
+    dispatchNotConfigured: "未配置接口",
+    dispatchReady: "接口就绪",
     noIntegrationEvents: "暂无待推送记录",
     eventStatus: "状态",
     targetSystem: "目标系统",
@@ -184,6 +188,9 @@ const translations = {
     depthCameraPrimaryText: "默认用深度相机采集；未连接时才使用照片兜底。",
     refreshDepth: "刷新状态",
     probeDepthCapture: "采集探测",
+    openVendorViewer: "打开官方上位机",
+    vendorViewerOpened: "官方上位机已启动；确认 Color、Depth、IR、Point Cloud 后关闭它，再回到 PackVision。",
+    vendorViewerMissing: "未找到官方上位机",
     workflowGuide: "调试清单",
     autoWorkflow: "自动识别流程",
     arrivalKit: "到货准备",
@@ -210,6 +217,7 @@ const translations = {
     savedToHistory: "已保存到历史",
     depthBackend: "推荐后端",
     depthDriver: "驱动状态",
+    depthViewer: "官方上位机",
     depthOpenNi: "OpenNI2",
     depthPyorbbec: "pyorbbecsdk",
     depthConfiguredCameras: "配置相机",
@@ -256,11 +264,15 @@ const translations = {
     integrationOutbox: "Integration queue",
     integrationTitle: "Local WMS/TMS outbox",
     refreshIntegration: "Refresh queue",
+    dispatchIntegration: "Push to WMS/TMS",
     exportIntegration: "Export queue CSV",
     pendingEvents: "Pending",
     failedEvents: "Failed",
     sentEvents: "Sent",
     retryDue: "Retry due",
+    dispatchStatus: "Dispatch status",
+    dispatchNotConfigured: "Not configured",
+    dispatchReady: "Ready",
     noIntegrationEvents: "No integration events yet",
     eventStatus: "Status",
     targetSystem: "Target",
@@ -427,6 +439,9 @@ const translations = {
     depthCameraPrimaryText: "Use depth capture by default; photo upload is only a fallback when the camera is unavailable.",
     refreshDepth: "Refresh status",
     probeDepthCapture: "Probe capture",
+    openVendorViewer: "Open vendor viewer",
+    vendorViewerOpened: "Vendor viewer started. Confirm Color, Depth, IR, and Point Cloud, then close it before returning to PackVision.",
+    vendorViewerMissing: "Vendor viewer not found",
     workflowGuide: "Setup guide",
     autoWorkflow: "Auto workflow",
     arrivalKit: "Arrival kit",
@@ -453,6 +468,7 @@ const translations = {
     savedToHistory: "Saved to history",
     depthBackend: "Recommended backend",
     depthDriver: "Driver status",
+    depthViewer: "Vendor viewer",
     depthOpenNi: "OpenNI2",
     depthPyorbbec: "pyorbbecsdk",
     depthConfiguredCameras: "Configured cameras",
@@ -499,11 +515,15 @@ const translations = {
     integrationOutbox: "Черга інтеграції",
     integrationTitle: "Локальна черга WMS/TMS",
     refreshIntegration: "Оновити чергу",
+    dispatchIntegration: "Надіслати до WMS/TMS",
     exportIntegration: "Експорт CSV",
     pendingEvents: "Очікує",
     failedEvents: "Помилки",
     sentEvents: "Надіслано",
     retryDue: "Повтор",
+    dispatchStatus: "Стан надсилання",
+    dispatchNotConfigured: "Не налаштовано",
+    dispatchReady: "Готово",
     noIntegrationEvents: "Подій інтеграції ще немає",
     eventStatus: "Статус",
     targetSystem: "Ціль",
@@ -670,6 +690,9 @@ const translations = {
     depthCameraPrimaryText: "За замовчуванням використовується камера глибини; фото лише як резерв.",
     refreshDepth: "Оновити статус",
     probeDepthCapture: "Перевірити збір",
+    openVendorViewer: "Відкрити Viewer",
+    vendorViewerOpened: "Viewer запущено. Перевірте Color, Depth, IR і Point Cloud, потім закрийте його перед PackVision.",
+    vendorViewerMissing: "Viewer не знайдено",
     workflowGuide: "Підготовка",
     autoWorkflow: "Авто процес",
     arrivalKit: "Комплект",
@@ -696,6 +719,7 @@ const translations = {
     savedToHistory: "Збережено в історії",
     depthBackend: "Рекомендований бекенд",
     depthDriver: "Стан драйвера",
+    depthViewer: "Vendor Viewer",
     depthOpenNi: "OpenNI2",
     depthPyorbbec: "pyorbbecsdk",
     depthConfiguredCameras: "Налаштовані камери",
@@ -1434,6 +1458,7 @@ const state = {
   usageSummary: null,
   reviewSamples: null,
   integrationOutbox: null,
+  integrationDispatch: null,
   stationSnapshot: null,
   deploymentReadiness: null,
   deviceWatchdog: null,
@@ -1502,6 +1527,7 @@ const industrySummary = document.querySelector("#industrySummary");
 const depthStatusGrid = document.querySelector("#depthStatusGrid");
 const refreshDepthStatusButton = document.querySelector("#refreshDepthStatusButton");
 const probeDepthCaptureButton = document.querySelector("#probeDepthCaptureButton");
+const openVendorViewerButton = document.querySelector("#openVendorViewerButton");
 const liveStatusGrid = document.querySelector("#liveStatusGrid");
 const deviceWatchdogPanel = document.querySelector("#deviceWatchdogPanel");
 const deviceWatchdogStatus = document.querySelector("#deviceWatchdogStatus");
@@ -1542,6 +1568,7 @@ const exportUsageLink = document.querySelector("#exportUsageLink");
 const integrationSummaryGrid = document.querySelector("#integrationSummaryGrid");
 const integrationOutboxList = document.querySelector("#integrationOutboxList");
 const refreshIntegrationButton = document.querySelector("#refreshIntegrationButton");
+const dispatchIntegrationButton = document.querySelector("#dispatchIntegrationButton");
 const exportIntegrationLink = document.querySelector("#exportIntegrationLink");
 
 const metricEls = {
@@ -2790,6 +2817,7 @@ function renderDepthStatus(data) {
   const openNiReady = Boolean(data.openni2?.openni_dll_found && data.openni2?.orbbec_driver_found);
   const pyorbbecReady = Boolean(data.pyorbbecsdk_available);
   const driverReady = Boolean(data.windows_driver?.found);
+  const viewerReady = Boolean(data.vendor_viewer?.found);
   const inventory = data.camera_inventory || {};
   const configuredCount = Number(inventory.configured_camera_count || 0);
   const targetCount = Number(inventory.target_camera_count || configuredCount || 1);
@@ -2799,6 +2827,7 @@ function renderDepthStatus(data) {
   appendDepthPill(depthStatusGrid, t("depthOpenNi"), openNiReady ? t("ready") : t("missing"), openNiReady);
   appendDepthPill(depthStatusGrid, t("depthPyorbbec"), pyorbbecReady ? t("installed") : t("unavailable"), pyorbbecReady);
   appendDepthPill(depthStatusGrid, t("depthDriver"), driverReady ? t("installed") : t("missing"), driverReady);
+  appendDepthPill(depthStatusGrid, t("depthViewer"), viewerReady ? t("ready") : t("missing"), viewerReady);
   appendDepthPill(depthStatusGrid, t("depthConfiguredCameras"), `${configuredCount}/${targetCount}`, configuredCount > 0);
   appendDepthPill(depthStatusGrid, t("depthDetectedDevices"), String(detectedCount), detectedCount > 0);
   appendDepthPill(
@@ -2863,6 +2892,36 @@ function renderDepthProbe(data) {
     item.textContent = `${t("nextAction")}: ${labelFrom(probeActionLabels, action) || fallback}`;
     depthProbeSummary.appendChild(item);
   });
+}
+
+async function openVendorViewer() {
+  if (!openVendorViewerButton) {
+    return;
+  }
+  openVendorViewerButton.disabled = true;
+  try {
+    const response = await fetch("/api/depth/vendor-viewer/open", { method: "POST" });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.detail || response.statusText);
+    }
+    renderVendorViewerMessage(data, false);
+  } catch (error) {
+    renderVendorViewerMessage({ message: String(error.message || error) }, true);
+  } finally {
+    openVendorViewerButton.disabled = false;
+  }
+}
+
+function renderVendorViewerMessage(data, isError) {
+  if (!depthProbeSummary) {
+    return;
+  }
+  const item = document.createElement("div");
+  item.className = "recommendation";
+  const fallback = isError ? t("vendorViewerMissing") : t("vendorViewerOpened");
+  item.textContent = isError ? `${fallback}: ${data.message || "--"}` : fallback;
+  depthProbeSummary.prepend(item);
 }
 
 async function startDepthLive(options = {}) {
@@ -3356,13 +3415,44 @@ async function loadIntegrationOutbox() {
   if (!integrationSummaryGrid || !integrationOutboxList) {
     return;
   }
-  const response = await fetch("/api/integrations/outbox?limit=50");
+  const [response, dispatchResponse] = await Promise.all([
+    fetch("/api/integrations/outbox?limit=50"),
+    fetch("/api/integrations/dispatch/status"),
+  ]);
   if (!response.ok) {
     return;
   }
   const data = await response.json();
+  if (dispatchResponse.ok) {
+    data.summary = data.summary || {};
+    data.summary.dispatch = await dispatchResponse.json();
+  }
   state.integrationOutbox = data;
   renderIntegrationOutbox(data);
+}
+
+async function dispatchIntegrationOutbox() {
+  if (dispatchIntegrationButton) {
+    dispatchIntegrationButton.disabled = true;
+  }
+  try {
+    const response = await fetch("/api/integrations/outbox/dispatch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ limit: 20 }),
+    });
+    if (!response.ok) {
+      return;
+    }
+    const data = await response.json();
+    state.integrationDispatch = data;
+    state.integrationOutbox = { summary: data.summary || {}, items: data.events || [] };
+    await loadIntegrationOutbox();
+  } finally {
+    if (dispatchIntegrationButton) {
+      dispatchIntegrationButton.disabled = false;
+    }
+  }
 }
 
 async function loadStationSnapshot() {
@@ -3462,7 +3552,7 @@ function renderIntegrationOutbox(data) {
   appendIntegrationCard(t("pendingEvents"), summary.pending || 0, t("targetSystem"));
   appendIntegrationCard(t("failedEvents"), summary.failed || 0, t("retryDue") + ` ${summary.due_for_retry || 0}`);
   appendIntegrationCard(t("sentEvents"), summary.sent || 0, summary.delivery_mode || "local_outbox");
-  appendIntegrationCard(t("retryDue"), summary.due_for_retry || 0, t("eventStatus"));
+  appendIntegrationCard(t("dispatchStatus"), integrationDispatchLabel(summary.dispatch), summary.dispatch?.endpoint_host || summary.dispatch?.delivery_mode || "local_outbox");
   if (exportIntegrationLink) {
     exportIntegrationLink.href = "/api/integrations/outbox/export.csv?limit=500";
   }
@@ -3485,6 +3575,16 @@ function renderIntegrationOutbox(data) {
     appendSummaryCell(row, t("retryDue"), String(item.retry_count || 0));
     integrationOutboxList.appendChild(row);
   }
+}
+
+function integrationDispatchLabel(dispatch) {
+  if (!dispatch || dispatch.status === "not_configured") {
+    return t("dispatchNotConfigured");
+  }
+  if (dispatch.status === "ready") {
+    return t("dispatchReady");
+  }
+  return dispatch.status || "--";
 }
 
 function appendIntegrationCard(label, value, sub) {
@@ -3828,8 +3928,10 @@ refreshHistoryButton.addEventListener("click", loadHistory);
 refreshReviewButton.addEventListener("click", loadReviewSamples);
 refreshUsageButton.addEventListener("click", loadUsageSummary);
 refreshIntegrationButton?.addEventListener("click", loadIntegrationOutbox);
+dispatchIntegrationButton?.addEventListener("click", dispatchIntegrationOutbox);
 refreshDepthStatusButton.addEventListener("click", refreshStationHealth);
 probeDepthCaptureButton.addEventListener("click", probeDepthCapture);
+openVendorViewerButton?.addEventListener("click", openVendorViewer);
 startLiveButton.addEventListener("click", () => startDepthLive());
 stopLiveButton.addEventListener("click", stopDepthLive);
 confirmLiveButton.addEventListener("click", confirmLiveResult);

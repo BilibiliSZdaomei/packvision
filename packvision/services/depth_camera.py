@@ -18,6 +18,10 @@ _STATUS_CACHE: dict[str, tuple[float, dict[str, Any]]] = {}
 _DRIVER_INSTALLATION_CACHE: dict[str, Any] | None = None
 
 
+class VendorViewerLaunchError(RuntimeError):
+    pass
+
+
 def depth_camera_status(vendor_root: str | Path | None = None) -> dict[str, Any]:
     root = resolve_astra_root(vendor_root)
     cache_key = str(root)
@@ -74,6 +78,9 @@ def _build_depth_camera_status(root: Path) -> dict[str, Any]:
         "vendor_viewer": {
             "path": str(orbbec_viewer),
             "found": orbbec_viewer.exists(),
+            "launchable": platform.system().lower() == "windows" and orbbec_viewer.exists(),
+            "launch_endpoint": "/api/depth/vendor-viewer/open",
+            "role": "official_hardware_acceptance_and_debug_tool",
         },
         "reference_files": {
             "datasheet": str(datasheet) if datasheet.exists() else None,
@@ -92,6 +99,56 @@ def _build_depth_camera_status(root: Path) -> dict[str, Any]:
             "The branch keeps hardware SDK imports optional so the main EXE remains lightweight.",
         ],
     }
+
+
+def launch_vendor_viewer(
+    vendor_root: str | Path | None = None,
+    *,
+    launcher: Any | None = None,
+) -> dict[str, Any]:
+    viewer = _vendor_viewer_path(vendor_root)
+    if platform.system().lower() != "windows":
+        raise VendorViewerLaunchError("OrbbecViewer can only be launched locally on Windows.")
+    if not viewer.exists():
+        raise VendorViewerLaunchError(f"OrbbecViewer.exe was not found: {viewer}")
+
+    launch = launcher or _default_vendor_viewer_launcher
+    pid = launch(viewer)
+    return {
+        "status": "started",
+        "tool": "OrbbecViewer",
+        "path": str(viewer),
+        "pid": pid,
+        "usage": "Use it to verify Color, Depth, IR, and Point Cloud streams, then close it before PackVision capture.",
+        "next_actions": [
+            "confirm_color_depth_ir_point_cloud",
+            "close_viewer_before_packvision_capture",
+            "rerun_packvision_capture_probe",
+        ],
+    }
+
+
+def _vendor_viewer_path(vendor_root: str | Path | None = None) -> Path:
+    root = resolve_astra_root(vendor_root)
+    primary = root / "上位机软件" / "上位机软件" / "OrbbecViewer.exe"
+    app_copy = Path(r"D:\app\orbbec-astra-pro\viewer\OrbbecViewer.exe")
+    if primary.exists():
+        return primary
+    if app_copy.exists():
+        return app_copy
+    return primary
+
+
+def _default_vendor_viewer_launcher(viewer: Path) -> int:
+    process = subprocess.Popen(
+        [str(viewer)],
+        cwd=str(viewer.parent),
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        close_fds=True,
+    )
+    return int(process.pid)
 
 
 def windows_driver_installation_status(

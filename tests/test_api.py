@@ -43,6 +43,23 @@ def test_vendor_calibration_board_endpoint_uses_astra_reference_file():
     assert response.content.startswith(b"%PDF")
 
 
+def test_vendor_viewer_open_endpoint_launches(monkeypatch):
+    import packvision.app as app_module
+
+    monkeypatch.setattr(
+        app_module,
+        "launch_vendor_viewer",
+        lambda: {"status": "started", "tool": "OrbbecViewer", "pid": 1234, "path": r"D:\app\viewer.exe"},
+    )
+
+    client = TestClient(create_app())
+    response = client.post("/api/depth/vendor-viewer/open")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "started"
+    assert response.json()["tool"] == "OrbbecViewer"
+
+
 @pytest.mark.skipif(not opencv_ready(), reason="OpenCV ArUco is unavailable")
 def test_demo_image_endpoint_returns_jpeg():
     client = TestClient(create_app())
@@ -481,6 +498,14 @@ def test_depth_live_stream_can_confirm_stable_candidate_without_hardware():
         exported = client.get("/api/integrations/outbox/export.csv")
         assert exported.status_code == 200
         assert "event_id,created_at,updated_at,next_attempt_at" in exported.text
+
+        dispatch_status = client.get("/api/integrations/dispatch/status")
+        assert dispatch_status.status_code == 200
+        assert dispatch_status.json()["failure_behavior"] == "keep_event_in_outbox_and_retry_later"
+
+        dispatch = client.post("/api/integrations/outbox/dispatch", json={"limit": 5})
+        assert dispatch.status_code == 200
+        assert dispatch.json()["status"] in {"not_configured", "no_due_events", "dispatched", "partial_failure"}
     finally:
         client.post("/api/depth/live/stop")
 

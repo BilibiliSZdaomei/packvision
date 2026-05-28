@@ -3,9 +3,12 @@ from __future__ import annotations
 import csv
 import io
 import json
+import os
 import sqlite3
 from datetime import datetime, timedelta, timezone
 from typing import Any
+from urllib import error, request
+from urllib.parse import urlparse
 
 from packvision.services.history import db_path
 
@@ -25,6 +28,9 @@ OUTBOX_COLUMNS = (
     "last_error",
     "last_response",
 )
+DEFAULT_DISPATCH_LIMIT = 20
+MAX_DISPATCH_LIMIT = 100
+DEFAULT_HTTP_TIMEOUT_MS = 3000
 
 
 def init_integration_db() -> None:
@@ -145,6 +151,7 @@ def outbox_summary() -> dict[str, Any]:
             """
         ).fetchone()
     by_status = {row["status"]: int(row["count"]) for row in rows}
+    dispatch = integration_dispatch_status()
     return {
         "total": sum(by_status.values()),
         "pending": by_status.get("pending", 0),
@@ -152,7 +159,121 @@ def outbox_summary() -> dict[str, Any]:
         "failed": by_status.get("failed", 0),
         "due_for_retry": int(due["count"] if due else 0),
         "latest_event": dict(latest) if latest else None,
-        "delivery_mode": "local_outbox",
+        "delivery_mode": dispatch["delivery_mode"],
+        "dispatch": dispatch,
+    }
+
+
+def integration_dispatch_status(env: dict[str, str] | None = None) -> dict[str, Any]:
+    values = env or os.environ
+    endpoint = _integration_endpoint(values)
+    dry_run = _bool_env(values, "PACKVISION_INTEGRATION_DRY_RUN")
+    configured = bool(endpoint) or dry_run
+    return {
+        "status": "ready" if configured else "not_configured",
+        "delivery_mode": "http_push" if endpoint else "local_outbox",
+        "target": _integration_target(values),
+        "endpoint_configured": bool(endpoint),
+        "endpoint_host": _endpoint_host(endpoint),
+        "token_configured": bool(values.get("PACKVISION_INTEGRATION_HTTP_TOKEN") or values.get("PACKVISION_WMS_TMS_TOKEN")),
+        "dry_run": dry_run,
+        "timeout_ms": _int_env(values, "PACKVISION_INTEGRATION_TIMEOUT_MS", DEFAULT_HTTP_TIMEOUT_MS),
+        "batch_limit_default": DEFAULT_DISPATCH_LIMIT,
+        "failure_behavior": "keep_event_in_outbox_and_retry_later",
+        "required_env": [
+            "PACKVISION_INTEGRATION_HTTP_URL",
+            "PACKVISION_INTEGRATION_HTTP_TOKEN optional",
+            "PACKVISION_INTEGRATION_TARGET optional",
+        ],
+        "next_actions": []
+        if configured
+        else [
+            "set_packvision_integration_http_url_when_wms_tms_is_ready",
+            "keep_using_local_outbox_and_csv_export_until_then",
+        ],
+    }
+
+
+def dispatch_outbox_events(
+    *,
+    limit: int = DEFAULT_DISPATCH_LIMIT,
+    env: dict[str, str] | None = None,
+    post_json: Any | None = None,
+) -> dict[str, Any]:
+    init_integration_db()
+    values = env or os.environ
+    config = integration_dispatch_status(values)
+    target = config["target"]
+    limit = max(1, min(int(limit or DEFAULT_DISPATCH_LIMIT), MAX_DISPATCH_LIMIT))
+    if config["status"] != "ready":
+        return {
+            "status": "not_configured",
+            "dispatch": config,
+            "attempted": 0,
+            "sent": 0,
+            "failed": 0,
+            "events": [],
+            "summary": outbox_summary(),
+        }
+
+    due_events = _due_outbox_events(target=target, limit=limit)
+    if not due_events:
+        return {
+            "status": "no_due_events",
+            "dispatch": config,
+            "attempted": 0,
+            "sent": 0,
+            "failed": 0,
+            "events": [],
+            "summary": outbox_summary(),
+        }
+
+    poster = post_json or _post_json
+    results: list[dict[str, Any]] = []
+    sent = 0
+    failed = 0
+    for event in due_events:
+        try:
+            response = _dry_run_response(event) if config["dry_run"] else poster(
+                _integration_endpoint(values),
+                _dispatch_payload(event),
+                _dispatch_headers(values, event),
+                config["timeout_ms"],
+            )
+            if 200 <= int(response.get("status_code") or 0) < 300:
+                updated = update_outbox_event(event["event_id"], status="sent", response=_response_excerpt(response))
+                sent += 1
+                results.append({"event_id": event["event_id"], "status": "sent", "updated": updated})
+            else:
+                retry_after = _retry_after_seconds(event)
+                updated = update_outbox_event(
+                    event["event_id"],
+                    status="failed",
+                    response=_response_excerpt(response),
+                    error=f"HTTP {response.get('status_code')}",
+                    retry_after_seconds=retry_after,
+                )
+                failed += 1
+                results.append({"event_id": event["event_id"], "status": "failed", "retry_after_seconds": retry_after, "updated": updated})
+        except Exception as exc:
+            retry_after = _retry_after_seconds(event)
+            updated = update_outbox_event(
+                event["event_id"],
+                status="failed",
+                error=f"{type(exc).__name__}: {exc}",
+                retry_after_seconds=retry_after,
+            )
+            failed += 1
+            results.append({"event_id": event["event_id"], "status": "failed", "retry_after_seconds": retry_after, "updated": updated})
+
+    return {
+        "status": "dispatched" if failed == 0 else "partial_failure",
+        "dispatch": config,
+        "attempted": len(due_events),
+        "sent": sent,
+        "failed": failed,
+        "events": results,
+        "summary": outbox_summary(),
     }
 
 
@@ -196,6 +317,105 @@ def export_outbox_csv(limit: int = 500, status: str | None = None) -> str:
     for item in data["items"]:
         writer.writerow({column: item.get(column) for column in OUTBOX_COLUMNS})
     return buffer.getvalue()
+
+
+def _due_outbox_events(*, target: str, limit: int) -> list[dict[str, Any]]:
+    with _connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT * FROM integration_outbox
+            WHERE target = ? AND status IN ('pending', 'failed') AND next_attempt_at <= ?
+            ORDER BY next_attempt_at ASC, created_at ASC
+            LIMIT ?
+            """,
+            (target, _now(), limit),
+        ).fetchall()
+    return [_row_to_event(row) for row in rows]
+
+
+def _dispatch_payload(event: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "schema": "packvision.integration_event.v1",
+        "event_id": event.get("event_id"),
+        "event_type": event.get("event_type"),
+        "target": event.get("target"),
+        "created_at": event.get("created_at"),
+        "updated_at": event.get("updated_at"),
+        "retry_count": event.get("retry_count"),
+        "payload": event.get("payload") or {},
+    }
+
+
+def _dispatch_headers(env: dict[str, str], event: dict[str, Any]) -> dict[str, str]:
+    headers = {
+        "Content-Type": "application/json; charset=utf-8",
+        "Accept": "application/json",
+        "X-PackVision-Event-Id": str(event.get("event_id") or ""),
+        "X-PackVision-Event-Type": str(event.get("event_type") or ""),
+    }
+    token = env.get("PACKVISION_INTEGRATION_HTTP_TOKEN") or env.get("PACKVISION_WMS_TMS_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return headers
+
+
+def _post_json(url: str, payload: dict[str, Any], headers: dict[str, str], timeout_ms: int) -> dict[str, Any]:
+    data = json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    req = request.Request(url, data=data, headers=headers, method="POST")
+    try:
+        with request.urlopen(req, timeout=max(0.1, timeout_ms / 1000.0)) as response:
+            body = response.read(8192).decode("utf-8", errors="replace")
+            return {"status_code": response.status, "body": body}
+    except error.HTTPError as exc:
+        body = exc.read(8192).decode("utf-8", errors="replace")
+        return {"status_code": exc.code, "body": body}
+
+
+def _dry_run_response(event: dict[str, Any]) -> dict[str, Any]:
+    return {"status_code": 200, "body": f"dry_run_sent:{event.get('event_id')}"}
+
+
+def _response_excerpt(response: dict[str, Any]) -> str:
+    body = str(response.get("body") or "")
+    return json.dumps(
+        {
+            "status_code": response.get("status_code"),
+            "body": body[:1000],
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+    )
+
+
+def _retry_after_seconds(event: dict[str, Any]) -> int:
+    retry_count = int(event.get("retry_count") or 0)
+    return min(3600, 60 * (2 ** min(retry_count, 5)))
+
+
+def _integration_endpoint(env: dict[str, str]) -> str:
+    return str(env.get("PACKVISION_INTEGRATION_HTTP_URL") or env.get("PACKVISION_WMS_TMS_URL") or "").strip()
+
+
+def _integration_target(env: dict[str, str]) -> str:
+    return str(env.get("PACKVISION_INTEGRATION_TARGET") or "wms_tms").strip() or "wms_tms"
+
+
+def _endpoint_host(endpoint: str) -> str | None:
+    if not endpoint:
+        return None
+    parsed = urlparse(endpoint)
+    return parsed.netloc or parsed.path or None
+
+
+def _bool_env(env: dict[str, str], key: str) -> bool:
+    return str(env.get(key) or "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _int_env(env: dict[str, str], key: str, default: int) -> int:
+    try:
+        return int(env.get(key) or default)
+    except (TypeError, ValueError):
+        return default
 
 
 def _measurement_payload(result: dict[str, Any]) -> dict[str, Any]:

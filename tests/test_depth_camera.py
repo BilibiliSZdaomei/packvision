@@ -1,4 +1,5 @@
-from packvision.services.depth_camera import windows_driver_installation_status
+from packvision.services import depth_camera
+from packvision.services.depth_camera import launch_vendor_viewer, windows_driver_installation_status
 
 
 def test_windows_driver_installation_status_detects_installed_sensor_driver():
@@ -41,3 +42,22 @@ def test_windows_driver_installation_status_reports_not_found_without_evidence()
     assert status["installed"] is False
     assert status["status"] == "not_found"
     assert status["evidence"] == []
+
+
+def test_launch_vendor_viewer_uses_vendor_executable(tmp_path, monkeypatch):
+    viewer = tmp_path / "上位机软件" / "上位机软件" / "OrbbecViewer.exe"
+    viewer.parent.mkdir(parents=True)
+    viewer.write_bytes(b"viewer")
+    captured = {}
+
+    monkeypatch.setattr(depth_camera.platform, "system", lambda: "Windows")
+
+    def fake_launcher(path):
+        captured["path"] = path
+        return 4321
+
+    result = launch_vendor_viewer(tmp_path, launcher=fake_launcher)
+
+    assert result["status"] == "started"
+    assert result["pid"] == 4321
+    assert captured["path"] == viewer

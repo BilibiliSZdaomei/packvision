@@ -66,6 +66,7 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert 'id="engineering"' in html
     assert 'id="depthStatusGrid"' in html
     assert 'id="depthProbeSummary"' in html
+    assert 'id="openVendorViewerButton"' in html
     assert 'id="liveWorkstation"' in html
     assert 'id="liveStatusGrid"' in html
     assert 'id="liveMonitorGrid"' in html
@@ -94,6 +95,7 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert 'id="integrationOutbox"' in html
     assert 'id="integrationSummaryGrid"' in html
     assert 'id="integrationOutboxList"' in html
+    assert 'id="dispatchIntegrationButton"' in html
     assert '<details class="workflow-controls" id="workflowControls">' in html
     assert 'id="workflowAutoSummary"' in html
     assert 'id="workflowPackageSelect"' in html
@@ -102,6 +104,7 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert "autoCameraCountForProfile" in js
     assert "loadDepthWorkflow({ auto: true })" in js
     assert "/api/depth/measure-capture" in js
+    assert "/api/depth/vendor-viewer/open" in js
     assert "/api/depth/live/start" in js
     assert "/api/depth/live/state" in js
     assert "/api/depth/live/confirm" in js
@@ -111,6 +114,8 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert "/api/station/snapshot" in js
     assert "/api/device/watchdog" in js
     assert "/api/integrations/outbox" in js
+    assert "/api/integrations/outbox/dispatch" in js
+    assert "/api/integrations/dispatch/status" in js
     assert "/api/deployment/readiness" in js
     assert "renderLiveMonitor" in js
     assert "renderCameraMonitor" in js
@@ -118,6 +123,7 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert "normalizeCameraRole" in js
     assert "loadStationSnapshot" in js
     assert "loadDeviceWatchdog" in js
+    assert "openVendorViewer" in js
     assert "renderDeviceWatchdog" in js
     assert "loadDeploymentReadiness" in js
     assert "refreshStationHealth" in js
@@ -126,6 +132,7 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert "renderScaleStatus" in js
     assert "loadIntegrationOutbox" in js
     assert "renderIntegrationOutbox" in js
+    assert "dispatchIntegrationOutbox" in js
     assert "renderStationStrip" in js
     assert "renderDepthEvidenceStage" in js
     assert "startDepthLive({ silent: true })" in js
