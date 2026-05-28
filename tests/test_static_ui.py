@@ -69,6 +69,14 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert 'id="liveWorkstation"' in html
     assert 'id="liveStatusGrid"' in html
     assert 'id="liveMonitorGrid"' in html
+    assert 'id="cameraMonitor"' in html
+    assert 'id="cameraMonitorGrid"' in html
+    assert 'data-camera-feed="top"' in html
+    assert 'data-camera-feed="front"' in html
+    assert 'data-camera-feed="side"' in html
+    assert 'id="cameraMonitorCanvasTop"' in html
+    assert 'id="cameraMonitorCanvasFront"' in html
+    assert 'id="cameraMonitorCanvasSide"' in html
     assert 'id="confirmLiveButton"' in html
     assert 'class="station-strip"' in html
     assert 'id="stationLiveStatus"' in html
@@ -89,6 +97,9 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert "/api/depth/live/confirm" in js
     assert "/api/weight/volumetric-rules" in js
     assert "renderLiveMonitor" in js
+    assert "renderCameraMonitor" in js
+    assert "collectCameraMonitorResults" in js
+    assert "normalizeCameraRole" in js
     assert "renderWeightMonitorFromDimensions" in js
     assert "renderStationStrip" in js
     assert "renderDepthEvidenceStage" in js
@@ -101,6 +112,8 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert ".depth-inline-card" in css
     assert ".live-workstation" in css
     assert ".live-monitor-grid" in css
+    assert ".camera-monitor-grid" in css
+    assert ".camera-feed.is-primary" in css
     assert ".station-strip" in css
     assert ".depth-evidence" in css
     assert ".weight-monitor-panel" in css

@@ -75,6 +75,7 @@ from packvision.services.review_pool import (
     list_review_samples,
 )
 from packvision.services.storage import ensure_data_dirs, resource_path, write_bytes
+from packvision.services.station import build_station_snapshot
 from packvision.services.support_bundle import build_support_bundle
 from packvision.services.usage import (
     export_usage_csv,
@@ -313,6 +314,14 @@ def create_app() -> FastAPI:
             bundle_path,
             media_type="application/zip",
             filename=bundle_path.name,
+        )
+
+    @app.get("/api/station/snapshot")
+    def station_snapshot() -> dict[str, object]:
+        return build_station_snapshot(
+            live_state=depth_live_manager.state(),
+            latest_measurements=list_measurements(limit=1),
+            usage=usage_summary(),
         )
 
     @app.get("/api/ai/plugins")

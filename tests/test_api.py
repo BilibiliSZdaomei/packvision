@@ -968,6 +968,24 @@ def test_ai_plugin_endpoint_reports_lightweight_base_without_plugins(monkeypatch
     assert "manual_annotation_review" in body["fallback_chain"]
 
 
+def test_station_snapshot_endpoint_reports_dws_orchestration_status():
+    client = TestClient(create_app())
+    response = client.get("/api/station/snapshot")
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["architecture_decision"]["mode"] == "medium_upgrade_modular_monolith"
+    assert [camera["role"] for camera in body["camera_monitor_layout"]] == ["top", "front", "side"]
+    assert {item["id"] for item in body["dws_capabilities"]} >= {
+        "dimensioning",
+        "weighing",
+        "scanning",
+        "evidence",
+        "integration",
+    }
+    assert "wms_tms_push_and_retry_queue" in body["next_upgrade_tracks"]
+
+
 def test_ai_plugin_endpoint_validates_optional_model_manifest(monkeypatch, tmp_path):
     plugin_dir = tmp_path / "packvision-yolo"
     plugin_dir.mkdir()

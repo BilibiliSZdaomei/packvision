@@ -238,7 +238,7 @@
             <div class="panel-head">
               <div>
                 <p class="section-label" data-i18n="result">结果</p>
-                <h3 id="resultTitle" data-i18n="waiting">等待图片</h3>
+                <h3 id="resultTitle" data-i18n="waiting">等待相机流</h3>
               </div>
               <span class="confidence" id="confidenceValue">--</span>
               <details class="tool-drawer">
@@ -251,6 +251,48 @@
                 <a class="tool-button" id="openImageLink" href="#" target="_blank" rel="noopener" aria-disabled="true" data-i18n="openImage">打开标注图</a>
                 </div>
               </details>
+            </div>
+
+            <div class="camera-monitor" id="cameraMonitor">
+              <div class="camera-monitor-head">
+                <div>
+                  <span data-i18n="cameraMonitor">相机监控</span>
+                  <strong data-i18n="cameraMonitorLive">Astra Pro 多视角实时画面</strong>
+                </div>
+                <span class="camera-monitor-badge" id="cameraMonitorBadge" data-i18n="cameraMonitorWaiting">等待相机流</span>
+              </div>
+              <div class="camera-monitor-grid" id="cameraMonitorGrid">
+                <div class="camera-feed is-primary" data-camera-feed="top">
+                  <div class="camera-feed-bar">
+                    <strong data-i18n="cameraTopView">顶部相机</strong>
+                    <span data-camera-badge="top" data-i18n="cameraMonitorWaiting">等待相机流</span>
+                  </div>
+                  <div class="camera-monitor-screen" aria-label="Top camera live monitor">
+                    <canvas id="cameraMonitorCanvasTop" data-camera-canvas="top"></canvas>
+                    <div class="camera-monitor-overlay" data-camera-overlay="top"></div>
+                  </div>
+                </div>
+                <div class="camera-feed" data-camera-feed="front">
+                  <div class="camera-feed-bar">
+                    <strong data-i18n="cameraFrontView">正面相机</strong>
+                    <span data-camera-badge="front" data-i18n="cameraMonitorStandby">待接入</span>
+                  </div>
+                  <div class="camera-monitor-screen" aria-label="Front camera live monitor">
+                    <canvas id="cameraMonitorCanvasFront" data-camera-canvas="front"></canvas>
+                    <div class="camera-monitor-overlay" data-camera-overlay="front"></div>
+                  </div>
+                </div>
+                <div class="camera-feed" data-camera-feed="side">
+                  <div class="camera-feed-bar">
+                    <strong data-i18n="cameraSideView">侧面相机</strong>
+                    <span data-camera-badge="side" data-i18n="cameraMonitorStandby">待接入</span>
+                  </div>
+                  <div class="camera-monitor-screen" aria-label="Side camera live monitor">
+                    <canvas id="cameraMonitorCanvasSide" data-camera-canvas="side"></canvas>
+                    <div class="camera-monitor-overlay" data-camera-overlay="side"></div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div class="metrics">

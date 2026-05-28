@@ -72,6 +72,20 @@ const translations = {
     actualWeightSource: "实重计费",
     volumetricWeightSource: "体积重计费",
     liveMonitor: "采集监控",
+    cameraMonitor: "相机监控",
+    cameraMonitorLive: "Astra Pro 多视角实时画面",
+    cameraMonitorWaiting: "等待相机流",
+    cameraMonitorStandby: "待接入",
+    cameraMonitorConnected: "实时检测中",
+    cameraMonitorSimulated: "模拟实时流",
+    cameraMonitorStable: "稳定可记录",
+    cameraMonitorPaused: "实时已暂停",
+    cameraMonitorOffline: "相机未连接",
+    cameraMonitorNoObject: "等待放件",
+    cameraMonitorFallback: "照片兜底",
+    cameraTopView: "顶部相机",
+    cameraFrontView: "正面相机",
+    cameraSideView: "侧面相机",
     liveFps: "FPS",
     liveUptime: "运行时长",
     liveMeasurements: "测量次数",
@@ -90,18 +104,18 @@ const translations = {
     manualHeight: "人工高度，毫米",
     cameraDistance: "相机距离，毫米",
     focal35: "等效焦距，毫米",
-    runMeasure: "开始测量",
+    runMeasure: "照片兜底测量",
     measuring: "测量中",
-    loadDemo: "加载演示图",
+    loadDemo: "加载照片演示",
     result: "结果",
-    waiting: "等待图片",
+    waiting: "等待相机流",
     measured: "已完成测量",
     needsReference: "需要参考或修正",
     length: "长",
     width: "宽",
     height: "高",
     volume: "体积",
-    emptyStage: "上传顶部照片后开始",
+    emptyStage: "照片兜底或历史标注结果显示区",
     drawHint: "拖拽框选需要修正的范围",
     adjustBox: "手动修正框",
     topView: "顶部",
@@ -279,6 +293,20 @@ const translations = {
     actualWeightSource: "Actual weight",
     volumetricWeightSource: "Volumetric weight",
     liveMonitor: "Capture monitor",
+    cameraMonitor: "Camera monitor",
+    cameraMonitorLive: "Astra Pro multi-view live",
+    cameraMonitorWaiting: "Waiting for camera stream",
+    cameraMonitorStandby: "Standby",
+    cameraMonitorConnected: "Live detection",
+    cameraMonitorSimulated: "Simulated live stream",
+    cameraMonitorStable: "Stable, ready to record",
+    cameraMonitorPaused: "Live paused",
+    cameraMonitorOffline: "Camera offline",
+    cameraMonitorNoObject: "Waiting for item",
+    cameraMonitorFallback: "Photo fallback",
+    cameraTopView: "Top camera",
+    cameraFrontView: "Front camera",
+    cameraSideView: "Side camera",
     liveFps: "FPS",
     liveUptime: "Uptime",
     liveMeasurements: "Measurements",
@@ -297,18 +325,18 @@ const translations = {
     manualHeight: "Manual height, mm",
     cameraDistance: "Camera distance, mm",
     focal35: "35mm equiv. focal, mm",
-    runMeasure: "Measure package",
+    runMeasure: "Photo fallback measure",
     measuring: "Measuring",
-    loadDemo: "Load demo image",
+    loadDemo: "Load photo demo",
     result: "Result",
-    waiting: "Waiting for image",
+    waiting: "Waiting for camera",
     measured: "Measured",
     needsReference: "Reference or correction needed",
     length: "Length",
     width: "Width",
     height: "Height",
     volume: "Volume",
-    emptyStage: "Upload a top photo to begin",
+    emptyStage: "Photo fallback or history evidence appears here",
     drawHint: "Drag to correct the detected range",
     adjustBox: "Manual box",
     topView: "Top",
@@ -486,6 +514,20 @@ const translations = {
     actualWeightSource: "Фактична вага",
     volumetricWeightSource: "Об'ємна вага",
     liveMonitor: "Монітор збору",
+    cameraMonitor: "Монітор камери",
+    cameraMonitorLive: "Мультиракурс Astra Pro",
+    cameraMonitorWaiting: "Очікування потоку камери",
+    cameraMonitorStandby: "Очікує",
+    cameraMonitorConnected: "Живе виявлення",
+    cameraMonitorSimulated: "Симуляція live-потоку",
+    cameraMonitorStable: "Стабільно, можна записати",
+    cameraMonitorPaused: "Live на паузі",
+    cameraMonitorOffline: "Камера офлайн",
+    cameraMonitorNoObject: "Очікує деталь",
+    cameraMonitorFallback: "Фото-резерв",
+    cameraTopView: "Верхня камера",
+    cameraFrontView: "Фронтальна камера",
+    cameraSideView: "Бічна камера",
     liveFps: "FPS",
     liveUptime: "Час роботи",
     liveMeasurements: "Вимірювання",
@@ -504,18 +546,18 @@ const translations = {
     manualHeight: "Висота вручну, мм",
     cameraDistance: "Відстань камери, мм",
     focal35: "Фокус 35 мм, мм",
-    runMeasure: "Виміряти",
+    runMeasure: "Виміряти фото",
     measuring: "Вимірювання",
-    loadDemo: "Завантажити демо",
+    loadDemo: "Завантажити фото-демо",
     result: "Результат",
-    waiting: "Очікування фото",
+    waiting: "Очікування камери",
     measured: "Виміряно",
     needsReference: "Потрібна опора або корекція",
     length: "Довжина",
     width: "Ширина",
     height: "Висота",
     volume: "Об'єм",
-    emptyStage: "Додайте фото зверху",
+    emptyStage: "Тут з'явиться фото-резерв або історія",
     drawHint: "Перетягніть, щоб виправити область",
     adjustBox: "Ручна рамка",
     topView: "Верх",
@@ -1196,6 +1238,18 @@ const imageStage = document.querySelector("#imageStage");
 const annotationCanvas = document.querySelector("#annotationCanvas");
 const drawHint = document.querySelector("#drawHint");
 const emptyStage = document.querySelector("#emptyStage");
+const cameraMonitor = document.querySelector("#cameraMonitor");
+const cameraMonitorBadge = document.querySelector("#cameraMonitorBadge");
+const cameraMonitorFeeds = [...document.querySelectorAll("[data-camera-feed]")].map((feed) => {
+  const role = feed.dataset.cameraFeed;
+  return {
+    role,
+    feed,
+    canvas: feed.querySelector(`[data-camera-canvas="${role}"]`),
+    badge: feed.querySelector(`[data-camera-badge="${role}"]`),
+    overlay: feed.querySelector(`[data-camera-overlay="${role}"]`),
+  };
+});
 const qualityFlags = document.querySelector("#qualityFlags");
 const recommendations = document.querySelector("#recommendations");
 const copyJsonButton = document.querySelector("#copyJsonButton");
@@ -1287,7 +1341,10 @@ function applyLanguage() {
   if (state.depthLive) {
     renderDepthLive(state.depthLive);
   } else if (state.lastResult?.dimensions) {
+    renderCameraMonitor({ status: "stopped", fallback_result: state.lastResult });
     renderWeightMonitorFromDimensions(state.lastResult.dimensions, state.lastResult.industry_profile);
+  } else {
+    renderCameraMonitor({ status: "stopped" });
   }
   if (state.depthWorkflow) {
     renderDepthWorkflow(state.depthWorkflow);
@@ -1611,6 +1668,11 @@ function renderResult(data, options = {}) {
   showTopViewButton.classList.toggle("is-active", state.activeView === "top");
   showSideViewButton.classList.toggle("is-active", state.activeView === "side");
   renderStageImage();
+  renderCameraMonitor(
+    isDepthResult(data)
+      ? { ...(state.depthLive || {}), status: state.depthLive?.status || "stable_ready", stable_result: data }
+      : { status: "stopped", config: state.depthLive?.config || {}, fallback_result: data },
+  );
   renderSideSummary(data);
   renderIndustrySummary(data.industry_profile, { autoLoadWorkflow: !options.keepView });
   renderWeightMonitorFromDimensions(data.dimensions, data.industry_profile);
@@ -1708,6 +1770,346 @@ function appendDepthEvidenceMetric(parent, label, value) {
   valueEl.textContent = value || "--";
   item.append(labelEl, valueEl);
   parent.appendChild(item);
+}
+
+function renderCameraMonitor(data = state.depthLive || {}) {
+  if (!cameraMonitorFeeds.length) {
+    return;
+  }
+  const feedResults = collectCameraMonitorResults(data);
+  const activeResult = data?.stable_result || data?.latest_result || [...feedResults.values()][0] || null;
+  const status = data?.status || (activeResult?.dimensions ? "stable_ready" : "stopped");
+  const activeIsFallback = Boolean(data?.fallback_result && !isDepthResult(data.fallback_result));
+  const rootLabel = cameraMonitorLabel(data, status, activeResult, activeIsFallback);
+  setCameraBadge(cameraMonitorBadge, rootLabel, monitorBadgeVariant(status, data, activeIsFallback, Boolean(activeResult)));
+
+  for (const feed of cameraMonitorFeeds) {
+    const result = feedResults.get(feed.role) || null;
+    const isActive = Boolean(result);
+    const isFallback = Boolean(result && data?.fallback_result === result && !isDepthResult(result));
+    const feedStatus = isActive ? status : data?.running && feed.role === normalizeCameraRole(data?.config?.role) ? "waiting_for_object" : "stopped";
+    drawCameraFeed(feed, data, result, feedStatus, isFallback, isActive);
+  }
+}
+
+function collectCameraMonitorResults(data = {}) {
+  const results = new Map();
+  const add = (result, preferredRole = null) => {
+    if (!result || typeof result !== "object") {
+      return;
+    }
+    const hasEvidence = result.dimensions || result.capture_regions || result.camera_capture || result.live_capture;
+    if (!hasEvidence) {
+      return;
+    }
+    const role = normalizeCameraRole(
+      result.camera_capture?.role ||
+        result.live_capture?.role ||
+        preferredRole ||
+        data.config?.role ||
+        "top",
+    );
+    if (!results.has(role)) {
+      results.set(role, result);
+    }
+  };
+
+  for (const key of ["camera_results", "view_results", "multi_view_results", "results"]) {
+    const items = Array.isArray(data[key]) ? data[key] : [];
+    for (const item of items) {
+      add(item, item?.role);
+    }
+  }
+  add(data.stable_result);
+  add(data.latest_result);
+  if (data.fallback_result) {
+    add(data.fallback_result, state.activeView === "side" ? "side" : "top");
+  }
+  if (!results.size && isDepthResult(state.lastResult)) {
+    add(state.lastResult);
+  }
+  return results;
+}
+
+function normalizeCameraRole(role) {
+  const value = String(role || "top").toLowerCase();
+  if (["front", "forward", "face"].includes(value)) {
+    return "front";
+  }
+  if (["side", "left", "right", "lateral"].includes(value)) {
+    return "side";
+  }
+  return "top";
+}
+
+function drawCameraFeed(feed, data, result, status, isFallback, isActive) {
+  if (!feed.canvas || !feed.overlay) {
+    return;
+  }
+  feed.feed.classList.toggle("is-active", isActive);
+  const rect = feed.canvas.getBoundingClientRect();
+  const width = Math.max(260, Math.round(rect.width || feed.canvas.parentElement?.clientWidth || 520));
+  const height = Math.max(180, Math.round(rect.height || 260));
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  feed.canvas.width = Math.round(width * dpr);
+  feed.canvas.height = Math.round(height * dpr);
+
+  const ctx = feed.canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  drawMonitorBackground(ctx, width, height, feed.role, isActive);
+
+  const stage = {
+    x: 20,
+    y: 30,
+    width: width - 40,
+    height: height - 68,
+  };
+  drawMonitorTable(ctx, stage);
+
+  const frameShape = monitorFrameShape(result);
+  const box = isActive ? monitorObjectBox(result, frameShape, stage) : null;
+  if (box) {
+    drawMonitorObject(ctx, box, status, isFallback);
+  } else if (isActive || data?.running) {
+    drawMonitorScanLine(ctx, stage, status, isActive);
+  }
+
+  const label = isActive ? cameraMonitorLabel(data, status, result, isFallback) : t("cameraMonitorStandby");
+  ctx.fillStyle = "rgba(232, 244, 239, 0.86)";
+  ctx.font = "700 12px Segoe UI, Arial, sans-serif";
+  ctx.fillText(label, stage.x + 4, height - 20);
+  setCameraBadge(feed.badge, label, monitorBadgeVariant(status, data, isFallback, isActive));
+  renderCameraMonitorOverlay(feed, result, status, data, isFallback, isActive);
+}
+
+function drawMonitorBackground(ctx, width, height, role, isActive) {
+  const gradient = ctx.createLinearGradient(0, 0, 0, height);
+  gradient.addColorStop(0, "#0a1210");
+  gradient.addColorStop(1, "#121916");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.strokeStyle = "rgba(124, 181, 167, 0.18)";
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= width; x += 36) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+    ctx.stroke();
+  }
+  for (let y = 0; y <= height; y += 36) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+  }
+  ctx.fillStyle = isActive ? "rgba(232, 244, 239, 0.12)" : "rgba(232, 244, 239, 0.07)";
+  ctx.font = "800 13px Segoe UI, Arial, sans-serif";
+  ctx.fillText(cameraRoleTitle(role), 16, 22);
+}
+
+function cameraRoleTitle(role) {
+  if (role === "front") {
+    return t("cameraFrontView");
+  }
+  if (role === "side") {
+    return t("cameraSideView");
+  }
+  return t("cameraTopView");
+}
+
+function drawMonitorTable(ctx, stage) {
+  const topY = stage.y + stage.height * 0.34;
+  const bottomY = stage.y + stage.height;
+  ctx.fillStyle = "rgba(255, 255, 255, 0.045)";
+  ctx.beginPath();
+  ctx.moveTo(stage.x + stage.width * 0.16, topY);
+  ctx.lineTo(stage.x + stage.width * 0.84, topY);
+  ctx.lineTo(stage.x + stage.width, bottomY);
+  ctx.lineTo(stage.x, bottomY);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(111, 224, 191, 0.22)";
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 6; i += 1) {
+    const t = i / 6;
+    ctx.beginPath();
+    ctx.moveTo(stage.x + stage.width * (0.16 + 0.68 * t), topY);
+    ctx.lineTo(stage.x + stage.width * t, bottomY);
+    ctx.stroke();
+  }
+  for (let i = 0; i <= 5; i += 1) {
+    const t = i / 5;
+    const y = topY + (bottomY - topY) * t;
+    const inset = stage.width * 0.16 * (1 - t);
+    ctx.beginPath();
+    ctx.moveTo(stage.x + inset, y);
+    ctx.lineTo(stage.x + stage.width - inset, y);
+    ctx.stroke();
+  }
+}
+
+function monitorFrameShape(result) {
+  const capture = result?.camera_capture || {};
+  const shape = capture.frame_shape || {};
+  const intrinsics = capture.intrinsics || {};
+  return {
+    width: Number(shape.width || intrinsics.width || 640),
+    height: Number(shape.height || intrinsics.height || 480),
+  };
+}
+
+function monitorObjectBox(result, frameShape, stage) {
+  const regions = result?.capture_regions || {};
+  const roi = Array.isArray(regions.roi) ? regions.roi.map(Number) : null;
+  if (roi?.length === 4 && frameShape.width > 0 && frameShape.height > 0) {
+    const left = Math.min(roi[0], roi[2]);
+    const top = Math.min(roi[1], roi[3]);
+    const right = Math.max(roi[0], roi[2]);
+    const bottom = Math.max(roi[1], roi[3]);
+    return {
+      x: stage.x + clampNumber(left / frameShape.width, 0, 1) * stage.width,
+      y: stage.y + clampNumber(top / frameShape.height, 0, 1) * stage.height,
+      width: clampNumber((right - left) / frameShape.width, 0.12, 0.88) * stage.width,
+      height: clampNumber((bottom - top) / frameShape.height, 0.12, 0.88) * stage.height,
+    };
+  }
+
+  const dimensions = result?.dimensions || {};
+  const length = Number(dimensions.length_mm);
+  const width = Number(dimensions.width_mm);
+  if (![length, width].every((value) => Number.isFinite(value) && value > 0)) {
+    return null;
+  }
+  const aspect = clampNumber(length / Math.max(width, 1), 0.55, 2.65);
+  let boxWidth = stage.width * clampNumber(length / 1200, 0.28, 0.62);
+  let boxHeight = boxWidth / aspect;
+  if (boxHeight > stage.height * 0.52) {
+    boxHeight = stage.height * 0.52;
+    boxWidth = boxHeight * aspect;
+  }
+  return {
+    x: stage.x + (stage.width - boxWidth) / 2,
+    y: stage.y + stage.height * 0.58 - boxHeight / 2,
+    width: boxWidth,
+    height: boxHeight,
+  };
+}
+
+function drawMonitorObject(ctx, box, status, isFallback) {
+  const stable = status === "stable_ready";
+  const needsReview = status === "needs_review" || isFallback;
+  const stroke = stable ? "#55e6b6" : needsReview ? "#f4c35a" : "#74c7ff";
+  ctx.save();
+  ctx.fillStyle = stable ? "rgba(85, 230, 182, 0.12)" : "rgba(116, 199, 255, 0.11)";
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = 2;
+  if (isFallback) {
+    ctx.setLineDash([8, 6]);
+  }
+  ctx.fillRect(box.x, box.y, box.width, box.height);
+  ctx.strokeRect(box.x, box.y, box.width, box.height);
+  ctx.setLineDash([]);
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
+  ctx.beginPath();
+  ctx.moveTo(box.x, box.y);
+  ctx.lineTo(box.x + box.width * 0.12, box.y - 14);
+  ctx.lineTo(box.x + box.width * 1.12, box.y - 14);
+  ctx.lineTo(box.x + box.width, box.y);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawMonitorScanLine(ctx, stage, status, isActive = true) {
+  const progress = ((Date.now() / 22) % stage.height) + stage.y;
+  ctx.strokeStyle = status === "error" ? "rgba(236, 95, 86, 0.75)" : isActive ? "rgba(111, 224, 191, 0.6)" : "rgba(132, 143, 138, 0.32)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(stage.x + 10, progress);
+  ctx.lineTo(stage.x + stage.width - 10, progress);
+  ctx.stroke();
+}
+
+function cameraMonitorLabel(data, status, result, isFallback) {
+  if (isFallback) {
+    return t("cameraMonitorFallback");
+  }
+  if (status === "stable_ready" && result?.dimensions) {
+    return t("cameraMonitorStable");
+  }
+  if (data?.simulation_active) {
+    return t("cameraMonitorSimulated");
+  }
+  if (data?.running) {
+    return t("cameraMonitorConnected");
+  }
+  if (!result?.dimensions) {
+    return status === "stopped" ? t("cameraMonitorPaused") : t("cameraMonitorNoObject");
+  }
+  return labelFrom(liveStatusLabels, status);
+}
+
+function setCameraBadge(target, label, variant = "standby") {
+  if (!target) {
+    return;
+  }
+  target.textContent = label || t("cameraMonitorWaiting");
+  target.className = "camera-monitor-badge";
+  if (variant === "ready") {
+    target.classList.add("is-ready");
+  } else if (variant === "warning") {
+    target.classList.add("is-warning");
+  } else if (variant === "error") {
+    target.classList.add("is-error");
+  }
+}
+
+function monitorBadgeVariant(status, data, isFallback, isActive) {
+  if (!isActive) {
+    return "standby";
+  }
+  if (status === "error") {
+    return "error";
+  }
+  if (status === "stable_ready" && !isFallback) {
+    return "ready";
+  }
+  if (data?.simulation_active || isFallback || status === "needs_review") {
+    return "warning";
+  }
+  return "standby";
+}
+
+function renderCameraMonitorOverlay(feed, result, status, data, isFallback, isActive) {
+  feed.overlay.innerHTML = "";
+  const dimensions = result?.dimensions || {};
+  const chips = [
+    cameraRoleTitle(feed.role),
+    isActive ? labelFrom(liveStatusLabels, status) || t("cameraMonitorWaiting") : t("cameraMonitorStandby"),
+    dimensions.length_mm ? `${formatMm(dimensions.length_mm)} x ${formatMm(dimensions.width_mm)} x ${formatMm(dimensions.height_mm)}` : t("cameraMonitorNoObject"),
+    data?.config?.backend || result?.camera_capture?.backend || "--",
+  ];
+  const serial = result?.camera_capture?.serial_number;
+  if (serial) {
+    chips.push(serial);
+  }
+  if (isFallback) {
+    chips.push(t("cameraMonitorFallback"));
+  }
+  for (const chip of chips) {
+    const item = document.createElement("span");
+    item.textContent = chip;
+    feed.overlay.appendChild(item);
+  }
+}
+
+function clampNumber(value, min, max) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) {
+    return min;
+  }
+  return Math.min(max, Math.max(min, number));
 }
 
 function renderSideSummary(data) {
@@ -2154,6 +2556,7 @@ function renderDepthLive(data) {
   );
   appendDepthPill(liveStatusGrid, t("liveSimulation"), data.simulation_active ? t("ready") : t("missing"), !data.simulation_active);
   renderLiveMonitor(data);
+  renderCameraMonitor(data);
   renderStationStrip();
 
   startLiveButton.disabled = Boolean(data.running);
@@ -2194,6 +2597,7 @@ function renderDepthLiveError(error) {
     liveMonitorGrid.innerHTML = "";
   }
   appendDepthPill(liveStatusGrid, t("liveState"), t("live_error"), false);
+  renderCameraMonitor({ status: "error", last_error: String(error.message || error) });
   liveStateSummary.innerHTML = "";
   const item = document.createElement("div");
   item.className = "recommendation";
@@ -2970,7 +3374,10 @@ showSideViewButton.addEventListener("click", () => {
 });
 adjustTopButton.addEventListener("click", toggleDrawing);
 annotatedImage.addEventListener("load", resizeCanvas);
-window.addEventListener("resize", resizeCanvas);
+window.addEventListener("resize", () => {
+  resizeCanvas();
+  renderCameraMonitor(state.depthLive || { status: "stopped" });
+});
 annotationCanvas.addEventListener("pointerdown", (event) => {
   if (!state.drawing.active) {
     return;
@@ -2992,6 +3399,7 @@ annotationCanvas.addEventListener("pointercancel", () => stopDrawing());
 
 applyLanguage();
 applyTheme();
+renderCameraMonitor({ status: "stopped" });
 loadVolumetricRules();
 loadDepthStatus();
 startDepthLive({ silent: true });
