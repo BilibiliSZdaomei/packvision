@@ -70,6 +70,9 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert 'id="liveStatusGrid"' in html
     assert 'id="liveMonitorGrid"' in html
     assert 'id="confirmLiveButton"' in html
+    assert 'class="station-strip"' in html
+    assert 'id="stationLiveStatus"' in html
+    assert 'id="stationChargeableValue"' in html
     assert 'id="actualWeightInput"' in html
     assert 'id="volumetricRuleSelect"' in html
     assert 'id="weightMonitorPanel"' in html
@@ -87,6 +90,8 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert "/api/weight/volumetric-rules" in js
     assert "renderLiveMonitor" in js
     assert "renderWeightMonitorFromDimensions" in js
+    assert "renderStationStrip" in js
+    assert "renderDepthEvidenceStage" in js
     assert "startDepthLive({ silent: true })" in js
     assert "buildDepthCapturePayload" in js
     assert "cameraPoseLabels" in js
@@ -96,6 +101,8 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert ".depth-inline-card" in css
     assert ".live-workstation" in css
     assert ".live-monitor-grid" in css
+    assert ".station-strip" in css
+    assert ".depth-evidence" in css
     assert ".weight-monitor-panel" in css
     assert ".workflow-fields" in css
     assert ".workflow-controls" in css

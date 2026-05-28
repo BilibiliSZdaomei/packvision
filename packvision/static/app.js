@@ -49,6 +49,17 @@ const translations = {
     darkMaterial: "深黑吸光",
     deformableMaterial: "易变形软材",
     actualWeight: "实重，kg",
+    stationStatus: "工位状态",
+    stationOrder: "当前单号",
+    stationBilling: "计费重",
+    stationReview: "质检结论",
+    reviewPass: "自动通过",
+    reviewPending: "等待结果",
+    reviewRequired: "需要复核",
+    depthEvidenceTitle: "Astra Pro 深度证据",
+    depthEvidenceBadge: "实时深度流",
+    evidenceStatus: "证据状态",
+    evidenceSavedAfterConfirm: "记录后保存点云证据",
     volumetricRule: "体积重规则",
     standard6000: "标准仓配 6000",
     express5000: "快递/空运 5000",
@@ -245,6 +256,17 @@ const translations = {
     darkMaterial: "Dark absorbing",
     deformableMaterial: "Deformable",
     actualWeight: "Weight, kg",
+    stationStatus: "Station status",
+    stationOrder: "Current order",
+    stationBilling: "Chargeable",
+    stationReview: "QA result",
+    reviewPass: "Auto pass",
+    reviewPending: "Waiting",
+    reviewRequired: "Review needed",
+    depthEvidenceTitle: "Astra Pro depth evidence",
+    depthEvidenceBadge: "Live depth stream",
+    evidenceStatus: "Evidence status",
+    evidenceSavedAfterConfirm: "Point cloud saved after record",
     volumetricRule: "Volumetric rule",
     standard6000: "Standard warehouse 6000",
     express5000: "Express / air 5000",
@@ -441,6 +463,17 @@ const translations = {
     darkMaterial: "Темний поглинаючий",
     deformableMaterial: "Деформівний",
     actualWeight: "Вага, кг",
+    stationStatus: "Стан станції",
+    stationOrder: "Поточний номер",
+    stationBilling: "Платна вага",
+    stationReview: "QA результат",
+    reviewPass: "Авто пройдено",
+    reviewPending: "Очікування",
+    reviewRequired: "Потрібна перевірка",
+    depthEvidenceTitle: "Доказ глибини Astra Pro",
+    depthEvidenceBadge: "Потік глибини",
+    evidenceStatus: "Стан доказу",
+    evidenceSavedAfterConfirm: "Хмара точок після запису",
     volumetricRule: "Правило об'ємної ваги",
     standard6000: "Стандарт склад 6000",
     express5000: "Експрес / авіа 5000",
@@ -1145,6 +1178,10 @@ const measureButton = document.querySelector("#measureButton");
 const demoButton = document.querySelector("#demoButton");
 const orderIdInput = document.querySelector("#orderId");
 const barcodeTextInput = document.querySelector("#barcodeText");
+const stationLiveStatus = document.querySelector("#stationLiveStatus");
+const stationOrderValue = document.querySelector("#stationOrderValue");
+const stationChargeableValue = document.querySelector("#stationChargeableValue");
+const stationReviewValue = document.querySelector("#stationReviewValue");
 const actualWeightInput = document.querySelector("#actualWeightInput");
 const volumetricRuleSelect = document.querySelector("#volumetricRuleSelect");
 const weightMonitorPanel = document.querySelector("#weightMonitorPanel");
@@ -1231,6 +1268,7 @@ function applyLanguage() {
     node.textContent = t(node.dataset.i18n);
   });
   renderVolumetricRuleOptions(volumetricRuleSelect?.value || "standard_6000");
+  renderStationStrip();
   localStorage.setItem("packvision.lang", state.lang);
   setFileName(topImage, topFileName, "noFile");
   setFileName(sideImage, sideFileName, "optional");
@@ -1546,6 +1584,7 @@ function showError(error) {
   qualityFlags.innerHTML = "";
   sideSummary.textContent = "";
   industrySummary.innerHTML = "";
+  renderStationStrip({ error });
   const badge = document.createElement("span");
   badge.className = "flag";
   badge.textContent = String(error.message || error);
@@ -1575,6 +1614,7 @@ function renderResult(data, options = {}) {
   renderSideSummary(data);
   renderIndustrySummary(data.industry_profile, { autoLoadWorkflow: !options.keepView });
   renderWeightMonitorFromDimensions(data.dimensions, data.industry_profile);
+  renderStationStrip();
   renderFlags(data);
 }
 
@@ -1586,17 +1626,88 @@ function renderStageImage() {
   if (url) {
     annotatedImage.src = url;
     annotatedImage.style.display = "block";
+    emptyStage.classList.remove("is-depth-feed");
     emptyStage.style.display = "none";
     openImageLink.href = url;
     openImageLink.removeAttribute("aria-disabled");
     resizeCanvas();
+  } else if (isDepthResult(state.lastResult)) {
+    annotatedImage.removeAttribute("src");
+    annotatedImage.style.display = "none";
+    emptyStage.style.display = "grid";
+    emptyStage.classList.add("is-depth-feed");
+    renderDepthEvidenceStage(state.lastResult);
+    openImageLink.href = "#";
+    openImageLink.setAttribute("aria-disabled", "true");
   } else {
     annotatedImage.removeAttribute("src");
     annotatedImage.style.display = "none";
     emptyStage.style.display = "grid";
+    emptyStage.classList.remove("is-depth-feed");
+    emptyStage.textContent = t("emptyStage");
     openImageLink.href = "#";
     openImageLink.setAttribute("aria-disabled", "true");
   }
+}
+
+function isDepthResult(data) {
+  return Boolean(
+    data?.camera_capture ||
+      data?.live_capture ||
+      String(data?.measurement_source || "").startsWith("depth_") ||
+      data?.artifacts?.depth_source,
+  );
+}
+
+function renderDepthEvidenceStage(data) {
+  emptyStage.innerHTML = "";
+  const shell = document.createElement("div");
+  shell.className = "depth-evidence";
+
+  const head = document.createElement("div");
+  head.className = "depth-evidence-head";
+  const titleWrap = document.createElement("div");
+  const label = document.createElement("span");
+  const title = document.createElement("strong");
+  label.textContent = t("evidenceStatus");
+  title.textContent = t("depthEvidenceTitle");
+  titleWrap.append(label, title);
+  const badge = document.createElement("div");
+  badge.className = "depth-evidence-badge";
+  badge.textContent = t("depthEvidenceBadge");
+  head.append(titleWrap, badge);
+
+  const grid = document.createElement("div");
+  grid.className = "depth-evidence-grid";
+  appendDepthEvidenceMetric(grid, t("length"), formatMm(data?.dimensions?.length_mm));
+  appendDepthEvidenceMetric(grid, t("width"), formatMm(data?.dimensions?.width_mm));
+  appendDepthEvidenceMetric(grid, t("height"), formatMm(data?.dimensions?.height_mm));
+
+  const foot = document.createElement("div");
+  foot.className = "depth-evidence-foot";
+  for (const item of [
+    data?.camera_capture?.backend || data?.measurement_source || "--",
+    `${t("confidence")} ${Math.round((data?.confidence || 0) * 100)}%`,
+    data?.history_saved ? t("savedToHistory") : t("evidenceSavedAfterConfirm"),
+  ]) {
+    const pill = document.createElement("span");
+    pill.textContent = item;
+    foot.appendChild(pill);
+  }
+
+  shell.append(head, grid, foot);
+  emptyStage.appendChild(shell);
+}
+
+function appendDepthEvidenceMetric(parent, label, value) {
+  const item = document.createElement("div");
+  item.className = "depth-evidence-metric";
+  const labelEl = document.createElement("span");
+  const valueEl = document.createElement("strong");
+  labelEl.textContent = label;
+  valueEl.textContent = value || "--";
+  item.append(labelEl, valueEl);
+  parent.appendChild(item);
 }
 
 function renderSideSummary(data) {
@@ -1669,6 +1780,7 @@ function renderWeightMonitorFromDimensions(dimensions, profile = null) {
     label.textContent = t("weightMonitor");
     value.textContent = t("weightMonitorWaiting");
     weightMonitorPanel.append(label, value);
+    renderStationStrip();
     return;
   }
   const rule = profile?.volumetric_rule || currentVolumetricRule();
@@ -1682,6 +1794,45 @@ function renderWeightMonitorFromDimensions(dimensions, profile = null) {
   appendSummaryCell(weightMonitorPanel, t("actualWeight"), formatKg(actual));
   appendSummaryCell(weightMonitorPanel, t("volumetricWeight"), formatKg(volumetric));
   appendSummaryCell(weightMonitorPanel, t("chargeableWeight"), `${formatKg(chargeable)} · ${billingSourceLabel(source)}`);
+  renderStationStrip();
+}
+
+function previewChargeableWeight() {
+  const result = state.lastResult || state.depthLive?.stable_result || state.depthLive?.latest_result;
+  const profile = state.lastResult?.industry_profile;
+  const volume = volumeFromDimensions(result?.dimensions);
+  if (!volume && !profile?.chargeable_weight_kg) {
+    return null;
+  }
+  if (profile?.chargeable_weight_kg) {
+    return profile.chargeable_weight_kg;
+  }
+  const rule = currentVolumetricRule();
+  const actual = Number(actualWeightInput?.value);
+  const volumetric = volume / Number(rule.divisor_l_per_kg || 6);
+  return Math.max(Number.isFinite(actual) && actual > 0 ? actual : 0, volumetric);
+}
+
+function renderStationStrip(options = {}) {
+  if (!stationLiveStatus || !stationOrderValue || !stationChargeableValue || !stationReviewValue) {
+    return;
+  }
+  const liveStatus = options.error
+    ? t("live_error")
+    : labelFrom(liveStatusLabels, state.depthLive?.status || (state.lastResult ? "stable_ready" : "stopped"));
+  const order = String(orderIdInput?.value || barcodeTextInput?.value || state.lastResult?.order_id || state.lastResult?.barcode_text || "").trim();
+  const chargeable = previewChargeableWeight();
+  const confidence = Number(state.lastResult?.confidence || 0);
+  const needsReview =
+    options.error ||
+    state.lastResult?.status !== "measured" ||
+    confidence < 0.65 ||
+    (state.lastResult?.industry_profile?.handling_flags || []).includes("manual_review_recommended");
+
+  stationLiveStatus.textContent = liveStatus;
+  stationOrderValue.textContent = order || "--";
+  stationChargeableValue.textContent = formatKg(chargeable);
+  stationReviewValue.textContent = state.lastResult ? (needsReview ? t("reviewRequired") : t("reviewPass")) : t("reviewPending");
 }
 
 function volumeFromDimensions(dimensions) {
@@ -2003,6 +2154,7 @@ function renderDepthLive(data) {
   );
   appendDepthPill(liveStatusGrid, t("liveSimulation"), data.simulation_active ? t("ready") : t("missing"), !data.simulation_active);
   renderLiveMonitor(data);
+  renderStationStrip();
 
   startLiveButton.disabled = Boolean(data.running);
   stopLiveButton.disabled = !data.running;
@@ -2797,6 +2949,7 @@ reviewSearch.addEventListener("keydown", (event) => {
   }
 });
 for (const input of [orderIdInput, barcodeTextInput]) {
+  input.addEventListener("input", renderStationStrip);
   input.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
       event.preventDefault();
