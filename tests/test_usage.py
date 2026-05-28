@@ -56,3 +56,13 @@ def test_usage_counts_depth_measure_capture_as_measurement_call():
 
     after = usage_summary(endpoint=endpoint)["measurement_calls"]
     assert after == before + 1
+
+
+def test_usage_counts_depth_live_confirm_as_measurement_call():
+    endpoint = "/api/depth/live/confirm"
+    before = usage_summary(endpoint=endpoint)["measurement_calls"]
+
+    record_usage_event(endpoint=endpoint, method="POST", status_code=200)
+
+    after = usage_summary(endpoint=endpoint)["measurement_calls"]
+    assert after == before + 1

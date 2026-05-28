@@ -162,6 +162,22 @@ const translations = {
     missing: "未就绪",
     installed: "已安装",
     unavailable: "不可用",
+    liveWorkstation: "实时工作站",
+    liveWorkstationText: "实时检测中",
+    liveState: "实时状态",
+    liveFrames: "帧数",
+    liveStable: "稳定帧",
+    liveSimulation: "模拟",
+    confirmCurrentResult: "记录当前稳定结果",
+    pauseLive: "暂停实时",
+    resumeLive: "继续实时",
+    liveCandidate: "当前候选",
+    waiting_for_object: "等待放件",
+    stable_ready: "稳定可记录",
+    measuring_live: "检测中",
+    needs_review_live: "需复核",
+    live_stopped: "已暂停",
+    live_error: "实时异常",
   },
   en: {
     localLab: "Local warehouse station",
@@ -326,6 +342,22 @@ const translations = {
     missing: "Missing",
     installed: "Installed",
     unavailable: "Unavailable",
+    liveWorkstation: "Live workstation",
+    liveWorkstationText: "Live detection",
+    liveState: "Live state",
+    liveFrames: "Frames",
+    liveStable: "Stable frames",
+    liveSimulation: "Simulation",
+    confirmCurrentResult: "Record stable result",
+    pauseLive: "Pause live",
+    resumeLive: "Resume live",
+    liveCandidate: "Current candidate",
+    waiting_for_object: "Waiting for item",
+    stable_ready: "Stable",
+    measuring_live: "Measuring",
+    needs_review_live: "Needs review",
+    live_stopped: "Paused",
+    live_error: "Live error",
   },
   uk: {
     localLab: "Локальна станція складу",
@@ -490,6 +522,22 @@ const translations = {
     missing: "Немає",
     installed: "Встановлено",
     unavailable: "Недоступно",
+    liveWorkstation: "Жива станція",
+    liveWorkstationText: "Живе виявлення",
+    liveState: "Стан",
+    liveFrames: "Кадри",
+    liveStable: "Стабільні кадри",
+    liveSimulation: "Симуляція",
+    confirmCurrentResult: "Записати стабільний результат",
+    pauseLive: "Пауза",
+    resumeLive: "Продовжити",
+    liveCandidate: "Поточний кандидат",
+    waiting_for_object: "Очікує деталь",
+    stable_ready: "Стабільно",
+    measuring_live: "Вимірювання",
+    needs_review_live: "На перевірку",
+    live_stopped: "Пауза",
+    live_error: "Помилка live",
   },
 };
 
@@ -832,6 +880,36 @@ const probeStatusLabels = {
   },
 };
 
+const liveStatusLabels = {
+  zh: {
+    starting: "启动中",
+    waiting_for_object: "等待放件",
+    measuring: "检测中",
+    stable_ready: "稳定可记录",
+    needs_review: "需复核",
+    stopped: "已暂停",
+    error: "实时异常",
+  },
+  en: {
+    starting: "Starting",
+    waiting_for_object: "Waiting for item",
+    measuring: "Measuring",
+    stable_ready: "Stable",
+    needs_review: "Needs review",
+    stopped: "Paused",
+    error: "Live error",
+  },
+  uk: {
+    starting: "Запуск",
+    waiting_for_object: "Очікує деталь",
+    measuring: "Вимірювання",
+    stable_ready: "Стабільно",
+    needs_review: "На перевірку",
+    stopped: "Пауза",
+    error: "Помилка live",
+  },
+};
+
 const probeActionLabels = {
   zh: {
     connect_camera_driver: "连接 Astra Pro，并确认 Windows 驱动已安装。",
@@ -994,6 +1072,8 @@ const state = {
   depthStatus: null,
   depthProbe: null,
   depthWorkflow: null,
+  depthLive: null,
+  depthLiveTimer: null,
   validationPlan: null,
   aiPlugins: null,
   usageSummary: null,
@@ -1039,6 +1119,11 @@ const industrySummary = document.querySelector("#industrySummary");
 const depthStatusGrid = document.querySelector("#depthStatusGrid");
 const refreshDepthStatusButton = document.querySelector("#refreshDepthStatusButton");
 const probeDepthCaptureButton = document.querySelector("#probeDepthCaptureButton");
+const liveStatusGrid = document.querySelector("#liveStatusGrid");
+const liveStateSummary = document.querySelector("#liveStateSummary");
+const startLiveButton = document.querySelector("#startLiveButton");
+const stopLiveButton = document.querySelector("#stopLiveButton");
+const confirmLiveButton = document.querySelector("#confirmLiveButton");
 const loadDepthWorkflowButton = document.querySelector("#loadDepthWorkflowButton");
 const workflowAutoSummary = document.querySelector("#workflowAutoSummary");
 const workflowPackageSelect = document.querySelector("#workflowPackageSelect");
@@ -1106,6 +1191,9 @@ function applyLanguage() {
   }
   if (state.depthProbe) {
     renderDepthProbe(state.depthProbe);
+  }
+  if (state.depthLive) {
+    renderDepthLive(state.depthLive);
   }
   if (state.depthWorkflow) {
     renderDepthWorkflow(state.depthWorkflow);
@@ -1615,6 +1703,174 @@ function renderDepthProbe(data) {
     item.textContent = `${t("nextAction")}: ${labelFrom(probeActionLabels, action) || fallback}`;
     depthProbeSummary.appendChild(item);
   });
+}
+
+async function startDepthLive(options = {}) {
+  if (!liveStatusGrid) {
+    return;
+  }
+  startLiveButton.disabled = true;
+  try {
+    const response = await fetch("/api/depth/live/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        backend: "auto",
+        interval_ms: 700,
+        allow_simulation: true,
+        measurement_mode: "auto",
+        stable_required_frames: 3,
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.detail || response.statusText);
+    }
+    state.depthLive = data;
+    renderDepthLive(data);
+    scheduleDepthLivePolling();
+  } catch (error) {
+    renderDepthLiveError(error);
+    if (!options.silent) {
+      showError(error);
+    }
+  } finally {
+    startLiveButton.disabled = false;
+  }
+}
+
+async function stopDepthLive() {
+  stopLiveButton.disabled = true;
+  try {
+    const response = await fetch("/api/depth/live/stop", { method: "POST" });
+    const data = await response.json();
+    state.depthLive = data;
+    renderDepthLive(data);
+    clearDepthLivePolling();
+  } finally {
+    stopLiveButton.disabled = false;
+  }
+}
+
+function scheduleDepthLivePolling() {
+  clearDepthLivePolling();
+  state.depthLiveTimer = window.setInterval(loadDepthLiveState, 1000);
+}
+
+function clearDepthLivePolling() {
+  if (state.depthLiveTimer) {
+    window.clearInterval(state.depthLiveTimer);
+    state.depthLiveTimer = null;
+  }
+}
+
+async function loadDepthLiveState() {
+  if (!liveStatusGrid) {
+    return;
+  }
+  const response = await fetch("/api/depth/live/state");
+  if (!response.ok) {
+    return;
+  }
+  const data = await response.json();
+  state.depthLive = data;
+  renderDepthLive(data);
+  if (!data.running) {
+    clearDepthLivePolling();
+  }
+}
+
+function renderDepthLive(data) {
+  liveStatusGrid.innerHTML = "";
+  const status = data.status || "stopped";
+  appendDepthPill(liveStatusGrid, t("liveState"), labelFrom(liveStatusLabels, status), data.can_confirm || status === "measuring");
+  appendDepthPill(liveStatusGrid, t("liveFrames"), String(data.frame_count || 0), Number(data.frame_count || 0) > 0);
+  appendDepthPill(
+    liveStatusGrid,
+    t("liveStable"),
+    `${data.stable_frame_count || 0}/${data.stable_required_frames || 3}`,
+    Boolean(data.can_confirm),
+  );
+  appendDepthPill(liveStatusGrid, t("liveSimulation"), data.simulation_active ? t("ready") : t("missing"), !data.simulation_active);
+
+  startLiveButton.disabled = Boolean(data.running);
+  stopLiveButton.disabled = !data.running;
+  confirmLiveButton.disabled = !data.can_confirm;
+
+  liveStateSummary.innerHTML = "";
+  const result = data.stable_result || data.latest_result;
+  if (result?.dimensions && Object.keys(result.dimensions).length) {
+    const card = document.createElement("div");
+    card.className = "depth-demo-card";
+    appendSummaryCell(card, t("liveCandidate"), labelFrom(liveStatusLabels, status));
+    appendSummaryCell(card, t("length"), formatMm(result.dimensions.length_mm));
+    appendSummaryCell(card, t("width"), formatMm(result.dimensions.width_mm));
+    appendSummaryCell(card, t("height"), formatMm(result.dimensions.height_mm));
+    liveStateSummary.appendChild(card);
+  } else if (data.last_error) {
+    const item = document.createElement("div");
+    item.className = "recommendation";
+    item.textContent = data.last_error;
+    liveStateSummary.appendChild(item);
+  }
+
+  if (data.stable_result?.dimensions && !state.drawing.active) {
+    renderResult(data.stable_result, { keepView: true });
+  }
+}
+
+function renderDepthLiveError(error) {
+  if (!liveStatusGrid) {
+    return;
+  }
+  liveStatusGrid.innerHTML = "";
+  appendDepthPill(liveStatusGrid, t("liveState"), t("live_error"), false);
+  liveStateSummary.innerHTML = "";
+  const item = document.createElement("div");
+  item.className = "recommendation";
+  item.textContent = String(error.message || error);
+  liveStateSummary.appendChild(item);
+}
+
+async function confirmLiveResult() {
+  confirmLiveButton.disabled = true;
+  try {
+    const response = await fetch("/api/depth/live/confirm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(buildLiveConfirmPayload()),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.detail || response.statusText);
+    }
+    renderResult(data);
+    await loadHistory();
+    await loadReviewSamples();
+    await loadUsageSummary();
+  } catch (error) {
+    showError(error);
+  } finally {
+    confirmLiveButton.disabled = !state.depthLive?.can_confirm;
+  }
+}
+
+function buildLiveConfirmPayload() {
+  const payload = { require_stable: true };
+  for (const key of ["order_id", "barcode_text", "part_category", "package_hint", "material_hint"]) {
+    const value = String(form.elements[key]?.value || "").trim();
+    if (value) {
+      payload[key] = value;
+    }
+  }
+  if (!payload.order_id && payload.barcode_text) {
+    payload.order_id = payload.barcode_text;
+  }
+  const actualWeight = Number(form.elements.actual_weight_kg?.value);
+  if (Number.isFinite(actualWeight) && actualWeight > 0) {
+    payload.actual_weight_kg = actualWeight;
+  }
+  return payload;
 }
 
 async function loadDepthWorkflow(options = {}) {
@@ -2297,6 +2553,9 @@ refreshReviewButton.addEventListener("click", loadReviewSamples);
 refreshUsageButton.addEventListener("click", loadUsageSummary);
 refreshDepthStatusButton.addEventListener("click", loadDepthStatus);
 probeDepthCaptureButton.addEventListener("click", probeDepthCapture);
+startLiveButton.addEventListener("click", () => startDepthLive());
+stopLiveButton.addEventListener("click", stopDepthLive);
+confirmLiveButton.addEventListener("click", confirmLiveResult);
 loadDepthWorkflowButton.addEventListener("click", loadDepthWorkflow);
 for (const select of [workflowPackageSelect, workflowMaterialSelect, workflowCameraCountSelect]) {
   select.addEventListener("change", () => {
@@ -2366,6 +2625,7 @@ annotationCanvas.addEventListener("pointercancel", () => stopDrawing());
 applyLanguage();
 applyTheme();
 loadDepthStatus();
+startDepthLive({ silent: true });
 loadHistory();
 loadReviewSamples();
 loadUsageSummary();

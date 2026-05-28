@@ -351,6 +351,7 @@ input {
 }
 
 .depth-inline-card,
+.live-workstation,
 .order-card,
 .parts-card,
 .mode-block {
@@ -384,6 +385,46 @@ input {
 
 .depth-inline-card .depth-status-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.live-workstation {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 9%, transparent), transparent 44%),
+    var(--surface-2);
+}
+
+.live-head,
+.live-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.live-head {
+  justify-content: space-between;
+}
+
+.live-head strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 1rem;
+}
+
+.live-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.primary-action.compact {
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 7px;
+  font-size: 0.9rem;
+}
+
+.live-state-summary {
+  display: grid;
+  gap: 8px;
 }
 
 .data-page {

@@ -16,6 +16,7 @@ MEASUREMENT_ENDPOINTS = {
     "/api/measure",
     "/api/depth/demo-object",
     "/api/depth/demo-object/save",
+    "/api/depth/live/confirm",
     "/api/depth/measure-capture",
     "/api/depth/measure-roi",
     "/api/depth/measure-object",

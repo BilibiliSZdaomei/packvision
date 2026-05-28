@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 from io import BytesIO
 from PIL import Image, ImageDraw
 import pytest
+import time
 from uuid import uuid4
 
 from packvision.app import create_app
@@ -415,6 +416,50 @@ def test_depth_measure_capture_auto_finds_foreground_without_worker_selection(mo
 
     history = client.get("/api/history", params={"order_id": order_id})
     assert any(item["measurement_id"] == body["measurement_id"] for item in history.json()["items"])
+
+
+def test_depth_live_stream_can_confirm_stable_candidate_without_hardware():
+    client = TestClient(create_app())
+    order_id = f"LIVE-{uuid4().hex[:8]}"
+    try:
+        start = client.post(
+            "/api/depth/live/start",
+            json={
+                "backend": "simulated",
+                "interval_ms": 50,
+                "stable_required_frames": 2,
+            },
+        )
+        assert start.status_code == 200
+
+        state = {}
+        for _ in range(30):
+            state = client.get("/api/depth/live/state").json()
+            if state.get("can_confirm"):
+                break
+            time.sleep(0.06)
+
+        assert state["running"] is True
+        assert state["status"] in {"stable_ready", "needs_review"}
+        assert state["can_confirm"] is True
+        assert state["stable_result"]["dimensions"]["length_mm"] > 0
+        assert state["simulation_active"] is True
+
+        confirm = client.post(
+            "/api/depth/live/confirm",
+            json={"order_id": order_id, "barcode_text": order_id, "require_stable": True},
+        )
+        body = confirm.json()
+        assert confirm.status_code == 200
+        assert body["measurement_source"] == "depth_live_confirm"
+        assert body["history_saved"] is True
+        assert body["live_confirmation"]["confirmed_from"] == "depth_live_stream"
+        assert body["artifacts"]["depth_point_cloud_url"].endswith(".npz")
+
+        history = client.get("/api/history", params={"order_id": order_id})
+        assert any(item["measurement_id"] == body["measurement_id"] for item in history.json()["items"])
+    finally:
+        client.post("/api/depth/live/stop")
 
 
 def test_depth_fuse_measurements_endpoint_saves_traceable_result():

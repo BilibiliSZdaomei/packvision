@@ -39,6 +39,7 @@ from packvision.services.depth_geometry import (
     measure_depth_object_mask,
     measure_depth_roi,
 )
+from packvision.services.depth_live import DepthLiveConfig, DepthLiveError, DepthLiveManager
 from packvision.services.depth_quality import DepthQualityError, analyze_depth_quality
 from packvision.services.astra_tutorials import build_astra_tutorial_playbook
 from packvision.services.depth_simulation import (
@@ -178,6 +179,25 @@ class DepthMeasureCapturePayload(DepthTraceabilityPayload):
     save_depth_evidence: bool = True
 
 
+class DepthLiveStartPayload(BaseModel):
+    backend: str = "auto"
+    timeout_ms: int = 1500
+    camera_id: str | None = None
+    role: str | None = None
+    interval_ms: int = 700
+    allow_simulation: bool = True
+    measurement_mode: str = "auto"
+    min_valid_depth_mm: float = 50.0
+    max_valid_depth_mm: float = 6000.0
+    object_min_height_mm: float = 30.0
+    footprint_method: str = "principal_axes"
+    stable_required_frames: int = 3
+
+
+class DepthLiveConfirmPayload(DepthTraceabilityPayload):
+    require_stable: bool = True
+
+
 class DepthFusionPayload(DepthTraceabilityPayload):
     view_measurements: list[dict[str, Any]]
     strategy: str = "conservative_max"
@@ -219,6 +239,7 @@ def create_app() -> FastAPI:
     dirs = ensure_data_dirs()
     init_db()
     init_usage_db()
+    depth_live_manager = DepthLiveManager(capture_depth_once)
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
     app.mount("/results", StaticFiles(directory=dirs["results"]), name="results")
 
@@ -685,6 +706,68 @@ def create_app() -> FastAPI:
             return finalized
         except (DepthCaptureError, DepthMeasurementError) as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post("/api/depth/live/start")
+    def depth_live_start(payload: DepthLiveStartPayload) -> dict[str, object]:
+        return depth_live_manager.start(
+            DepthLiveConfig(
+                backend=payload.backend,
+                timeout_ms=payload.timeout_ms,
+                camera_id=payload.camera_id,
+                role=payload.role,
+                interval_ms=payload.interval_ms,
+                allow_simulation=payload.allow_simulation,
+                measurement_mode=payload.measurement_mode,
+                min_valid_depth_mm=payload.min_valid_depth_mm,
+                max_valid_depth_mm=payload.max_valid_depth_mm,
+                object_min_height_mm=payload.object_min_height_mm,
+                footprint_method=payload.footprint_method,
+                stable_required_frames=payload.stable_required_frames,
+            )
+        )
+
+    @app.get("/api/depth/live/state")
+    def depth_live_state() -> dict[str, object]:
+        return depth_live_manager.state()
+
+    @app.post("/api/depth/live/stop")
+    def depth_live_stop() -> dict[str, object]:
+        return depth_live_manager.stop()
+
+    @app.post("/api/depth/live/confirm")
+    def depth_live_confirm(request: Request, payload: DepthLiveConfirmPayload) -> dict[str, object]:
+        try:
+            candidate = depth_live_manager.confirm_candidate(require_stable=payload.require_stable)
+            result = candidate["result"]
+            bundle = candidate["bundle"]
+            capture_regions = result.get("capture_regions") if isinstance(result.get("capture_regions"), dict) else {}
+            roi = capture_regions.get("roi")
+            if not isinstance(roi, list):
+                raise DepthLiveError("Live candidate does not include a valid ROI.")
+            _attach_depth_evidence_artifacts(
+                result,
+                bundle,
+                roi=roi,
+                table_depth_mm=capture_regions.get("table_depth_mm"),
+                min_valid_depth_mm=50.0,
+                max_valid_depth_mm=6000.0,
+                object_min_height_mm=30.0,
+                results_dir=dirs["results"],
+            )
+            result["live_confirmation"] = {
+                "confirmed_from": "depth_live_stream",
+                "live_state": candidate["state"],
+            }
+            finalized = _finalize_depth_result(
+                result,
+                payload,
+                measurement_source="depth_live_confirm",
+                save_to_history=True,
+            )
+            _set_usage_trace(request, finalized)
+            return finalized
+        except (DepthLiveError, DepthMeasurementError) as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
 
     @app.post("/api/depth/fuse-measurements")
     def depth_fuse_measurements(request: Request, payload: DepthFusionPayload) -> dict[str, object]:

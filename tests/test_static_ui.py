@@ -66,6 +66,9 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert 'id="engineering"' in html
     assert 'id="depthStatusGrid"' in html
     assert 'id="depthProbeSummary"' in html
+    assert 'id="liveWorkstation"' in html
+    assert 'id="liveStatusGrid"' in html
+    assert 'id="confirmLiveButton"' in html
     assert '<details class="workflow-controls" id="workflowControls">' in html
     assert 'id="workflowAutoSummary"' in html
     assert 'id="workflowPackageSelect"' in html
@@ -74,12 +77,17 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert "autoCameraCountForProfile" in js
     assert "loadDepthWorkflow({ auto: true })" in js
     assert "/api/depth/measure-capture" in js
+    assert "/api/depth/live/start" in js
+    assert "/api/depth/live/state" in js
+    assert "/api/depth/live/confirm" in js
+    assert "startDepthLive({ silent: true })" in js
     assert "buildDepthCapturePayload" in js
     assert "cameraPoseLabels" in js
     assert "wide_roi_depth_capture" in js
     assert "depthCameraPrimary" in js
     assert "package_class=long_part&material_class=reflective&camera_count=2" not in js
     assert ".depth-inline-card" in css
+    assert ".live-workstation" in css
     assert ".workflow-fields" in css
     assert ".workflow-controls" in css
 

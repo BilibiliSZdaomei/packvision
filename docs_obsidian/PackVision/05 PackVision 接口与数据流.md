@@ -46,6 +46,10 @@ flowchart LR
 | `POST /api/depth/capture/probe` | 探测相机能不能采集 |
 | `POST /api/depth/capture/frame` | 采集一帧深度数据 |
 | `POST /api/depth/measure-capture` | 工作台主流程：采集并直接测量；未传 ROI 时优先自动识别深度前景，失败时才回退中心作业区，并保存点云/深度预览证据 |
+| `POST /api/depth/live/start` | 启动实时采集循环；相机未到货时可用模拟实时帧干跑 |
+| `GET /api/depth/live/state` | 查询实时工作站状态、稳定候选尺寸、帧数和是否可记录 |
+| `POST /api/depth/live/confirm` | 把当前稳定候选绑定单号并保存到历史，生成点云和深度预览证据 |
+| `POST /api/depth/live/stop` | 暂停实时采集循环 |
 | `POST /api/depth/simulate-from-image` | 上传真实图片，用 Astra 模拟内参和合成深度帧做硬件到货前干跑 |
 
 ## 测量接口

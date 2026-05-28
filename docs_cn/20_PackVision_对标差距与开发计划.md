@@ -8,6 +8,8 @@
 
 > 2026-05-28 增量：`/api/depth/measure-capture` 已从无 ROI 默认中心框，升级为优先深度前景自动识别；测量成功后保存点云 `.npz` 和深度预览 `.png`，并计入后台测量次数。
 
+> 2026-05-28 实时工作站增量：新增 `/api/depth/live/start`、`/api/depth/live/state`、`/api/depth/live/confirm`、`/api/depth/live/stop`。后台持续采集和判断稳定候选，按钮只负责记录当前稳定结果；相机未到货时可用模拟实时帧干跑 UI 和业务链路。
+
 ## 1. 我给自己的目标模式
 
 PackVision 后续开发按这个模式推进：

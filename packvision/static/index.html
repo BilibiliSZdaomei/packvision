@@ -75,6 +75,22 @@
               <div class="depth-probe-summary" id="depthProbeSummary"></div>
             </div>
 
+            <div class="live-workstation" id="liveWorkstation">
+              <div class="live-head">
+                <div>
+                  <span class="flow-badge" data-i18n="liveWorkstation">实时工作站</span>
+                  <strong data-i18n="liveWorkstationText">实时检测中</strong>
+                </div>
+                <div class="live-actions">
+                  <button class="tool-button" type="button" id="startLiveButton" data-i18n="resumeLive">继续实时</button>
+                  <button class="tool-button" type="button" id="stopLiveButton" data-i18n="pauseLive">暂停实时</button>
+                  <button class="primary-action compact" type="button" id="confirmLiveButton" disabled data-i18n="confirmCurrentResult">记录当前稳定结果</button>
+                </div>
+              </div>
+              <div class="depth-status-grid live-status-grid" id="liveStatusGrid"></div>
+              <div class="live-state-summary" id="liveStateSummary"></div>
+            </div>
+
             <div class="order-card">
               <label>
                 <span data-i18n="orderId">单号</span>
