@@ -375,11 +375,13 @@ D:\Documents\包装尺寸检测\docs_obsidian\PackVision
 - `docs_cn\25_复核样本池与真值闭环.md`
 - `docs_cn\26_AI插件接口与轻量部署策略.md`
 - `docs_cn\27_多相机外参与三视图验收方案.md`
+- `docs_cn\28_开发方向二次审计与高星项目差距.md`
 - `docs_obsidian\PackVision\14 PackVision 完整项目报告.md`
 - `docs_obsidian\PackVision\15 厂商资料包 Git 维护策略.md`
 - `docs_obsidian\PackVision\16 复核样本池与真值闭环.md`
 - `docs_obsidian\PackVision\17 AI 插件接口与轻量部署策略.md`
 - `docs_obsidian\PackVision\18 多相机外参与三视图验收方案.md`
+- `docs_obsidian\PackVision\19 开发方向二次审计与高星项目差距.md`
 
 ## 15. 厂商资料包维护策略
 

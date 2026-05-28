@@ -4,6 +4,8 @@
 > 分支：`codex/astra-pro-depth-camera`  
 > 当前目标：把 PackVision 做成汽车备件仓库可落地的轻量本地测量工作台，而不是一个只在演示里好看的视觉 Demo。
 
+> 二次审计：更详细的厂商资料核对和 GitHub 高星项目差距，见 `D:\Documents\包装尺寸检测\docs_cn\28_开发方向二次审计与高星项目差距.md`。
+
 ## 1. 我给自己的目标模式
 
 PackVision 后续开发按这个模式推进：
