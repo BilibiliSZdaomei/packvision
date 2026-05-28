@@ -465,6 +465,44 @@ input {
   gap: 8px;
 }
 
+.device-watchdog-panel {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.42fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface) 86%, var(--accent-soft));
+}
+
+.device-watchdog-panel[data-severity="warning"] {
+  border-left-color: #d8a72d;
+}
+
+.device-watchdog-panel[data-severity="critical"] {
+  border-left-color: var(--danger);
+}
+
+.device-watchdog-panel div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.device-watchdog-panel span,
+.device-watchdog-panel small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
+.device-watchdog-panel strong {
+  overflow-wrap: anywhere;
+}
+
 .live-monitor-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

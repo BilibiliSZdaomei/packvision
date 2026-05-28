@@ -26,6 +26,14 @@ def test_station_snapshot_scores_professional_dws_capabilities():
         usage={"total_calls": 10},
         scale_status={"status": "auto_weight_ready", "source": "mock", "weight_kg": 6.4, "stable": True},
         integration_outbox={"delivery_mode": "local_outbox", "pending": 1, "failed": 0, "due_for_retry": 1, "total": 1},
+        device_watchdog={
+            "status": "live_camera_active",
+            "severity": "ok",
+            "operator_mode": "live_camera_measurement",
+            "safe_to_record_live": True,
+            "signals": {"device_count": 1, "simulation_active": False, "live_stale": False},
+            "issues": [],
+        },
     )
 
     assert snapshot["station_status"] == "ready_to_record"
@@ -38,12 +46,14 @@ def test_station_snapshot_scores_professional_dws_capabilities():
     assert snapshot["integration_outbox"]["pending"] == 1
     assert next(item for item in snapshot["dws_capabilities"] if item["id"] == "weighing")["status"] == "auto_ready"
     assert next(item for item in snapshot["dws_capabilities"] if item["id"] == "integration")["status"] == "outbox_ready"
+    assert next(item for item in snapshot["dws_capabilities"] if item["id"] == "device_health")["status"] == "watchdog_ready"
     assert {item["id"] for item in snapshot["dws_capabilities"]} == {
         "dimensioning",
         "weighing",
         "scanning",
         "evidence",
         "integration",
+        "device_health",
     }
     assert any(gap["code"] == "hardware_validation_pending" for gap in snapshot["production_gaps"])
     assert any(gap["code"] == "wms_connector_pending" for gap in snapshot["production_gaps"])

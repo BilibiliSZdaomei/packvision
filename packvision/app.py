@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import json
+import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -26,6 +27,7 @@ from packvision.services.depth_capture import (
     depth_capture_capabilities,
     probe_depth_capture,
 )
+from packvision.services.device_watchdog import build_device_watchdog
 from packvision.services.depth_devices import build_depth_camera_inventory
 from packvision.services.depth_extrinsics import validate_multiview_extrinsics
 from packvision.services.depth_fusion import DepthFusionError, fuse_depth_measurements
@@ -267,6 +269,26 @@ def create_app() -> FastAPI:
     init_usage_db()
     init_integration_db()
     depth_live_manager = DepthLiveManager(capture_depth_once)
+    capture_status_lock = threading.RLock()
+    capture_status_cache: dict[str, Any] = {"value": None, "cached_at": 0.0}
+
+    def cached_depth_capture_capabilities(*, ttl_seconds: float = 8.0) -> dict[str, Any]:
+        now = time.monotonic()
+        with capture_status_lock:
+            cached = capture_status_cache.get("value")
+            if isinstance(cached, dict) and now - float(capture_status_cache.get("cached_at") or 0.0) < ttl_seconds:
+                return cached
+            value = depth_capture_capabilities()
+            capture_status_cache["value"] = value
+            capture_status_cache["cached_at"] = now
+            return value
+
+    def device_watchdog_snapshot(live_state: dict[str, Any] | None = None) -> dict[str, Any]:
+        return build_device_watchdog(
+            live_state=live_state or depth_live_manager.state(),
+            capture_status=cached_depth_capture_capabilities(),
+        )
+
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
     app.mount("/results", StaticFiles(directory=dirs["results"]), name="results")
 
@@ -339,13 +361,19 @@ def create_app() -> FastAPI:
 
     @app.get("/api/station/snapshot")
     def station_snapshot() -> dict[str, object]:
+        live_state = depth_live_manager.state()
         return build_station_snapshot(
-            live_state=depth_live_manager.state(),
+            live_state=live_state,
             latest_measurements=list_measurements(limit=1),
             usage=usage_summary(),
             scale_status=build_scale_status(),
             integration_outbox=outbox_summary(),
+            device_watchdog=device_watchdog_snapshot(live_state),
         )
+
+    @app.get("/api/device/watchdog")
+    def device_watchdog() -> dict[str, object]:
+        return device_watchdog_snapshot()
 
     @app.get("/api/ai/plugins")
     def ai_plugins() -> dict[str, object]:
@@ -682,7 +710,7 @@ def create_app() -> FastAPI:
 
     @app.get("/api/depth/capture/capabilities")
     def depth_capture_capability_report() -> dict[str, object]:
-        return depth_capture_capabilities()
+        return cached_depth_capture_capabilities()
 
     @app.get("/api/depth/cameras")
     def depth_cameras() -> dict[str, object]:

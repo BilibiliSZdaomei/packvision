@@ -44,6 +44,7 @@ PackVision 不是单纯的“拍照量尺寸 Demo”，而是给海外汽车备�
 | 现场支持包 | 已完成 | 一键导出环境体检、日志、历史、用量、复核样本和真值模板，默认不包含现场图片。 |
 | 异形件/长条件 | 已有深度算法基础 | 支持深度 ROI、object mask、长条件主轴测量。 |
 | Astra Pro 适配 | 已完成无硬件开发底座 | 驱动/上位机/OpenNI 状态检查、内参归一化、采集探测、模拟干跑。 |
+| 设备守护和恢复 | 已完成轻量底座 | 汇总 OpenNI 运行库、相机枚举、实时流卡顿、模拟兜底和恢复动作，供 UI 和现场支持包排错。 |
 | 多相机冗余 | 已有架构 | 相机角色、序列号、三视图缺口、保守融合接口已预留。 |
 | 海外仓交付包 | 已完成第一版 | 可生成小于 `100 MB` 的现场交付压缩包。 |
 | 自动化开发流程 | 已配置 | `packvision` 自动化已按分阶段落地模式启用。 |
@@ -51,7 +52,7 @@ PackVision 不是单纯的“拍照量尺寸 Demo”，而是给海外汽车备�
 当前验证结果：
 
 ```text
-111 passed in 9.15s
+115 passed in 7.92s
 ```
 
 最新已验证交付包：
@@ -63,7 +64,7 @@ D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_*.zip
 大小约：
 
 ```text
-73.53 MB
+73.55 MB
 ```
 
 ## 4. 运行方式
@@ -191,6 +192,7 @@ PowerShell -ExecutionPolicy Bypass -File .\scripts\check_astra_depth_status.ps1
 | `GET /api/deployment/readiness` | 海外仓交付和环境体检。 |
 | `GET /api/deployment/support-bundle.zip` | 现场远程排错支持包。 |
 | `GET /api/station/snapshot` | DWS 工位编排快照，汇总尺寸、称重、扫码、证据、接口状态和工业级缺口。 |
+| `GET /api/device/watchdog` | 设备守护状态，汇总相机枚举、实时流是否卡住、模拟兜底和现场恢复步骤。 |
 
 ### 图片测量
 

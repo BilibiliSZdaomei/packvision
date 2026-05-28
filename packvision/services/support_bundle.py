@@ -12,6 +12,7 @@ from packvision.services.ai_plugins import build_ai_plugin_inventory
 from packvision.services.depth_camera import depth_camera_status
 from packvision.services.depth_capture import depth_capture_capabilities
 from packvision.services.depth_devices import build_depth_camera_inventory
+from packvision.services.device_watchdog import build_device_watchdog
 from packvision.services.deployment import build_deployment_readiness
 from packvision.services.history import export_measurements_csv
 from packvision.services.review_pool import export_review_samples_csv, export_review_truth_template_csv
@@ -40,6 +41,7 @@ def build_support_bundle() -> Path:
         _write_json(archive, "depth_status.json", _safe_call(depth_camera_status))
         _write_json(archive, "depth_capture_capabilities.json", _safe_call(depth_capture_capabilities))
         _write_json(archive, "depth_cameras.json", _safe_call(build_depth_camera_inventory))
+        _write_json(archive, "device_watchdog.json", _safe_call(build_device_watchdog))
         _write_json(archive, "ai_plugins.json", _safe_call(build_ai_plugin_inventory))
         _write_json(archive, "usage_summary.json", _safe_call(usage_summary))
         _write_text(
@@ -92,6 +94,7 @@ def _manifest(generated_at: datetime, bundle_path: Path) -> dict[str, Any]:
             "depth_status.json",
             "depth_capture_capabilities.json",
             "depth_cameras.json",
+            "device_watchdog.json",
             "ai_plugins.json",
             "usage_summary.json",
             "history_latest.csv",

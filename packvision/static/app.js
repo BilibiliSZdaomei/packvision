@@ -89,6 +89,8 @@ const translations = {
     scaleAutoReady: "电子秤已读数",
     scaleAdapterWaiting: "等待电子秤读数",
     scaleSource: "称重来源",
+    deviceWatchdog: "设备守护",
+    watchdogAction: "恢复动作",
     liveMonitor: "采集监控",
     cameraMonitor: "相机监控",
     cameraMonitorLive: "Astra Pro 多视角实时画面",
@@ -328,6 +330,8 @@ const translations = {
     scaleAutoReady: "Scale weight ready",
     scaleAdapterWaiting: "Waiting for scale",
     scaleSource: "Scale source",
+    deviceWatchdog: "Device watchdog",
+    watchdogAction: "Recovery action",
     liveMonitor: "Capture monitor",
     cameraMonitor: "Camera monitor",
     cameraMonitorLive: "Astra Pro multi-view live",
@@ -567,6 +571,8 @@ const translations = {
     scaleAutoReady: "Вага зчитана",
     scaleAdapterWaiting: "Очікування ваги",
     scaleSource: "Джерело ваги",
+    deviceWatchdog: "Нагляд пристрою",
+    watchdogAction: "Дія відновлення",
     liveMonitor: "Монітор збору",
     cameraMonitor: "Монітор камери",
     cameraMonitorLive: "Мультиракурс Astra Pro",
@@ -1168,6 +1174,81 @@ const scaleStatusLabels = {
   },
 };
 
+const watchdogStatusLabels = {
+  zh: {
+    ready: "守护就绪",
+    live_camera_active: "相机实时正常",
+    camera_detected_idle: "相机已识别",
+    simulation_fallback: "模拟兜底中",
+    no_camera_detected: "未检测到相机",
+    live_stale: "实时流卡住",
+    runtime_not_ready: "运行库未就绪",
+    needs_recovery: "需要恢复",
+    unknown: "状态未知",
+  },
+  en: {
+    ready: "Watchdog ready",
+    live_camera_active: "Live camera healthy",
+    camera_detected_idle: "Camera detected",
+    simulation_fallback: "Simulation fallback",
+    no_camera_detected: "No camera detected",
+    live_stale: "Live stream stale",
+    runtime_not_ready: "Runtime not ready",
+    needs_recovery: "Recovery needed",
+    unknown: "Unknown",
+  },
+  uk: {
+    ready: "Нагляд готовий",
+    live_camera_active: "Камера працює",
+    camera_detected_idle: "Камеру знайдено",
+    simulation_fallback: "Симуляція",
+    no_camera_detected: "Камеру не знайдено",
+    live_stale: "Потік завис",
+    runtime_not_ready: "Runtime не готовий",
+    needs_recovery: "Потрібне відновлення",
+    unknown: "Невідомо",
+  },
+};
+
+const watchdogStepLabels = {
+  zh: {
+    continue_live_measurement: "继续实时测量，只记录稳定结果。",
+    check_driver_install: "运行 Astra 安装检查脚本。",
+    repair_vendor_runtime: "重新安装驱动并确认 OpenNI 运行库。",
+    check_usb_data_path: "检查 USB 数据线、供电和扩展坞。",
+    open_orbbec_viewer: "打开上位机确认彩色/深度/红外画面。",
+    rerun_capture_probe: "回到 PackVision 重新运行采集探测。",
+    restart_live_stream: "暂停实时流后重新继续实时。",
+    export_support_bundle: "问题重复时导出现场支持包。",
+    validate_real_camera_before_shipping: "发货计费前必须连接真实相机。",
+    bind_multiview_serials: "三视图前绑定每台相机序列号。",
+  },
+  en: {
+    continue_live_measurement: "Continue live measurement and record only stable results.",
+    check_driver_install: "Run the Astra install check script.",
+    repair_vendor_runtime: "Reinstall the driver and confirm OpenNI runtime files.",
+    check_usb_data_path: "Check USB data cable, power, and hub.",
+    open_orbbec_viewer: "Open the vendor viewer and confirm color/depth/IR streams.",
+    rerun_capture_probe: "Return to PackVision and rerun capture probe.",
+    restart_live_stream: "Pause live stream, then resume it.",
+    export_support_bundle: "Export a support bundle if the issue repeats.",
+    validate_real_camera_before_shipping: "Use a real camera before shipping billing.",
+    bind_multiview_serials: "Bind camera serials before three-view production.",
+  },
+  uk: {
+    continue_live_measurement: "Продовжити live-вимірювання і записувати лише стабільне.",
+    check_driver_install: "Запустити скрипт перевірки Astra.",
+    repair_vendor_runtime: "Перевстановити драйвер і перевірити OpenNI.",
+    check_usb_data_path: "Перевірити USB-кабель, живлення і hub.",
+    open_orbbec_viewer: "Відкрити viewer і перевірити color/depth/IR.",
+    rerun_capture_probe: "Повернутися до PackVision і повторити пробу.",
+    restart_live_stream: "Зупинити і знову запустити live-потік.",
+    export_support_bundle: "Експортувати support bundle, якщо помилка повториться.",
+    validate_real_camera_before_shipping: "Для тарифікації потрібна реальна камера.",
+    bind_multiview_serials: "Прив'язати серійні номери для трьох ракурсів.",
+  },
+};
+
 const probeActionLabels = {
   zh: {
     connect_camera_driver: "连接 Astra Pro，并确认 Windows 驱动已安装。",
@@ -1340,6 +1421,7 @@ const state = {
   integrationOutbox: null,
   stationSnapshot: null,
   deploymentReadiness: null,
+  deviceWatchdog: null,
   scaleStatus: null,
   lastDepthDemo: null,
   activeView: "top",
@@ -1405,6 +1487,9 @@ const depthStatusGrid = document.querySelector("#depthStatusGrid");
 const refreshDepthStatusButton = document.querySelector("#refreshDepthStatusButton");
 const probeDepthCaptureButton = document.querySelector("#probeDepthCaptureButton");
 const liveStatusGrid = document.querySelector("#liveStatusGrid");
+const deviceWatchdogPanel = document.querySelector("#deviceWatchdogPanel");
+const deviceWatchdogStatus = document.querySelector("#deviceWatchdogStatus");
+const deviceWatchdogAction = document.querySelector("#deviceWatchdogAction");
 const liveMonitorGrid = document.querySelector("#liveMonitorGrid");
 const liveStateSummary = document.querySelector("#liveStateSummary");
 const startLiveButton = document.querySelector("#startLiveButton");
@@ -1512,6 +1597,9 @@ function applyLanguage() {
   }
   if (state.scaleStatus) {
     renderScaleStatus(state.scaleStatus);
+  }
+  if (state.deviceWatchdog) {
+    renderDeviceWatchdog(state.deviceWatchdog);
   }
   if (state.stationSnapshot || state.deploymentReadiness) {
     renderStationStrip();
@@ -2462,6 +2550,25 @@ function deploymentReadinessText(readiness) {
   return readiness ? labelFrom(readinessStatusLabels, "needs_attention") : "--";
 }
 
+function renderDeviceWatchdog(data) {
+  if (!deviceWatchdogPanel || !deviceWatchdogStatus || !deviceWatchdogAction) {
+    return;
+  }
+  const status = data?.status || "unknown";
+  const severity = data?.severity || "unknown";
+  deviceWatchdogPanel.dataset.severity = severity;
+  deviceWatchdogStatus.textContent = labelFrom(watchdogStatusLabels, status);
+  const step = (data?.recovery_steps || [])[0];
+  const issue = (data?.issues || [])[0];
+  const actionKey = step?.id || issue?.code || "";
+  const translatedAction = actionKey ? watchdogStepLabels[state.lang]?.[actionKey] || watchdogStepLabels.en[actionKey] : "";
+  deviceWatchdogAction.textContent =
+    translatedAction ||
+    step?.label ||
+    issue?.recovery ||
+    `${t("watchdogAction")}: ${data?.operator_mode || "--"}`;
+}
+
 function volumeFromDimensions(dimensions) {
   if (!dimensions) {
     return null;
@@ -2766,6 +2873,9 @@ async function loadDepthLiveState() {
     state.depthLive = data;
     renderDepthLive(data);
     if (data.can_confirm || !data.running) {
+      void loadStationSnapshot();
+    }
+    if (data.last_error || !data.running) {
       void loadStationSnapshot();
     }
   if (!data.running) {
@@ -3196,7 +3306,23 @@ async function loadStationSnapshot() {
     return;
   }
   state.stationSnapshot = await response.json();
+  if (state.stationSnapshot?.device_watchdog) {
+    state.deviceWatchdog = state.stationSnapshot.device_watchdog;
+    renderDeviceWatchdog(state.deviceWatchdog);
+  }
   renderStationStrip();
+}
+
+async function loadDeviceWatchdog() {
+  if (!deviceWatchdogPanel) {
+    return;
+  }
+  const response = await fetch("/api/device/watchdog");
+  if (!response.ok) {
+    return;
+  }
+  state.deviceWatchdog = await response.json();
+  renderDeviceWatchdog(state.deviceWatchdog);
 }
 
 async function loadDeploymentReadiness() {
@@ -3209,7 +3335,9 @@ async function loadDeploymentReadiness() {
 }
 
 async function refreshStationHealth() {
-  await Promise.allSettled([loadDepthStatus(), loadStationSnapshot(), loadDeploymentReadiness()]);
+  await loadDepthStatus();
+  await loadStationSnapshot();
+  await loadDeploymentReadiness();
 }
 
 function renderUsageSummary(data) {

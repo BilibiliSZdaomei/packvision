@@ -959,6 +959,19 @@ def test_scale_status_endpoint_keeps_manual_fallback_available():
     assert any(adapter["id"] == "manual_entry" and adapter["available"] for adapter in body["adapters"])
 
 
+def test_device_watchdog_endpoint_reports_recovery_guidance():
+    client = TestClient(create_app())
+    response = client.get("/api/device/watchdog")
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["status"]
+    assert body["severity"] in {"ok", "warning", "critical"}
+    assert "device_count" in body["signals"]
+    assert body["photo_fallback_available"] is True
+    assert isinstance(body["recovery_steps"], list)
+
+
 def test_industry_profile_endpoint_reports_abnormal_material_flow():
     client = TestClient(create_app())
     response = client.post(
@@ -1011,8 +1024,10 @@ def test_station_snapshot_endpoint_reports_dws_orchestration_status():
         "scanning",
         "evidence",
         "integration",
+        "device_health",
     }
     assert "wms_tms_push_and_retry_queue" in body["next_upgrade_tracks"]
+    assert "device_watchdog" in body
 
 
 def test_ai_plugin_endpoint_validates_optional_model_manifest(monkeypatch, tmp_path):

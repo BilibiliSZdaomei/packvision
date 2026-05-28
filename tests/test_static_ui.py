@@ -69,6 +69,9 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert 'id="liveWorkstation"' in html
     assert 'id="liveStatusGrid"' in html
     assert 'id="liveMonitorGrid"' in html
+    assert 'id="deviceWatchdogPanel"' in html
+    assert 'id="deviceWatchdogStatus"' in html
+    assert 'id="deviceWatchdogAction"' in html
     assert 'id="cameraMonitor"' in html
     assert 'id="cameraMonitorGrid"' in html
     assert 'data-camera-feed="top"' in html
@@ -104,6 +107,7 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert "/api/weight/volumetric-rules" in js
     assert "/api/scale/status" in js
     assert "/api/station/snapshot" in js
+    assert "/api/device/watchdog" in js
     assert "/api/integrations/outbox" in js
     assert "/api/deployment/readiness" in js
     assert "renderLiveMonitor" in js
@@ -111,6 +115,8 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert "collectCameraMonitorResults" in js
     assert "normalizeCameraRole" in js
     assert "loadStationSnapshot" in js
+    assert "loadDeviceWatchdog" in js
+    assert "renderDeviceWatchdog" in js
     assert "loadDeploymentReadiness" in js
     assert "refreshStationHealth" in js
     assert "renderWeightMonitorFromDimensions" in js
@@ -128,6 +134,7 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert "package_class=long_part&material_class=reflective&camera_count=2" not in js
     assert ".depth-inline-card" in css
     assert ".live-workstation" in css
+    assert ".device-watchdog-panel" in css
     assert ".live-monitor-grid" in css
     assert ".camera-monitor-grid" in css
     assert ".camera-feed.is-primary" in css
