@@ -38,6 +38,7 @@ PackVision 不是单纯的“拍照量尺寸 Demo”，而是给海外汽车备�
 | 使用次数统计 | 已完成 | 后台记录接口调用次数、测量次数、成功/失败次数，可导出 CSV。 |
 | 实时采集监控 | 已完成并升级 | Astra Pro 实时流持续测量，按钮只负责记录稳定结果；UI 显示顶部/正面/侧面多相机监控矩阵、FPS、运行时长、测量次数和采集后端。 |
 | 体积重/计费重 | 已完成 | 支持手动输入实重，按体积重规则表计算体积重和计费重，并保存计费来源。 |
+| 电子秤适配接口 | 已完成轻量底座 | 基础包保留手动实重兜底，预留 mock、USB HID、RS232 adapter。 |
 | DWS 工位 UI | 持续强化 | 首屏常驻工位状态、当前单号、计费重、质检结论、工位编排成熟度、到货验收状态和深度证据面板。 |
 | 现场支持包 | 已完成 | 一键导出环境体检、日志、历史、用量、复核样本和真值模板，默认不包含现场图片。 |
 | 异形件/长条件 | 已有深度算法基础 | 支持深度 ROI、object mask、长条件主轴测量。 |
@@ -49,7 +50,7 @@ PackVision 不是单纯的“拍照量尺寸 Demo”，而是给海外汽车备�
 当前验证结果：
 
 ```text
-106 passed in 8.44s
+109 passed in 8.02s
 ```
 
 最新已验证交付包：
@@ -243,6 +244,8 @@ PowerShell -ExecutionPolicy Bypass -File .\scripts\check_astra_depth_status.ps1
 | 接口 | 用途 |
 | --- | --- |
 | `GET /api/weight/volumetric-rules` | 返回体积重规则表，例如 5000、6000、8000。 |
+| `GET /api/scale/status` | 电子秤 adapter 状态；基础包默认手动实重兜底。 |
+| `POST /api/scale/read` | 读取电子秤重量；未配置硬件时返回手动兜底。 |
 | `POST /api/industry/profile` | 根据尺寸、包装、材质、实重和体积重规则计算行业摘要、体积重和计费重。 |
 
 ### 现场验证
@@ -283,6 +286,7 @@ flowchart TD
 - FastAPI 本地 API。
 - OpenCV ArUco、轮廓、条码/二维码。
 - SQLite 本地历史和统计。
+- 电子秤 adapter 接口，默认手动兜底，后续可扩展 USB HID/RS232。
 - OpenNI/PrimeSense Astra Pro 采集后端。
 - 多相机外参验收、角色绑定和保守融合冲突检查。
 - 可选 AI 插件协议，默认不携带 YOLO/SAM/Depth 模型权重。

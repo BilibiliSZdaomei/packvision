@@ -74,6 +74,7 @@ from packvision.services.review_pool import (
     export_review_truth_template_csv,
     list_review_samples,
 )
+from packvision.services.scale import build_scale_status, read_scale_weight
 from packvision.services.storage import ensure_data_dirs, resource_path, write_bytes
 from packvision.services.station import build_station_snapshot
 from packvision.services.support_bundle import build_support_bundle
@@ -322,6 +323,7 @@ def create_app() -> FastAPI:
             live_state=depth_live_manager.state(),
             latest_measurements=list_measurements(limit=1),
             usage=usage_summary(),
+            scale_status=build_scale_status(),
         )
 
     @app.get("/api/ai/plugins")
@@ -1001,6 +1003,14 @@ def create_app() -> FastAPI:
             "default_rule_id": DEFAULT_VOLUMETRIC_RULE_ID,
             "rules": list_volumetric_rules(),
         }
+
+    @app.get("/api/scale/status")
+    def scale_status() -> dict[str, object]:
+        return build_scale_status()
+
+    @app.post("/api/scale/read")
+    def scale_read() -> dict[str, object]:
+        return read_scale_weight()
 
     @app.get("/api/validation/trial-plan")
     def validation_trial_plan() -> dict[str, object]:

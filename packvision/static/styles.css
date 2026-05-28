@@ -563,10 +563,33 @@ input {
   background: color-mix(in srgb, var(--accent-soft) 72%, var(--surface));
 }
 
+.scale-status-panel {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  min-height: 64px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
 .weight-monitor-panel div {
   display: grid;
   gap: 4px;
   min-width: 0;
+}
+
+.scale-status-panel div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.scale-status-panel span {
+  color: var(--muted);
+  font-size: 0.76rem;
 }
 
 .mode-head {
@@ -1548,6 +1571,7 @@ summary:focus-visible,
   .usage-row,
   .industry-card,
   .weight-monitor-panel,
+  .scale-status-panel,
   .depth-workflow-card,
   .validation-plan-card,
   .depth-demo-card,

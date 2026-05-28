@@ -24,6 +24,7 @@ def test_station_snapshot_scores_professional_dws_capabilities():
             }
         ],
         usage={"total_calls": 10},
+        scale_status={"status": "auto_weight_ready", "source": "mock", "weight_kg": 6.4, "stable": True},
     )
 
     assert snapshot["station_status"] == "ready_to_record"
@@ -32,6 +33,8 @@ def test_station_snapshot_scores_professional_dws_capabilities():
     assert snapshot["professional_score"]["percent"] == 100
     assert snapshot["current_candidate"]["can_confirm"] is True
     assert snapshot["latest_record"]["order_id"] == "SO-1"
+    assert snapshot["scale_status"]["source"] == "mock"
+    assert next(item for item in snapshot["dws_capabilities"] if item["id"] == "weighing")["status"] == "auto_ready"
     assert {item["id"] for item in snapshot["dws_capabilities"]} == {
         "dimensioning",
         "weighing",

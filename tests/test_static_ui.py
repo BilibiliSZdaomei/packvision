@@ -86,6 +86,7 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert 'id="actualWeightInput"' in html
     assert 'id="volumetricRuleSelect"' in html
     assert 'id="weightMonitorPanel"' in html
+    assert 'id="scaleStatusPanel"' in html
     assert '<details class="workflow-controls" id="workflowControls">' in html
     assert 'id="workflowAutoSummary"' in html
     assert 'id="workflowPackageSelect"' in html
@@ -98,6 +99,7 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert "/api/depth/live/state" in js
     assert "/api/depth/live/confirm" in js
     assert "/api/weight/volumetric-rules" in js
+    assert "/api/scale/status" in js
     assert "/api/station/snapshot" in js
     assert "/api/deployment/readiness" in js
     assert "renderLiveMonitor" in js
@@ -108,6 +110,8 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert "loadDeploymentReadiness" in js
     assert "refreshStationHealth" in js
     assert "renderWeightMonitorFromDimensions" in js
+    assert "loadScaleStatus" in js
+    assert "renderScaleStatus" in js
     assert "renderStationStrip" in js
     assert "renderDepthEvidenceStage" in js
     assert "startDepthLive({ silent: true })" in js
@@ -124,6 +128,7 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert ".station-strip" in css
     assert ".depth-evidence" in css
     assert ".weight-monitor-panel" in css
+    assert ".scale-status-panel" in css
     assert ".workflow-fields" in css
     assert ".workflow-controls" in css
 

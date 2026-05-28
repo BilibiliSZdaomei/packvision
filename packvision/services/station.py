@@ -18,11 +18,13 @@ def build_station_snapshot(
     live_state: dict[str, Any] | None = None,
     latest_measurements: list[dict[str, Any]] | None = None,
     usage: dict[str, Any] | None = None,
+    scale_status: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     live = live_state or {}
     latest = (latest_measurements or [{}])[0] if latest_measurements else {}
     usage_summary = usage or {}
-    capabilities = _capability_statuses(live, latest, usage_summary)
+    scale = scale_status or {}
+    capabilities = _capability_statuses(live, latest, usage_summary, scale)
     score = _professional_score(capabilities)
 
     return {
@@ -45,7 +47,8 @@ def build_station_snapshot(
         "professional_score": score,
         "current_candidate": _current_candidate(live),
         "latest_record": _latest_record(latest),
-        "production_gaps": _production_gaps(live, latest, capabilities),
+        "scale_status": _scale_summary(scale),
+        "production_gaps": _production_gaps(live, latest, capabilities, scale),
         "next_upgrade_tracks": [
             "scale_adapter_usb_rs232_hid",
             "wms_tms_push_and_retry_queue",
@@ -71,11 +74,13 @@ def _capability_statuses(
     live: dict[str, Any],
     latest: dict[str, Any],
     usage: dict[str, Any],
+    scale: dict[str, Any],
 ) -> list[dict[str, Any]]:
     live_dims = ((live.get("stable_result") or live.get("latest_result") or {}).get("dimensions") or {})
     latest_has_dims = any(_positive(latest.get(key)) for key in ("length_mm", "width_mm", "height_mm", "volume_l"))
     latest_has_order = bool(latest.get("order_id") or latest.get("barcode_text"))
     latest_has_weight = _positive(latest.get("chargeable_weight_kg")) or _positive(latest.get("volumetric_weight_kg"))
+    scale_has_auto_weight = _positive(scale.get("weight_kg")) and scale.get("status") == "auto_weight_ready"
     latest_has_evidence = bool(latest.get("top_result_url") or latest.get("side_result_url") or live.get("can_confirm"))
 
     return [
@@ -88,8 +93,8 @@ def _capability_statuses(
         {
             "id": "weighing",
             "label": "Weighing",
-            "status": "manual_ready" if latest_has_weight else "manual_input_pending",
-            "source": "manual_weight_and_dim_rule",
+            "status": "auto_ready" if scale_has_auto_weight else "manual_ready" if latest_has_weight else "manual_input_pending",
+            "source": scale.get("source") or "manual_weight_and_dim_rule",
         },
         {
             "id": "scanning",
@@ -113,7 +118,7 @@ def _capability_statuses(
 
 
 def _professional_score(capabilities: list[dict[str, Any]]) -> dict[str, Any]:
-    strong_statuses = {"ready", "manual_ready", "manual_or_image_ready", "local_ready"}
+    strong_statuses = {"ready", "auto_ready", "manual_ready", "manual_or_image_ready", "local_ready"}
     ready_count = sum(1 for item in capabilities if item["status"] in strong_statuses)
     total = max(1, len(capabilities))
     percent = round(ready_count / total * 100)
@@ -152,15 +157,26 @@ def _latest_record(latest: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _scale_summary(scale: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "status": scale.get("status") or "unknown",
+        "source": scale.get("source"),
+        "configured": bool(scale.get("configured")),
+        "weight_kg": scale.get("weight_kg"),
+        "stable": bool(scale.get("stable")),
+    }
+
+
 def _production_gaps(
     live: dict[str, Any],
     latest: dict[str, Any],
     capabilities: list[dict[str, Any]],
+    scale: dict[str, Any],
 ) -> list[dict[str, str]]:
     gaps: list[dict[str, str]] = []
     if live.get("simulation_active"):
         gaps.append(_gap("hardware_validation_pending", "Astra Pro real hardware validation is still required."))
-    if not _positive(latest.get("actual_weight_kg")):
+    if not _positive(latest.get("actual_weight_kg")) and scale.get("status") != "auto_weight_ready":
         gaps.append(_gap("scale_adapter_pending", "Actual weight is still manual; add USB/RS232/HID scale adapter."))
     if not (latest.get("order_id") or latest.get("barcode_text")):
         gaps.append(_gap("wms_order_binding_pending", "Order binding should be driven by scanner or WMS lookup."))

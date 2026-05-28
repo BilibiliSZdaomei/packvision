@@ -73,6 +73,11 @@ const translations = {
     weightDelta: "重量差",
     actualWeightSource: "实重计费",
     volumetricWeightSource: "体积重计费",
+    scaleStatus: "电子秤",
+    scaleManualReady: "手动实重兜底",
+    scaleAutoReady: "电子秤已读数",
+    scaleAdapterWaiting: "等待电子秤读数",
+    scaleSource: "称重来源",
     liveMonitor: "采集监控",
     cameraMonitor: "相机监控",
     cameraMonitorLive: "Astra Pro 多视角实时画面",
@@ -296,6 +301,11 @@ const translations = {
     weightDelta: "Weight delta",
     actualWeightSource: "Actual weight",
     volumetricWeightSource: "Volumetric weight",
+    scaleStatus: "Scale",
+    scaleManualReady: "Manual weight fallback",
+    scaleAutoReady: "Scale weight ready",
+    scaleAdapterWaiting: "Waiting for scale",
+    scaleSource: "Scale source",
     liveMonitor: "Capture monitor",
     cameraMonitor: "Camera monitor",
     cameraMonitorLive: "Astra Pro multi-view live",
@@ -519,6 +529,11 @@ const translations = {
     weightDelta: "Різниця ваги",
     actualWeightSource: "Фактична вага",
     volumetricWeightSource: "Об'ємна вага",
+    scaleStatus: "Вага",
+    scaleManualReady: "Ручний резерв",
+    scaleAutoReady: "Вага зчитана",
+    scaleAdapterWaiting: "Очікування ваги",
+    scaleSource: "Джерело ваги",
     liveMonitor: "Монітор збору",
     cameraMonitor: "Монітор камери",
     cameraMonitorLive: "Мультиракурс Astra Pro",
@@ -1102,6 +1117,24 @@ const readinessStatusLabels = {
   },
 };
 
+const scaleStatusLabels = {
+  zh: {
+    manual_ready: "手动实重兜底",
+    auto_weight_ready: "电子秤已读数",
+    adapter_configured_waiting: "等待电子秤读数",
+  },
+  en: {
+    manual_ready: "Manual weight fallback",
+    auto_weight_ready: "Scale weight ready",
+    adapter_configured_waiting: "Waiting for scale",
+  },
+  uk: {
+    manual_ready: "Ручний резерв",
+    auto_weight_ready: "Вага зчитана",
+    adapter_configured_waiting: "Очікування ваги",
+  },
+};
+
 const probeActionLabels = {
   zh: {
     connect_camera_driver: "连接 Astra Pro，并确认 Windows 驱动已安装。",
@@ -1273,6 +1306,7 @@ const state = {
   reviewSamples: null,
   stationSnapshot: null,
   deploymentReadiness: null,
+  scaleStatus: null,
   lastDepthDemo: null,
   activeView: "top",
   previewUrls: { top: null, side: null },
@@ -1300,6 +1334,7 @@ const stationReadinessValue = document.querySelector("#stationReadinessValue");
 const actualWeightInput = document.querySelector("#actualWeightInput");
 const volumetricRuleSelect = document.querySelector("#volumetricRuleSelect");
 const weightMonitorPanel = document.querySelector("#weightMonitorPanel");
+const scaleStatusPanel = document.querySelector("#scaleStatusPanel");
 const orderImage = document.querySelector("#orderImage");
 const decodeBarcodeButton = document.querySelector("#decodeBarcodeButton");
 const topBoxJson = document.querySelector("#topBoxJson");
@@ -1433,6 +1468,9 @@ function applyLanguage() {
   }
   if (state.usageSummary) {
     renderUsageSummary(state.usageSummary);
+  }
+  if (state.scaleStatus) {
+    renderScaleStatus(state.scaleStatus);
   }
   if (state.stationSnapshot || state.deploymentReadiness) {
     renderStationStrip();
@@ -2273,6 +2311,31 @@ function renderWeightMonitorFromDimensions(dimensions, profile = null) {
   appendSummaryCell(weightMonitorPanel, t("volumetricWeight"), formatKg(volumetric));
   appendSummaryCell(weightMonitorPanel, t("chargeableWeight"), `${formatKg(chargeable)} · ${billingSourceLabel(source)}`);
   renderStationStrip();
+}
+
+async function loadScaleStatus() {
+  if (!scaleStatusPanel) {
+    return;
+  }
+  const response = await fetch("/api/scale/status");
+  if (!response.ok) {
+    return;
+  }
+  state.scaleStatus = await response.json();
+  renderScaleStatus(state.scaleStatus);
+}
+
+function renderScaleStatus(data) {
+  if (!scaleStatusPanel) {
+    return;
+  }
+  scaleStatusPanel.innerHTML = "";
+  appendSummaryCell(scaleStatusPanel, t("scaleStatus"), labelFrom(scaleStatusLabels, data.status));
+  appendSummaryCell(scaleStatusPanel, t("scaleSource"), data.source || "--");
+  if (Number(data.weight_kg) > 0 && data.source !== "manual_entry") {
+    actualWeightInput.value = Number(data.weight_kg).toFixed(3);
+    renderWeightMonitorFromCurrentState();
+  }
 }
 
 function previewChargeableWeight() {
@@ -3550,6 +3613,7 @@ applyLanguage();
 applyTheme();
 renderCameraMonitor({ status: "stopped" });
 loadVolumetricRules();
+loadScaleStatus();
 refreshStationHealth();
 startDepthLive({ silent: true });
 loadHistory();

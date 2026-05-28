@@ -930,6 +930,17 @@ def test_volumetric_rule_endpoint_returns_default_rule_table():
     assert {rule["rule_id"] for rule in body["rules"]} >= {"standard_6000", "express_5000", "economy_8000"}
 
 
+def test_scale_status_endpoint_keeps_manual_fallback_available():
+    client = TestClient(create_app())
+    response = client.get("/api/scale/status")
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["source"] == "manual_entry"
+    assert body["status"] == "manual_ready"
+    assert any(adapter["id"] == "manual_entry" and adapter["available"] for adapter in body["adapters"])
+
+
 def test_industry_profile_endpoint_reports_abnormal_material_flow():
     client = TestClient(create_app())
     response = client.post(
