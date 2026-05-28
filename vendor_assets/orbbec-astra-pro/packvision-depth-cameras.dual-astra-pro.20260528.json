@@ -1,0 +1,156 @@
+{
+  "version": 1,
+  "rig_id": "packvision-astra-pro-rig",
+  "target_camera_count": 2,
+  "default_camera_id": "astra-pro-top-01",
+  "cameras": [
+    {
+      "camera_id": "astra-pro-top-01",
+      "role": "top",
+      "enabled": true,
+      "backend": "openni2_primesense",
+      "model": "Orbbec Astra Pro",
+      "serial_hint": "17b3466a",
+      "vendor_root": "D:\\app\\orbbec-astra-pro\\vendor",
+      "runtime_dir": "D:\\app\\orbbec-astra-pro\\viewer",
+      "mount": {
+        "pose": "top_down",
+        "purpose": "primary top-down dimensioning"
+      },
+      "intrinsics": {
+        "fx": 572.573,
+        "fy": 572.335,
+        "cx": 320.0,
+        "cy": 240.0,
+        "width": 640,
+        "height": 480,
+        "depth_scale": 1.0,
+        "source": "astra_pro_datasheet_depth_fov_estimate",
+        "quality_flags": [
+          "factory_camera_info_preferred",
+          "field_validation_required"
+        ]
+      },
+      "ros2_profile": {
+        "driver_family": "ros2_astra_camera",
+        "camera_id": "astra-pro-top-01",
+        "role": "top",
+        "namespace": "camera_top",
+        "launch_file": "astra_pro.launch.xml",
+        "device_num": 2,
+        "serial_number": "17b3466a",
+        "connection_delay_ms": 100,
+        "streams": {
+          "enable_color": true,
+          "enable_depth": true,
+          "enable_ir": false,
+          "color_depth_synchronization": true
+        },
+        "point_cloud": {
+          "enable_point_cloud": true,
+          "enable_colored_point_cloud": false,
+          "depth_registration": false,
+          "engineering_only": true
+        },
+        "calibration_urls": {
+          "ir_info_url": "",
+          "color_info_url": "",
+          "expected_depth_camera_name": "ir_camera",
+          "expected_color_camera_name": "rgb_camera"
+        },
+        "uvc": {
+          "use_uvc_camera": true,
+          "uvc_product_id": "",
+          "uvc_retry_count": 100
+        },
+        "operator_policy": {
+          "manual_intrinsics_allowed": false,
+          "exposure_controls_visible_to_worker": false,
+          "measurement_mode": "auto"
+        }
+      }
+    },
+    {
+      "camera_id": "astra-pro-front-01",
+      "role": "front",
+      "enabled": true,
+      "backend": "openni2_primesense",
+      "model": "Orbbec Astra Pro",
+      "serial_hint": "371b6f72",
+      "vendor_root": "D:\\app\\orbbec-astra-pro\\vendor",
+      "runtime_dir": "D:\\app\\orbbec-astra-pro\\viewer",
+      "mount": {
+        "pose": "front_view",
+        "purpose": "front silhouette and height cross-check"
+      },
+      "intrinsics": {
+        "fx": 572.573,
+        "fy": 572.335,
+        "cx": 320.0,
+        "cy": 240.0,
+        "width": 640,
+        "height": 480,
+        "depth_scale": 1.0,
+        "source": "astra_pro_datasheet_depth_fov_estimate",
+        "quality_flags": [
+          "factory_camera_info_preferred",
+          "field_validation_required"
+        ]
+      },
+      "ros2_profile": {
+        "driver_family": "ros2_astra_camera",
+        "camera_id": "astra-pro-front-01",
+        "role": "front",
+        "namespace": "camera_front",
+        "launch_file": "astra_pro.launch.xml",
+        "device_num": 2,
+        "serial_number": "371b6f72",
+        "connection_delay_ms": 300,
+        "streams": {
+          "enable_color": true,
+          "enable_depth": true,
+          "enable_ir": false,
+          "color_depth_synchronization": true
+        },
+        "point_cloud": {
+          "enable_point_cloud": true,
+          "enable_colored_point_cloud": false,
+          "depth_registration": false,
+          "engineering_only": true
+        },
+        "calibration_urls": {
+          "ir_info_url": "",
+          "color_info_url": "",
+          "expected_depth_camera_name": "ir_camera",
+          "expected_color_camera_name": "rgb_camera"
+        },
+        "uvc": {
+          "use_uvc_camera": true,
+          "uvc_product_id": "",
+          "uvc_retry_count": 100
+        },
+        "operator_policy": {
+          "manual_intrinsics_allowed": false,
+          "exposure_controls_visible_to_worker": false,
+          "measurement_mode": "auto"
+        }
+      }
+    }
+  ],
+  "future_ready_roles": [
+    "top",
+    "front",
+    "left"
+  ],
+  "fusion_policy": {
+    "strategy": "conservative_max",
+    "minimum_views_for_auto_accept": 1,
+    "target_views_for_three_view": 3,
+    "disagreement_ratio": 0.12,
+    "notes": [
+      "Two Astra Pro cameras are currently configured as top and front.",
+      "Add left/right later for three-view fusion after external calibration.",
+      "Conservative max fusion avoids under-reporting shipping dimensions for irregular parts."
+    ]
+  }
+}

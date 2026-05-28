@@ -29,6 +29,11 @@ PackVision therefore tracks this folder as metadata first:
 - README/docs: integration policy and maintenance notes.
 - Raw package: stays local or moves to Git LFS/private release assets if redistribution is acceptable.
 
+## Field Config Snapshots
+
+- `packvision-depth-cameras.dual-astra-pro.20260528.json`: first verified two-camera field config for this workstation. It binds `top` to serial hint `17b3466a` and `front` to serial hint `371b6f72`. Copy it to `D:\app\orbbec-astra-pro\packvision-depth-cameras.json` on a matching workstation, then run PackVision readiness checks.
+- If the physical top/front positions are swapped, swap the two `serial_hint` values instead of changing code.
+
 ## Important Files
 
 | File | Size | Why it matters |

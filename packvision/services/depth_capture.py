@@ -355,10 +355,7 @@ def _capture_openni2_frame(camera: dict[str, Any]) -> DepthFrameBundle:
     try:
         openni2.initialize(str(runtime_dir))
         initialized = True
-        devices = openni2.Device.open_all()
-        if not devices:
-            raise DepthCaptureError("No OpenNI depth camera is connected.")
-        device = _select_openni_device(devices, camera)
+        device = _open_selected_openni_device(openni2, camera)
         stream = device.create_depth_stream()
         stream.start()
         frame = stream.read_frame()
@@ -399,13 +396,29 @@ def _capture_openni2_frame(camera: dict[str, Any]) -> DepthFrameBundle:
             pass
 
 
-def _select_openni_device(devices: list[Any], camera: dict[str, Any]) -> Any:
+def _open_selected_openni_device(openni2: Any, camera: dict[str, Any]) -> Any:
+    uris = list(openni2.Device.enumerate_uris())
+    if not uris:
+        raise DepthCaptureError("No OpenNI depth camera is connected.")
+    selected_uri = _select_openni_uri(uris, camera)
+    return openni2.Device(selected_uri)
+
+
+def _select_openni_uri(uris: list[Any], camera: dict[str, Any]) -> Any:
     serial_hint = camera.get("serial_hint")
     if serial_hint:
-        for device in devices:
-            if serial_hint in _device_uri(device):
-                return device
-    return devices[0]
+        for uri in uris:
+            if serial_hint in _uri_text(uri):
+                return uri
+        camera_id = camera.get("camera_id") or camera.get("role") or "configured camera"
+        raise DepthCaptureError(f"No OpenNI device matched serial_hint for {camera_id}: {serial_hint}")
+    return uris[0]
+
+
+def _uri_text(uri: Any) -> str:
+    if isinstance(uri, bytes):
+        return uri.decode("utf-8", errors="replace")
+    return str(uri or "")
 
 
 def _device_uri(device: Any) -> str:

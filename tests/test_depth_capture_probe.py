@@ -1,5 +1,5 @@
 from packvision.services import depth_capture
-from packvision.services.depth_capture import DepthCaptureConfig, probe_depth_capture
+from packvision.services.depth_capture import DepthCaptureConfig, DepthCaptureError, _select_openni_uri, probe_depth_capture
 
 
 def _capabilities(*, openni_available=True, runtime_ready=True):
@@ -95,3 +95,26 @@ def test_depth_capture_probe_field_diagnosis_blocks_when_backend_missing(monkeyp
     assert diagnosis["operator_summary_key"] == "probe_backend_missing"
     assert diagnosis["primary_actions"][0]["key"] == "install_windows_driver"
     assert diagnosis["can_continue_photo_fallback"] is True
+
+
+def test_openni_uri_selection_uses_serial_hint_without_opening_every_device():
+    uris = [
+        b"\\\\?\\usb#vid_2bc5&pid_0403&mi_00#7&17b3466a&0&0000",
+        b"\\\\?\\usb#vid_2bc5&pid_0403&mi_00#7&371b6f72&0&0000",
+    ]
+
+    selected = _select_openni_uri(uris, {"camera_id": "astra-pro-front-01", "serial_hint": "371b6f72"})
+
+    assert selected == uris[1]
+
+
+def test_openni_uri_selection_fails_when_serial_hint_is_missing_from_device_list():
+    uris = [b"\\\\?\\usb#vid_2bc5&pid_0403&mi_00#7&17b3466a&0&0000"]
+
+    try:
+        _select_openni_uri(uris, {"camera_id": "astra-pro-front-01", "serial_hint": "371b6f72"})
+    except DepthCaptureError as exc:
+        assert "astra-pro-front-01" in str(exc)
+        assert "371b6f72" in str(exc)
+    else:  # pragma: no cover - keeps the assertion readable on old pytest.
+        raise AssertionError("Expected DepthCaptureError")
