@@ -366,6 +366,14 @@ def test_depth_capture_probe_endpoint_is_actionable_without_required_hardware():
     assert isinstance(body["ready"], bool)
     assert body["next_actions"]
     assert body["next_action_keys"]
+    assert body["field_diagnosis"]["severity"] in {
+        "ready",
+        "waiting_for_camera",
+        "validation_required",
+        "action_required",
+        "blocked",
+    }
+    assert body["field_diagnosis"]["primary_actions"]
 
 
 def test_depth_cameras_endpoint_returns_configured_rig():

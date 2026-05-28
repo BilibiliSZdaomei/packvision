@@ -68,6 +68,13 @@ POST /api/depth/measure-capture
 
 如果插了相机，目标是看到 `ready_for_capture`。
 
+现在 `probe` 还会返回 `field_diagnosis`。现场重点看：
+
+- `severity=waiting_for_camera`：驱动和运行库正常，先插线、换 USB 口、打开 OrbbecViewer。
+- `severity=ready`：PackVision 已看到相机，可以采集一帧深度图。
+- `primary_actions`：照顺序执行，不用理解 backend 细节。
+- `can_continue_photo_fallback=true`：相机还没好时，可以先用照片兜底演练单号、历史、体积重和复核流程。
+
 ## 第一批实物验证
 
 建议准备：

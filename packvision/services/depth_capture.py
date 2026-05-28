@@ -106,6 +106,7 @@ def probe_depth_capture(config: DepthCaptureConfig | None = None) -> dict[str, A
     openni_primesense_ready = bool(backends["openni2_primesense"]["available"])
     openni_ready = bool(backends["openni2_runtime_probe"]["available"])
     openni_runtime_ready = bool(backends["openni2_runtime_probe"]["openni_runtime_ready"])
+    openni_probe: dict[str, Any] | None = None
 
     if selected == "pyorbbecsdk" and pyorbbec_ready:
         status = "hardware_validation_required"
@@ -198,6 +199,18 @@ def probe_depth_capture(config: DepthCaptureConfig | None = None) -> dict[str, A
             "Use the vendor viewer to confirm the camera before enabling real-time capture.",
         ]
 
+    field_diagnosis = _field_probe_diagnosis(
+        status=status,
+        ready=ready,
+        message=message,
+        message_key=message_key,
+        backend_selected=selected,
+        config=config,
+        next_action_keys=next_action_keys,
+        next_actions=next_actions,
+        capabilities=capabilities,
+        openni_probe=openni_probe,
+    )
     return {
         "backend_requested": backend_requested,
         "backend_selected": selected,
@@ -210,8 +223,78 @@ def probe_depth_capture(config: DepthCaptureConfig | None = None) -> dict[str, A
         "message": message,
         "next_action_keys": next_action_keys,
         "next_actions": next_actions,
+        "field_diagnosis": field_diagnosis,
         "capabilities": capabilities,
     }
+
+
+def _field_probe_diagnosis(
+    *,
+    status: str,
+    ready: bool,
+    message: str,
+    message_key: str,
+    backend_selected: str,
+    config: DepthCaptureConfig,
+    next_action_keys: list[str],
+    next_actions: list[str],
+    capabilities: dict[str, Any],
+    openni_probe: dict[str, Any] | None,
+) -> dict[str, Any]:
+    summary_key_by_status = {
+        "ready_for_capture": "probe_ready",
+        "openni_runtime_ready_no_device": "probe_no_camera",
+        "hardware_validation_required": "probe_validate_hardware",
+        "driver_ready_capture_backend_missing": "probe_backend_missing",
+        "capture_backend_missing": "probe_backend_missing",
+    }
+    severity_by_status = {
+        "ready_for_capture": "ready",
+        "openni_runtime_ready_no_device": "waiting_for_camera",
+        "hardware_validation_required": "validation_required",
+        "driver_ready_capture_backend_missing": "action_required",
+        "capture_backend_missing": "blocked",
+    }
+    summary_key = summary_key_by_status.get(status, message_key)
+    severity = severity_by_status.get(status, "attention" if not ready else "ready")
+    probe = openni_probe or (capabilities.get("camera_inventory") or {}).get("openni_probe") or {}
+    device_count = int(probe.get("device_count") or 0)
+    runtime_initialized = bool(probe.get("runtime_initialized"))
+    action_items = [
+        {
+            "key": key,
+            "label": key,
+            "detail": next_actions[index] if index < len(next_actions) else key,
+        }
+        for index, key in enumerate(next_action_keys)
+    ]
+    return {
+        "severity": severity,
+        "operator_summary_key": summary_key,
+        "operator_summary": _operator_summary_text(summary_key),
+        "operator_detail": message,
+        "can_continue_photo_fallback": not ready,
+        "primary_actions": action_items,
+        "evidence": {
+            "status": status,
+            "backend_selected": backend_selected,
+            "camera_id": config.camera_id,
+            "role": config.role,
+            "runtime_initialized": runtime_initialized,
+            "device_count": device_count,
+            "openni_error": probe.get("error"),
+        },
+    }
+
+
+def _operator_summary_text(summary_key: str) -> str:
+    summaries = {
+        "probe_ready": "Depth camera is visible; capture a frame, then validate a known carton.",
+        "probe_no_camera": "Driver and runtime are ready, but no Astra Pro is connected.",
+        "probe_validate_hardware": "Runtime is present; connect the camera and validate it with OrbbecViewer.",
+        "probe_backend_missing": "Capture backend is not ready; fix the driver/runtime or Python adapter first.",
+    }
+    return summaries.get(summary_key, "Review the capture probe status and follow the listed actions.")
 
 
 def capture_depth_once(config: DepthCaptureConfig | None = None) -> DepthFrameBundle:

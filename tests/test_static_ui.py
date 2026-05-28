@@ -115,6 +115,9 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert "/api/depth/live/start" in js
     assert "/api/depth/live/state" in js
     assert "/api/depth/live/confirm" in js
+    assert "field_diagnosis" in js
+    assert "probeSummaryLabels" in js
+    assert "photoFallbackAvailable" in js
     assert "/api/weight/volumetric-rules" in js
     assert "/api/scale/status" in js
     assert "/api/scale/read" in js

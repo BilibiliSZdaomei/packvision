@@ -1060,7 +1060,7 @@ summary:focus-visible,
 }
 
 .depth-demo-card {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
 }
 
 .validation-plan-card {
@@ -1284,6 +1284,20 @@ summary:focus-visible,
   color: var(--muted);
   font-size: 0.86rem;
   line-height: 1.4;
+}
+
+.probe-diagnosis-ready {
+  border-left-color: var(--success);
+}
+
+.probe-diagnosis-waiting_for_camera,
+.probe-diagnosis-validation_required {
+  border-left-color: var(--warning);
+}
+
+.probe-diagnosis-action_required,
+.probe-diagnosis-blocked {
+  border-left-color: var(--danger);
 }
 
 .depth-panel {
@@ -1664,6 +1678,7 @@ summary:focus-visible,
   --accent-3: #2f6fed;
   --success: #197a3e;
   --warning: #c27803;
+  --danger: #b42318;
   --accent-soft: #e1f2ee;
   --shadow: 0 12px 34px rgba(24, 33, 28, 0.09);
   --radius: 8px;
@@ -1684,6 +1699,7 @@ summary:focus-visible,
   --accent-3: #86a7ff;
   --success: #7ed99a;
   --warning: #f0bf54;
+  --danger: #ff8a7a;
   --accent-soft: #1e3f39;
   --shadow: 0 14px 42px rgba(0, 0, 0, 0.32);
 }
@@ -1702,6 +1718,7 @@ summary:focus-visible,
   --accent-3: #7fb5d7;
   --success: #a4c95f;
   --warning: #e6b450;
+  --danger: #ff9b86;
   --accent-soft: #313b22;
 }
 

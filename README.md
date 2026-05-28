@@ -52,19 +52,19 @@ PackVision 不是单纯的“拍照量尺寸 Demo”，而是给海外汽车备�
 当前验证结果：
 
 ```text
-132 passed in 9.77s
+135 passed in 7.95s
 ```
 
 最新已验证交付包：
 
 ```text
-D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_20260528_1837.zip
+D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_20260528_1924.zip
 ```
 
 大小约：
 
 ```text
-73.63 MB
+73.64 MB
 ```
 
 ## 4. 运行方式
@@ -181,7 +181,7 @@ PowerShell -ExecutionPolicy Bypass -File .\scripts\check_astra_depth_status.ps1
 ```
 
 在源码目录中，它会直接调用 Python 服务输出完整 readiness 结果。  
-在现场交付包目录中，它会提示或访问本地 EXE API，帮助判断环境是否可用。
+在现场交付包目录中，它会提示或访问本地 EXE API，帮助判断环境是否可用。脚本现在同时输出 `capture_probe.field_diagnosis` 和 `field_summary`，现场人员可以直接照 `primary_actions` 排查相机、USB、上位机和采集后端。
 
 ## 8. 核心 API
 
@@ -254,7 +254,7 @@ PowerShell -ExecutionPolicy Bypass -File .\scripts\check_astra_depth_status.ps1
 | `GET /api/depth/astra/tutorial-playbook` | 厂商教程二次审计后的控制、标定、多相机说明。 |
 | `GET /api/depth/cameras` | 相机配置、角色、三视图缺口。 |
 | `GET /api/depth/capture/capabilities` | 可用采集后端。 |
-| `POST /api/depth/capture/probe` | 探测当前相机是否可采集。 |
+| `POST /api/depth/capture/probe` | 探测当前相机是否可采集，并返回 `field_diagnosis` 现场诊断、可执行动作和照片兜底提示。 |
 | `POST /api/depth/capture/frame` | 采集一帧深度数据。 |
 | `POST /api/depth/measure-capture` | 默认工作台主流程：采集 Astra Pro 深度帧并直接测量；未传 ROI 时自动使用中心作业区。 |
 | `POST /api/depth/live/start` | 启动实时深度采集流。 |

@@ -12,6 +12,8 @@ const translations = {
     reportVerdict: "报告结论",
     reportScore: "证据得分",
     reportNextAction: "下一步",
+    fieldDiagnosis: "现场诊断",
+    photoFallbackAvailable: "相机未就绪时可先用照片兜底",
     engineering: "工程设置",
     depth: "深度",
     history: "历史",
@@ -270,6 +272,8 @@ const translations = {
     reportVerdict: "Verdict",
     reportScore: "Evidence score",
     reportNextAction: "Next action",
+    fieldDiagnosis: "Field diagnosis",
+    photoFallbackAvailable: "Photo fallback is available while the camera is not ready",
     engineering: "Engineering",
     depth: "Depth",
     history: "History",
@@ -528,6 +532,8 @@ const translations = {
     reportVerdict: "Висновок",
     reportScore: "Оцінка доказів",
     reportNextAction: "Наступний крок",
+    fieldDiagnosis: "Польова діагностика",
+    photoFallbackAvailable: "Фото-резерв доступний, поки камера не готова",
     engineering: "Інженерія",
     depth: "Глибина",
     history: "Історія",
@@ -1096,21 +1102,45 @@ const cameraPoseLabels = {
 const probeStatusLabels = {
   zh: {
     ready_for_capture: "可采集",
+    openni_runtime_ready_no_device: "运行库就绪，未检测到相机",
     driver_ready_capture_backend_missing: "驱动就绪，采集后端待接入",
     capture_backend_missing: "采集后端未就绪",
     hardware_validation_required: "需要连接相机验证",
   },
   en: {
     ready_for_capture: "Ready for capture",
+    openni_runtime_ready_no_device: "Runtime ready, camera not detected",
     driver_ready_capture_backend_missing: "Driver ready, capture backend pending",
     capture_backend_missing: "Capture backend missing",
     hardware_validation_required: "Hardware validation required",
   },
   uk: {
     ready_for_capture: "Готово до збору",
+    openni_runtime_ready_no_device: "Runtime готовий, камеру не знайдено",
     driver_ready_capture_backend_missing: "Драйвер готовий, бекенд очікує",
     capture_backend_missing: "Бекенд збору відсутній",
     hardware_validation_required: "Потрібна перевірка камери",
+  },
+};
+
+const probeSummaryLabels = {
+  zh: {
+    probe_ready: "相机已识别，可以采集",
+    probe_no_camera: "驱动和运行库正常，但没检测到相机",
+    probe_validate_hardware: "需要接入相机并用上位机验机",
+    probe_backend_missing: "采集后端未就绪，先修复驱动或运行库",
+  },
+  en: {
+    probe_ready: "Camera detected and ready",
+    probe_no_camera: "Driver/runtime ready, but no camera detected",
+    probe_validate_hardware: "Connect the camera and validate it in the vendor viewer",
+    probe_backend_missing: "Capture backend is not ready; fix driver/runtime first",
+  },
+  uk: {
+    probe_ready: "Камеру знайдено і готово",
+    probe_no_camera: "Драйвер/runtime готові, але камеру не знайдено",
+    probe_validate_hardware: "Підключіть камеру і перевірте у viewer",
+    probe_backend_missing: "Бекенд збору не готовий; перевірте драйвер/runtime",
   },
 };
 
@@ -1315,7 +1345,12 @@ const probeActionLabels = {
     confirm_vendor_viewer_streams: "先打开上位机，确认 RGB 和 Depth 都有画面。",
     validate_known_carton_history: "用已知尺寸纸箱试测，并保存到历史记录。",
     confirm_vendor_viewer_depth: "连接 Astra Pro，并确认上位机能看到深度画面。",
+    connect_astra_usb: "插上 Astra Pro 数据线，优先直连电脑 USB 口。",
+    open_vendor_viewer: "打开官方上位机确认深度画面。",
     rerun_probe_connected: "相机连接后再次运行采集探测。",
+    capture_depth_frame: "采集一帧深度图并检查稳定性。",
+    measure_known_carton: "测一个已知尺寸纸箱并对比卷尺真值。",
+    save_validation_history: "保存试测记录到历史。",
     install_pyorbbec_if_unstable: "如果 OpenNI2 采集不稳定，再安装 pyorbbecsdk。",
     use_depth_frame_apis: "继续用现有 depth_frame 接口导入深度帧测量。",
     install_pyorbbec_hardware_build: "相机到货后再做包含 pyorbbecsdk 的硬件版构建。",
@@ -1329,7 +1364,12 @@ const probeActionLabels = {
     confirm_vendor_viewer_streams: "Open the vendor viewer and confirm both RGB and Depth streams.",
     validate_known_carton_history: "Test a known carton and save the result to history.",
     confirm_vendor_viewer_depth: "Connect Astra Pro and confirm the vendor viewer can see depth frames.",
+    connect_astra_usb: "Plug in Astra Pro with a data-rated USB cable.",
+    open_vendor_viewer: "Open the vendor viewer and confirm the depth stream.",
     rerun_probe_connected: "Run the capture probe again with the camera connected.",
+    capture_depth_frame: "Capture one depth frame and check stability.",
+    measure_known_carton: "Measure a known carton and compare tape-measure truth.",
+    save_validation_history: "Save the trial result to history.",
     install_pyorbbec_if_unstable: "Install pyorbbecsdk later if OpenNI2 capture is unstable.",
     use_depth_frame_apis: "Keep using the current depth_frame APIs for imported depth frames.",
     install_pyorbbec_hardware_build: "Build a hardware edition with pyorbbecsdk after the camera arrives.",
@@ -1343,7 +1383,12 @@ const probeActionLabels = {
     confirm_vendor_viewer_streams: "Відкрийте переглядач постачальника і перевірте RGB та Depth.",
     validate_known_carton_history: "Перевірте коробку відомого розміру і збережіть в історію.",
     confirm_vendor_viewer_depth: "Підключіть Astra Pro і перевірте глибину у переглядачі.",
+    connect_astra_usb: "Підключіть Astra Pro USB-кабелем для даних.",
+    open_vendor_viewer: "Відкрийте viewer і перевірте глибину.",
     rerun_probe_connected: "Запустіть перевірку ще раз з підключеною камерою.",
+    capture_depth_frame: "Захопіть один кадр глибини і перевірте стабільність.",
+    measure_known_carton: "Виміряйте коробку відомого розміру.",
+    save_validation_history: "Збережіть тест в історію.",
     install_pyorbbec_if_unstable: "Встановіть pyorbbecsdk, якщо OpenNI2 працює нестабільно.",
     use_depth_frame_apis: "Використовуйте поточні depth_frame API для імпортованих кадрів.",
     install_pyorbbec_hardware_build: "Після прибуття камери зробіть збірку з pyorbbecsdk.",
@@ -2904,18 +2949,37 @@ function renderDepthProbe(data) {
   depthProbeSummary.innerHTML = "";
   const card = document.createElement("div");
   card.className = "depth-demo-card depth-probe-card";
+  const diagnosis = data.field_diagnosis || {};
+  const diagnosisLabel = labelFrom(probeSummaryLabels, diagnosis.operator_summary_key) || diagnosis.operator_summary || "--";
   appendSummaryCell(card, t("captureProbe"), data.ready ? t("ready") : t("missing"));
   appendSummaryCell(card, t("captureStatus"), labelFrom(probeStatusLabels, data.status));
   appendSummaryCell(card, t("selectedBackend"), data.backend_selected || "--");
+  appendSummaryCell(card, t("fieldDiagnosis"), diagnosisLabel);
   depthProbeSummary.appendChild(card);
 
+  if (diagnosis.operator_detail) {
+    const item = document.createElement("div");
+    item.className = `recommendation probe-diagnosis probe-diagnosis-${diagnosis.severity || "attention"}`;
+    item.textContent = `${diagnosisLabel}: ${diagnosis.operator_detail}`;
+    depthProbeSummary.appendChild(item);
+  }
+
+  if (diagnosis.can_continue_photo_fallback) {
+    const item = document.createElement("div");
+    item.className = "recommendation";
+    item.textContent = t("photoFallbackAvailable");
+    depthProbeSummary.appendChild(item);
+  }
+
+  const structuredActions = diagnosis.primary_actions || [];
   const actionKeys = data.next_action_keys || [];
-  const actions = actionKeys.length ? actionKeys : data.next_actions || [];
+  const actions = structuredActions.length ? structuredActions : actionKeys.length ? actionKeys : data.next_actions || [];
   actions.forEach((action, index) => {
     const item = document.createElement("div");
     item.className = "recommendation";
-    const fallback = data.next_actions?.[index] || action;
-    item.textContent = `${t("nextAction")}: ${labelFrom(probeActionLabels, action) || fallback}`;
+    const key = typeof action === "string" ? action : action.key;
+    const fallback = typeof action === "string" ? data.next_actions?.[index] || action : action.detail || action.label || key;
+    item.textContent = `${t("nextAction")}: ${labelFrom(probeActionLabels, key) || fallback}`;
     depthProbeSummary.appendChild(item);
   });
 }

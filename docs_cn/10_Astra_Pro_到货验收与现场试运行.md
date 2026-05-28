@@ -7,7 +7,7 @@
 - EXE 保持轻量化，深度 SDK 仍为可选依赖。
 - `GET /api/depth/status` 会检查教程资料目录、OpenNI2 运行时、Orbbec 驱动 DLL、Windows 驱动安装包和 `pyorbbecsdk`。
 - `GET /api/depth/capture/capabilities` 会报告当前可用的采集后端，判断是否需要等相机到货后安装 `pyorbbecsdk` 或走 OpenNI2 探测。
-- `POST /api/depth/capture/probe` 会返回选中后端、探测状态和下一步动作，适合现场人员插相机前后各跑一次。
+- `POST /api/depth/capture/probe` 会返回选中后端、探测状态、`field_diagnosis` 现场诊断和下一步动作，适合现场人员插相机前后各跑一次。
 - `GET /api/depth/demo-object` 可在没有硬件时验证异形件点云测量逻辑。
 - `POST /api/depth/demo-object/save` 可在没有硬件时验证单号、行业分类、历史记录和 CSV 导出。
 
@@ -23,7 +23,7 @@
 ```
 
 5. 打开 PackVision，确认 OpenNI2、驱动安装状态、上位机工具和设备守护状态。
-6. 点击“采集探测”，记录 `backend_selected`、`status` 和 `next_actions`。
+6. 点击“采集探测”，记录 `backend_selected`、`status`、`field_diagnosis.severity` 和 `field_diagnosis.primary_actions`。
 7. 点击“验收计划”，确认普通纸箱、长条件、异形件和异常材质的抽检数量。
 8. 用“保存演示记录”先生成一条深度记录，确认历史和 CSV 能导出。
 
@@ -61,6 +61,25 @@
 - `save_to_history`
 
 当 `save_to_history=true` 时，结果会进入 SQLite 历史库，并可通过 `GET /api/history/export.csv` 导出给 Excel/WMS。
+
+## 6.1 采集探测现场诊断
+
+`POST /api/depth/capture/probe` 现在不仅返回开发者看的 backend/status，也会返回仓库现场能理解的 `field_diagnosis`：
+
+| 字段 | 用途 |
+| --- | --- |
+| `severity` | 当前严重程度：`ready`、`waiting_for_camera`、`validation_required`、`action_required`、`blocked`。 |
+| `operator_summary_key` | UI 多语言文案键，例如 `probe_no_camera` 或 `probe_ready`。 |
+| `primary_actions` | 下一步动作，按顺序提示插 USB、打开 OrbbecViewer、重新探测或采集深度帧。 |
+| `evidence.device_count` | OpenNI 当前看到的相机数量。 |
+| `can_continue_photo_fallback` | 相机没就绪时，是否仍可先用照片兜底流程继续业务演练。 |
+
+现场判断口径：
+
+- `ready_for_capture`：可以采集一帧深度图，再测已知纸箱。
+- `openni_runtime_ready_no_device`：驱动和运行库没问题，先查 USB 数据线、相机供电和上位机画面。
+- `driver_ready_capture_backend_missing`：驱动/运行库在，但当前 Python/EXE 采集适配还缺组件。
+- `capture_backend_missing`：先处理驱动、资料路径或运行库，再进入测量。
 
 ## 7. 现场风险
 
