@@ -44,19 +44,19 @@ PackVision 服务汽车备件仓库的实际作业流程：
 ## 验证结果
 
 ```text
-80 passed in 5.14s
+95 passed in 6.97s
 ```
 
 最新交付包：
 
 ```text
-D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_20260528_0231.zip
+D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_20260528_0842.zip
 ```
 
 大小：
 
 ```text
-73.4 MB
+73.46 MB
 ```
 
 ## 开箱即用边界

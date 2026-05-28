@@ -70,8 +70,16 @@ PackVision 用这些距离算长、宽、高。
 正确顺序是：
 
 1. 优先用厂商驱动、OpenNI、ROS camera_info 或设备参数。
-2. 工程师发现误差异常时，再用棋盘格标定复核。
+2. 工程师发现误差异常时，再用厂商资料包里的棋盘格标定板复核。
 3. 仓库员工不要手动输入相机参数。
+
+PackVision 里对应的厂商标定板入口是：
+
+```text
+http://127.0.0.1:8765/api/depth/vendor-calibration-board.pdf
+```
+
+旧的 ArUco 卡只保留给手机照片兜底，不作为 Astra Pro 主标定入口。
 
 完整厂商资料见：[[Astra Pro 厂商资料学习笔记]]
 

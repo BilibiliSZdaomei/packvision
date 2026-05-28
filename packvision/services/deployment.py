@@ -229,7 +229,7 @@ def _checklist(
             "Vendor calibration board reference",
             "pass" if vendor_files.get("calibration_board", {}).get("found") else "manual_required",
             "Depth camera work should prefer factory/ROS camera_info; printed boards are fallback and validation aids.",
-            "Print the PackVision ArUco card and keep the vendor checkerboard PDF available.",
+            "Print the vendor checkerboard PDF for engineering validation; keep PackVision ArUco only for image fallback.",
             details=vendor_files.get("calibration_board", {}),
         ),
         _check(
@@ -324,18 +324,18 @@ def _target_warehouse_prepare_before_arrival() -> list[dict[str, Any]]:
             "verify": "Open OrbbecViewer and confirm color, depth, IR, and point cloud streams.",
         },
         {
-            "id": "printed_aruco_card",
-            "owner": "target_warehouse",
-            "required": True,
-            "item": "Print the PackVision A4 ArUco calibration card at 100% scale.",
-            "verify": "Measure the printed marker with a ruler; do not stretch or fit-to-page.",
-        },
-        {
             "id": "vendor_checkerboard_available",
             "owner": "target_warehouse",
+            "required": True,
+            "item": "Print or keep ready the Astra Pro vendor checkerboard calibration PDF.",
+            "verify": "Open /api/depth/vendor-calibration-board.pdf; use it for engineering validation, not daily measurement.",
+        },
+        {
+            "id": "printed_aruco_card",
+            "owner": "target_warehouse",
             "required": False,
-            "item": "Keep the vendor checkerboard calibration PDF printed or ready to print.",
-            "verify": "Use only for engineering recalibration, not daily warehouse operation.",
+            "item": "Print the PackVision A4 ArUco calibration card only if phone-photo fallback is needed.",
+            "verify": "Measure the printed marker with a ruler; do not stretch or fit-to-page.",
         },
         {
             "id": "usb_data_cable",

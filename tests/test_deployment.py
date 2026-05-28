@@ -20,7 +20,7 @@ def test_deployment_readiness_reports_handoff_modes(tmp_path):
     assert Path(repo_readiness["local_paths"]["handoff_package_script"]).exists()
     item_ids = {item["id"] for item in readiness["target_warehouse_prepare_before_arrival"]}
     assert "usb_data_cable" in item_ids
-    assert "printed_aruco_card" in item_ids
+    assert "vendor_checkerboard_available" in item_ids
     assert readiness["arrival_handoff_sequence"][0]["step"] == 1
 
 

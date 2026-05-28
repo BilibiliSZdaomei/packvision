@@ -350,6 +350,7 @@ input {
   text-decoration: none;
 }
 
+.depth-inline-card,
 .order-card,
 .parts-card,
 .mode-block {
@@ -360,6 +361,35 @@ input {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface-2);
+}
+
+.depth-inline-card {
+  gap: 12px;
+}
+
+.depth-inline-copy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.depth-inline-copy strong {
+  color: var(--text);
+  font-size: 0.94rem;
+  overflow-wrap: anywhere;
+}
+
+.depth-inline-card .depth-status-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.data-page {
+  display: grid;
+  gap: 18px;
+  scroll-margin-top: 18px;
 }
 
 .order-card {

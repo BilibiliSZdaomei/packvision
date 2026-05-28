@@ -28,19 +28,19 @@ PackVision 是面向汽车备件仓库的本地包装尺寸检测工作台。它
 测试结果：
 
 ```text
-80 passed in 5.14s
+95 passed in 6.97s
 ```
 
 最新交付包：
 
 ```text
-D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_20260528_0231.zip
+D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_20260528_0842.zip
 ```
 
 大小：
 
 ```text
-73.4 MB
+73.46 MB
 ```
 
 ## 开箱即用结论
@@ -129,7 +129,7 @@ flowchart TD
 - Astra Pro Windows 驱动。
 - OrbbecViewer。
 - 原装 USB 数据线；如需延长，优先主动 USB-A 公对母延长线。
-- A4 ArUco 标定卡，100% 原比例打印。
+- 厂商棋盘格标定板，优先从 `GET /api/depth/vendor-calibration-board.pdf` 打印；A4 ArUco 只作为手机照片兜底比例尺。
 - 稳定支架、哑光工作台、稳定光照。
 - 卷尺/卡尺和标准样品。
 
@@ -145,7 +145,7 @@ flowchart TD
 
 ## 后续路线
 
-1. 工业现场 UI 自动化：员工只扫码、放件、点测量。
+1. 工业现场 UI 自动化：员工只扫码、放件、点测量；主按钮默认走 Astra Pro 深度采集，没有相机或主动上传照片时才走图片兜底。
 2. 真值模板与复核样本池：把失败、低置信、人工修正样本变成训练资产。
 3. Astra Pro 到货验证：标准纸箱、长条件、异形件、异常材质。
 4. AI 插件接口：YOLO/分割/单目深度都作为可选插件。

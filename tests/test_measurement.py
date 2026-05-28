@@ -92,3 +92,37 @@ def test_side_photo_can_estimate_height():
     assert result["dimensions"]["height_mm"] == pytest.approx(80, abs=6)
     assert result["side_measurement"]["height_candidate_mm"] == pytest.approx(80, abs=6)
     assert "side_view_height_estimated" in result["quality_flags"]
+
+
+def test_center_cardboard_box_wins_over_lower_clutter_without_marker():
+    import cv2
+    import numpy as np
+
+    top = np.full((900, 700, 3), (214, 214, 198), dtype=np.uint8)
+    cv2.rectangle(top, (180, 230), (545, 690), (92, 112, 160), -1)
+    cv2.rectangle(top, (180, 230), (545, 690), (70, 62, 54), 3)
+    cv2.rectangle(top, (250, 760), (680, 890), (38, 38, 42), -1)
+    cv2.line(top, (260, 820), (690, 830), (15, 15, 15), 18)
+
+    side = np.full((520, 900, 3), (212, 212, 198), dtype=np.uint8)
+    cv2.rectangle(side, (110, 170), (790, 390), (92, 112, 160), -1)
+    cv2.rectangle(side, (110, 170), (790, 390), (70, 62, 54), 3)
+
+    ok_top, top_encoded = cv2.imencode(".jpg", top)
+    ok_side, side_encoded = cv2.imencode(".jpg", side)
+    assert ok_top and ok_side
+
+    result = measure_images(
+        top_encoded.tobytes(),
+        side_image_bytes=side_encoded.tobytes(),
+        config=MeasurementConfig(manual_height_mm=120),
+    )
+
+    assert result["status"] == "needs_reference"
+    assert result["dimensions"]["length_mm"] == pytest.approx(370, abs=30)
+    assert result["dimensions"]["width_mm"] == pytest.approx(295, abs=35)
+    assert result["dimensions"]["height_mm"] == pytest.approx(120, abs=0.1)
+    assert "cross_view_scale_estimate" in result["quality_flags"]
+    assert result["top_view"]["box"]["candidate_kind"] == "cardboard_color"
+    center_y = sum(point[1] for point in result["top_view"]["box"]["corners"]) / 4
+    assert 350 < center_y < 560

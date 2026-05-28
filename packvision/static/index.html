@@ -17,12 +17,10 @@
           </div>
         </div>
         <nav class="rail-nav" aria-label="Primary">
-          <a class="nav-item is-active" href="#measure" data-i18n="measure">测量</a>
-          <a class="nav-item" href="#depth" data-i18n="depth">深度</a>
-          <a class="nav-item" href="#history" data-i18n="history">历史</a>
-          <a class="nav-item" href="#review" data-i18n="review">复核</a>
-          <a class="nav-item" href="#usage" data-i18n="usage">统计</a>
-          <a class="nav-item" href="/api/calibration-card.svg" target="_blank" rel="noopener" data-i18n="calibration">校准卡</a>
+          <a class="nav-item is-active" href="#measure" data-i18n="workbench">工作台</a>
+          <a class="nav-item" href="#dataCenter" data-i18n="dataCenter">数据中心</a>
+          <a class="nav-item" href="#engineering" data-i18n="engineering">工程设置</a>
+          <a class="nav-item" href="/api/depth/vendor-calibration-board.pdf" target="_blank" rel="noopener" data-i18n="vendorCalibrationBoard">厂商标定板</a>
         </nav>
         <div class="rail-status">
           <span class="status-dot"></span>
@@ -34,7 +32,7 @@
         <header class="top-bar">
           <div>
             <p class="section-label" data-i18n="project">包装尺寸检测</p>
-            <h2 data-i18n="title">手机照片、侧面照和人工修正一起测</h2>
+            <h2 data-i18n="title">Astra Pro 自动测量工作台</h2>
           </div>
           <div class="toolbar">
             <label class="select-label">
@@ -58,9 +56,23 @@
             <div class="panel-head">
               <div>
                 <p class="section-label" data-i18n="capture">采集</p>
-                <h3 data-i18n="uploadSet">上传图片和单号</h3>
+                <h3 data-i18n="uploadSet">深度相机采集和单号</h3>
               </div>
               <span class="flow-badge" data-i18n="autoWorkflow">自动识别流程</span>
+            </div>
+
+            <div class="depth-inline-card">
+              <div class="depth-inline-copy">
+                <span class="flow-badge" data-i18n="depthCameraPrimary">Astra Pro 优先</span>
+                <strong data-i18n="depthCameraPrimaryText">默认用深度相机采集；未连接时才使用照片兜底。</strong>
+              </div>
+              <div class="depth-primary-actions">
+                <button class="tool-button" type="button" id="refreshDepthStatusButton" data-i18n="refreshDepth">刷新状态</button>
+                <button class="tool-button" type="button" id="probeDepthCaptureButton" data-i18n="probeDepthCapture">采集探测</button>
+                <a class="tool-button" id="downloadSupportBundleLink" href="/api/deployment/support-bundle.zip" target="_blank" rel="noopener" data-i18n="supportBundle">现场支持包</a>
+              </div>
+              <div class="depth-status-grid" id="depthStatusGrid"></div>
+              <div class="depth-probe-summary" id="depthProbeSummary"></div>
             </div>
 
             <div class="order-card">
@@ -117,15 +129,15 @@
 
             <div class="drop-grid">
               <label class="drop-zone" for="topImage" data-drop-zone="top">
-                <input id="topImage" name="top_image" type="file" accept="image/*" required />
+                <input id="topImage" name="top_image" type="file" accept="image/*" />
                 <img class="drop-preview" id="topPreview" alt="" />
-                <span class="drop-title" data-i18n="topPhoto">顶部照片</span>
+                <span class="drop-title" data-i18n="topPhoto">顶部照片兜底</span>
                 <span class="drop-file" id="topFileName" data-i18n="noFile">未选择文件</span>
               </label>
               <label class="drop-zone" for="sideImage" data-drop-zone="side">
                 <input id="sideImage" name="side_image" type="file" accept="image/*" />
                 <img class="drop-preview" id="sidePreview" alt="" />
-                <span class="drop-title" data-i18n="sidePhoto">侧面照片</span>
+                <span class="drop-title" data-i18n="sidePhoto">侧面照片兜底</span>
                 <span class="drop-file" id="sideFileName" data-i18n="optional">可选</span>
               </label>
             </div>
@@ -224,15 +236,11 @@
           </section>
         </section>
 
-        <section id="depth" class="depth-panel">
+        <section id="engineering" class="depth-panel engineering-panel">
           <div class="panel-head">
             <div>
-              <p class="section-label" data-i18n="depth">深度</p>
-              <h3 data-i18n="depthTitle">Astra Pro 深度相机工作区</h3>
-            </div>
-            <div class="depth-primary-actions">
-              <button class="tool-button" type="button" id="refreshDepthStatusButton" data-i18n="refreshDepth">刷新状态</button>
-              <button class="tool-button" type="button" id="probeDepthCaptureButton" data-i18n="probeDepthCapture">采集探测</button>
+              <p class="section-label" data-i18n="engineering">工程设置</p>
+              <h3 data-i18n="depthTitle">Astra Pro 调试、验收和插件</h3>
             </div>
           </div>
           <details class="engineering-drawer">
@@ -241,7 +249,8 @@
               <button class="tool-button" type="button" id="loadDepthWorkflowButton" data-i18n="workflowGuide">调试清单</button>
               <button class="tool-button" type="button" id="loadValidationPlanButton" data-i18n="validationPlan">验收计划</button>
               <a class="tool-button" href="/api/validation/trial-template.csv" target="_blank" rel="noopener" data-i18n="validationTemplate">验收模板</a>
-              <a class="tool-button" id="downloadSupportBundleLink" href="/api/deployment/support-bundle.zip" target="_blank" rel="noopener" data-i18n="supportBundle">现场支持包</a>
+              <a class="tool-button" href="/api/depth/vendor-calibration-board.pdf" target="_blank" rel="noopener" data-i18n="vendorCalibrationBoard">厂商标定板</a>
+              <a class="tool-button" href="/api/calibration-card.svg" target="_blank" rel="noopener" data-i18n="fallbackArUcoCard">照片兜底 ArUco</a>
               <button class="tool-button" type="button" id="loadAiPluginsButton" data-i18n="aiPlugins">AI 插件</button>
               <button class="tool-button" type="button" id="runDepthDemoButton" data-i18n="runDepthDemo">运行深度演示</button>
               <button class="tool-button" type="button" id="saveDepthDemoButton" data-i18n="saveDepthDemo">保存演示记录</button>
@@ -281,13 +290,19 @@
               </label>
             </div>
           </details>
-          <div class="depth-status-grid" id="depthStatusGrid"></div>
           <div class="depth-workflow-summary" id="depthWorkflowSummary"></div>
           <div class="validation-plan-summary" id="validationPlanSummary"></div>
           <div class="depth-probe-summary" id="aiPluginSummary"></div>
-          <div class="depth-probe-summary" id="depthProbeSummary"></div>
           <div class="depth-demo-summary" id="depthDemoSummary"></div>
         </section>
+
+        <section id="dataCenter" class="data-page">
+          <div class="panel-head">
+            <div>
+              <p class="section-label" data-i18n="dataCenter">数据中心</p>
+              <h3 data-i18n="dataCenterTitle">历史、复核和使用统计</h3>
+            </div>
+          </div>
 
         <section id="history" class="history-panel">
           <div class="panel-head">
@@ -335,13 +350,14 @@
           <div class="usage-summary-grid" id="usageSummaryGrid"></div>
           <div class="usage-endpoints" id="usageEndpointList"></div>
         </section>
+        </section>
 
         <section class="api-panel">
           <div>
             <p class="section-label" data-i18n="api">API</p>
             <h3>POST /api/measure</h3>
           </div>
-          <code>order_id, barcode_text, top_image, side_image?, marker_size_mm, manual_height_mm?, camera_distance_mm?, focal_length_35mm?, top_box_json?, GET /api/depth/status, GET /api/depth/workflow-guide, POST /api/depth/measure-object, GET /api/history/export.csv, GET /api/review/samples, GET /api/review/truth-template.csv, GET /api/validation/trial-template.csv</code>
+          <code>POST /api/depth/measure-capture, POST /api/measure, order_id, barcode_text, top_image?, side_image?, marker_size_mm, manual_height_mm?, top_box_json?, GET /api/depth/status, GET /api/depth/vendor-calibration-board.pdf, GET /api/history/export.csv, GET /api/review/samples, GET /api/usage/summary</code>
         </section>
       </main>
     </div>

@@ -2,14 +2,20 @@ const translations = {
   zh: {
     localLab: "本地仓库测量台",
     measure: "测量",
+    workbench: "工作台",
+    dataCenter: "数据中心",
+    dataCenterTitle: "历史、复核和使用统计",
+    engineering: "工程设置",
     depth: "深度",
     history: "历史",
     review: "复核",
     usage: "统计",
     calibration: "校准卡",
+    vendorCalibrationBoard: "厂商标定板",
+    fallbackArUcoCard: "照片兜底 ArUco",
     localApi: "本地 API",
     project: "包装尺寸检测",
-    title: "自动测量工作台",
+    title: "Astra Pro 自动测量工作台",
     language: "语言",
     light: "明亮",
     dark: "深色",
@@ -21,7 +27,7 @@ const translations = {
     guideTraceTitle: "单号追溯",
     guideTraceText: "扫码枪、条码图片和手工录入都会保存到历史记录。",
     capture: "采集",
-    uploadSet: "扫码、上传、自动测量",
+    uploadSet: "深度相机采集和单号",
     printMarker: "打印标记",
     orderId: "单号",
     barcodeText: "扫码文本",
@@ -46,8 +52,8 @@ const translations = {
     decoding: "识别中",
     barcodeFound: "已识别单号",
     barcodeNotFound: "未识别到条码",
-    topPhoto: "顶部照片",
-    sidePhoto: "侧面照片",
+    topPhoto: "顶部照片兜底",
+    sidePhoto: "侧面照片兜底",
     noFile: "未选择文件",
     optional: "可选",
     measurementMode: "测量参数",
@@ -110,7 +116,9 @@ const translations = {
     captureMode: "推荐采集",
     chargeableWeight: "计费重量",
     exportCsv: "导出 CSV",
-    depthTitle: "Astra Pro 深度相机工作区",
+    depthTitle: "Astra Pro 调试、验收和插件",
+    depthCameraPrimary: "Astra Pro 优先",
+    depthCameraPrimaryText: "默认用深度相机采集；未连接时才使用照片兜底。",
     refreshDepth: "刷新状态",
     probeDepthCapture: "采集探测",
     workflowGuide: "调试清单",
@@ -158,14 +166,20 @@ const translations = {
   en: {
     localLab: "Local warehouse station",
     measure: "Measure",
+    workbench: "Workbench",
+    dataCenter: "Data center",
+    dataCenterTitle: "History, review, and usage",
+    engineering: "Engineering",
     depth: "Depth",
     history: "History",
     review: "Review",
     usage: "Usage",
     calibration: "Calibration",
+    vendorCalibrationBoard: "Vendor board",
+    fallbackArUcoCard: "Fallback ArUco",
     localApi: "Local API",
     project: "Packaging dimension detection",
-    title: "Automatic measurement workstation",
+    title: "Astra Pro automatic workstation",
     language: "Language",
     light: "Light",
     dark: "Dark",
@@ -177,7 +191,7 @@ const translations = {
     guideTraceTitle: "Order traceability",
     guideTraceText: "Scanner input, barcode images, and manual entry are saved to history.",
     capture: "Capture",
-    uploadSet: "Scan, upload, measure",
+    uploadSet: "Depth capture and order ID",
     printMarker: "Print marker",
     orderId: "Order ID",
     barcodeText: "Scanned text",
@@ -202,8 +216,8 @@ const translations = {
     decoding: "Decoding",
     barcodeFound: "Order detected",
     barcodeNotFound: "No barcode detected",
-    topPhoto: "Top photo",
-    sidePhoto: "Side photo",
+    topPhoto: "Top photo fallback",
+    sidePhoto: "Side photo fallback",
     noFile: "No file selected",
     optional: "Optional",
     measurementMode: "Measurement parameters",
@@ -266,7 +280,9 @@ const translations = {
     captureMode: "Capture mode",
     chargeableWeight: "Chargeable weight",
     exportCsv: "Export CSV",
-    depthTitle: "Astra Pro depth camera workspace",
+    depthTitle: "Astra Pro setup, trials, and plugins",
+    depthCameraPrimary: "Astra Pro first",
+    depthCameraPrimaryText: "Use depth capture by default; photo upload is only a fallback when the camera is unavailable.",
     refreshDepth: "Refresh status",
     probeDepthCapture: "Probe capture",
     workflowGuide: "Setup guide",
@@ -314,14 +330,20 @@ const translations = {
   uk: {
     localLab: "Локальна станція складу",
     measure: "Вимір",
+    workbench: "Станція",
+    dataCenter: "Дані",
+    dataCenterTitle: "Історія, перевірка і статистика",
+    engineering: "Інженерія",
     depth: "Глибина",
     history: "Історія",
     review: "Перевірка",
     usage: "Статистика",
     calibration: "Калібрування",
+    vendorCalibrationBoard: "Дошка виробника",
+    fallbackArUcoCard: "Резерв ArUco",
     localApi: "Локальний API",
     project: "Вимірювання пакування",
-    title: "Автоматична станція вимірювання",
+    title: "Автоматична станція Astra Pro",
     language: "Мова",
     light: "Світла",
     dark: "Темна",
@@ -333,7 +355,7 @@ const translations = {
     guideTraceTitle: "Відстеження замовлень",
     guideTraceText: "Сканер, фото штрихкоду і ручний ввід зберігаються в історії.",
     capture: "Збір",
-    uploadSet: "Скан, фото, вимір",
+    uploadSet: "Збір глибини і номер",
     printMarker: "Друк маркера",
     orderId: "Номер",
     barcodeText: "Текст скану",
@@ -358,8 +380,8 @@ const translations = {
     decoding: "Зчитування",
     barcodeFound: "Номер знайдено",
     barcodeNotFound: "Штрихкод не знайдено",
-    topPhoto: "Фото зверху",
-    sidePhoto: "Фото збоку",
+    topPhoto: "Фото зверху, резерв",
+    sidePhoto: "Фото збоку, резерв",
     noFile: "Файл не вибрано",
     optional: "Необов'язково",
     measurementMode: "Параметри",
@@ -422,7 +444,9 @@ const translations = {
     captureMode: "Режим зйомки",
     chargeableWeight: "Платна вага",
     exportCsv: "Експорт CSV",
-    depthTitle: "Робоча зона Astra Pro",
+    depthTitle: "Astra Pro: налаштування, приймання і плагіни",
+    depthCameraPrimary: "Спершу Astra Pro",
+    depthCameraPrimaryText: "За замовчуванням використовується камера глибини; фото лише як резерв.",
     refreshDepth: "Оновити статус",
     probeDepthCapture: "Перевірити збір",
     workflowGuide: "Підготовка",
@@ -480,6 +504,7 @@ const flagLabels = {
     manual_height_used: "使用人工高度",
     manual_side_box_used: "侧面手动框",
     manual_top_box_used: "顶部手动框",
+    cross_view_scale_estimate: "侧面高度反推长宽",
     missing_aruco_reference: "未识别 ArUco 标记",
     package_contour_not_found: "未找到包装轮廓",
     package_small_in_frame: "包装在画面中偏小",
@@ -487,6 +512,7 @@ const flagLabels = {
     side_aruco_reference_detected: "侧面标记已识别",
     side_camera_distance_exif_scale_used: "侧面使用 EXIF 估算",
     side_camera_distance_manual_focal_scale_used: "侧面使用距离和焦距估算",
+    side_manual_height_scale_used: "侧面使用人工高度比例",
     side_view_height_estimated: "使用侧面图估算高度",
     single_camera_perspective_limited: "单目照片存在透视限制",
     depth_camera_measurement: "深度相机测量",
@@ -525,6 +551,7 @@ const flagLabels = {
     manual_height_used: "Manual height used",
     manual_side_box_used: "Manual side box",
     manual_top_box_used: "Manual top box",
+    cross_view_scale_estimate: "Cross-view size estimate",
     missing_aruco_reference: "ArUco marker missing",
     package_contour_not_found: "Package contour not found",
     package_small_in_frame: "Package is small in frame",
@@ -532,6 +559,7 @@ const flagLabels = {
     side_aruco_reference_detected: "Side marker detected",
     side_camera_distance_exif_scale_used: "Side EXIF estimate used",
     side_camera_distance_manual_focal_scale_used: "Side distance estimate used",
+    side_manual_height_scale_used: "Side manual-height scale used",
     side_view_height_estimated: "Height estimated from side view",
     single_camera_perspective_limited: "Single-camera perspective limit",
     depth_camera_measurement: "Depth camera measurement",
@@ -570,6 +598,7 @@ const flagLabels = {
     manual_height_used: "Ручна висота",
     manual_side_box_used: "Ручна рамка збоку",
     manual_top_box_used: "Ручна рамка зверху",
+    cross_view_scale_estimate: "Оцінка з двох ракурсів",
     missing_aruco_reference: "Немає маркера ArUco",
     package_contour_not_found: "Контур не знайдено",
     package_small_in_frame: "Об'єкт малий у кадрі",
@@ -577,6 +606,7 @@ const flagLabels = {
     side_aruco_reference_detected: "Бічний маркер знайдено",
     side_camera_distance_exif_scale_used: "Бічна оцінка EXIF",
     side_camera_distance_manual_focal_scale_used: "Бічна оцінка відстані",
+    side_manual_height_scale_used: "Бічний масштаб за висотою",
     side_view_height_estimated: "Висота з бічного фото",
     single_camera_perspective_limited: "Обмеження однієї камери",
     depth_camera_measurement: "Вимір камерою глибини",
@@ -619,6 +649,7 @@ const recommendationLabels = {
     retake_on_plain_background: "换成更干净的背景，并保证边缘清晰。",
     stabilize_camera_or_tripod: "固定手机/相机后重拍，避免手抖。",
     use_distance_mode_or_marker: "没有标记时，可以输入相机距离和等效焦距进行估算。",
+    cross_view_estimate_needs_review: "这是侧面高度反推的低置信估算，建议复核或改用深度相机采集。",
     retake_depth_with_less_reflection: "调整角度避开反光/透明区域，必要时贴哑光胶带后重采深度。",
     stabilize_depth_camera_and_retake: "固定深度相机与工件，等待画面稳定后重新采集。",
     select_clean_background_roi: "重新选择平整干净的台面背景区域。",
@@ -635,6 +666,7 @@ const recommendationLabels = {
     retake_on_plain_background: "Use a cleaner background with clearer parcel edges.",
     stabilize_camera_or_tripod: "Stabilize the phone/camera and retake.",
     use_distance_mode_or_marker: "Without a marker, enter camera distance and 35mm focal length for estimation.",
+    cross_view_estimate_needs_review: "This is a low-confidence estimate inferred from side height; review it or use depth capture.",
     retake_depth_with_less_reflection: "Adjust the angle away from reflections or transparent areas; use matte tape if needed.",
     stabilize_depth_camera_and_retake: "Fix the depth camera and part, wait for a stable frame, then recapture.",
     select_clean_background_roi: "Select a flatter, cleaner table/background ROI.",
@@ -651,6 +683,7 @@ const recommendationLabels = {
     retake_on_plain_background: "Використайте чистіший фон і чіткі краї.",
     stabilize_camera_or_tripod: "Зафіксуйте телефон/камеру і перезніміть.",
     use_distance_mode_or_marker: "Без маркера введіть відстань камери та фокус 35 мм.",
+    cross_view_estimate_needs_review: "Це оцінка з низькою довірою за бічною висотою; перевірте її або використайте камеру глибини.",
     retake_depth_with_less_reflection: "Змініть кут від відблисків або прозорих зон; за потреби використайте матову стрічку.",
     stabilize_depth_camera_and_retake: "Зафіксуйте камеру глибини й деталь, дочекайтесь стабільного кадру та повторіть.",
     select_clean_background_roi: "Виберіть рівнішу й чистішу ділянку столу як фон.",
@@ -1203,18 +1236,8 @@ async function submitMeasurement(event) {
   qualityFlags.innerHTML = "";
   recommendations.innerHTML = "";
 
-  const payload = new FormData(form);
-  cleanPayload(payload);
-
   try {
-    const response = await fetch("/api/measure", {
-      method: "POST",
-      body: payload,
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.detail || response.statusText);
-    }
+    const data = topImage.files?.length ? await submitImageMeasurement() : await submitDepthCaptureMeasurement();
     renderResult(data);
     await loadHistory();
     await loadUsageSummary();
@@ -1223,6 +1246,55 @@ async function submitMeasurement(event) {
   } finally {
     setBusy(false);
   }
+}
+
+async function submitImageMeasurement() {
+  const payload = new FormData(form);
+  cleanPayload(payload);
+  const response = await fetch("/api/measure", {
+    method: "POST",
+    body: payload,
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.detail || response.statusText);
+  }
+  return data;
+}
+
+async function submitDepthCaptureMeasurement() {
+  const response = await fetch("/api/depth/measure-capture", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(buildDepthCapturePayload()),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.detail || response.statusText);
+  }
+  return data;
+}
+
+function buildDepthCapturePayload() {
+  const payload = {
+    backend: "auto",
+    measurement_mode: "auto",
+    save_to_history: true,
+  };
+  for (const key of ["order_id", "barcode_text", "part_category", "package_hint", "material_hint"]) {
+    const value = String(form.elements[key]?.value || "").trim();
+    if (value) {
+      payload[key] = value;
+    }
+  }
+  if (!payload.order_id && payload.barcode_text) {
+    payload.order_id = payload.barcode_text;
+  }
+  const actualWeight = Number(form.elements.actual_weight_kg?.value);
+  if (Number.isFinite(actualWeight) && actualWeight > 0) {
+    payload.actual_weight_kg = actualWeight;
+  }
+  return payload;
 }
 
 async function loadDemoImage() {

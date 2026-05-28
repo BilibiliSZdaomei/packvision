@@ -16,7 +16,7 @@ from pydantic import BaseModel
 from packvision import __version__
 from packvision.services.ai_plugins import build_ai_plugin_inventory
 from packvision.services.barcode import detect_codes
-from packvision.services.astra_vendor import AstraVendorError, astra_vendor_profile, normalize_camera_info
+from packvision.services.astra_vendor import AstraVendorError, astra_vendor_profile, normalize_camera_info, resolve_astra_root
 from packvision.services.capture_quality import CaptureQualityError, analyze_capture_quality
 from packvision.services.depth_camera import depth_camera_status
 from packvision.services.depth_capture import (
@@ -164,7 +164,7 @@ class DepthMeasureCapturePayload(DepthTraceabilityPayload):
     camera_id: str | None = None
     role: str | None = None
     measurement_mode: str = "object_mask"
-    roi: list[int]
+    roi: list[int] | None = None
     background_roi: list[int] | None = None
     table_depth_mm: float | None = None
     min_valid_depth_mm: float = 50.0
@@ -293,6 +293,17 @@ def create_app() -> FastAPI:
         except MeasurementError as exc:
             raise HTTPException(status_code=503, detail=str(exc)) from exc
         return Response(content=svg, media_type="image/svg+xml")
+
+    @app.get("/api/depth/vendor-calibration-board.pdf")
+    def vendor_calibration_board() -> FileResponse:
+        board_path = resolve_astra_root() / "棋盘格标定200x160_7x10.pdf"
+        if not board_path.exists():
+            raise HTTPException(status_code=404, detail="Astra Pro vendor calibration board not found.")
+        return FileResponse(
+            board_path,
+            media_type="application/pdf",
+            filename="Astra-Pro-checkerboard-200x160-7x10.pdf",
+        )
 
     @app.get("/api/demo-image.jpg")
     def demo_image() -> Response:
@@ -608,14 +619,19 @@ def create_app() -> FastAPI:
                     role=payload.role,
                 )
             )
+            roi, background_roi, region_source = _depth_capture_regions(
+                bundle.depth_frame,
+                roi=payload.roi,
+                background_roi=payload.background_roi,
+            )
             measurement_mode = str(payload.measurement_mode or "object_mask").strip().lower()
             if measurement_mode == "roi":
                 result = measure_depth_roi(
                     bundle.depth_frame,
                     bundle.intrinsics,
                     DepthMeasurementConfig(
-                        roi=payload.roi,
-                        background_roi=payload.background_roi,
+                        roi=roi,
+                        background_roi=background_roi,
                         table_depth_mm=payload.table_depth_mm,
                         min_valid_depth_mm=payload.min_valid_depth_mm,
                         max_valid_depth_mm=payload.max_valid_depth_mm,
@@ -627,8 +643,8 @@ def create_app() -> FastAPI:
                     bundle.depth_frame,
                     bundle.intrinsics,
                     DepthObjectConfig(
-                        roi=payload.roi,
-                        background_roi=payload.background_roi,
+                        roi=roi,
+                        background_roi=background_roi,
                         table_depth_mm=payload.table_depth_mm,
                         min_valid_depth_mm=payload.min_valid_depth_mm,
                         max_valid_depth_mm=payload.max_valid_depth_mm,
@@ -640,6 +656,11 @@ def create_app() -> FastAPI:
             else:
                 raise DepthCaptureError("measurement_mode must be auto, object_mask, or roi.")
             result["camera_capture"] = _depth_frame_response(bundle, include_frame=False)
+            result["capture_regions"] = {
+                "roi": roi,
+                "background_roi": background_roi,
+                "source": region_source,
+            }
             finalized = _finalize_depth_result(result, payload, measurement_source="depth_camera_capture")
             _set_usage_trace(request, finalized)
             return finalized
@@ -947,6 +968,36 @@ def _depth_frame_response(bundle: Any, *, include_frame: bool) -> dict[str, obje
     if include_frame:
         response["depth_frame"] = bundle.depth_frame
     return response
+
+
+def _depth_capture_regions(
+    depth_frame: list[list[float]],
+    *,
+    roi: list[int] | None,
+    background_roi: list[int] | None,
+) -> tuple[list[int], list[int] | None, str]:
+    frame_height = len(depth_frame)
+    frame_width = len(depth_frame[0]) if frame_height else 0
+    if frame_width <= 0 or frame_height <= 0:
+        raise DepthCaptureError("Captured depth frame is empty.")
+    if roi:
+        return roi, background_roi, "manual"
+
+    margin_x = max(1, int(frame_width * 0.18))
+    margin_y = max(1, int(frame_height * 0.18))
+    auto_roi = [
+        margin_x,
+        margin_y,
+        max(margin_x + 1, frame_width - margin_x),
+        max(margin_y + 1, frame_height - margin_y),
+    ]
+    auto_background_roi = background_roi or [
+        0,
+        0,
+        max(1, min(margin_x, frame_width)),
+        max(1, min(margin_y, frame_height)),
+    ]
+    return auto_roi, auto_background_roi, "auto_center_default"
 
 
 def _depth_demo_object_result() -> dict[str, object]:

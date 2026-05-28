@@ -41,10 +41,11 @@ flowchart LR
 | `GET /api/deployment/readiness` | 海外仓开箱即用体检：EXE、数据目录、驱动、上位机、OpenNI、相机连接、准备清单 |
 | `GET /api/depth/cameras` | 看配置了几台相机、是否连上、三视图还缺什么 |
 | `GET /api/depth/status` | 看驱动、OpenNI、厂商资料状态 |
+| `GET /api/depth/vendor-calibration-board.pdf` | 打开 Astra Pro 厂商棋盘格标定板 |
 | `GET /api/depth/astra/tutorial-playbook` | 看厂商教程二次审计后的 ROS2 控制、多相机、标定和点云适配 |
 | `POST /api/depth/capture/probe` | 探测相机能不能采集 |
 | `POST /api/depth/capture/frame` | 采集一帧深度数据 |
-| `POST /api/depth/measure-capture` | 采集并直接测量 |
+| `POST /api/depth/measure-capture` | 工作台主流程：采集并直接测量；未传 ROI 时自动使用中心作业区 |
 | `POST /api/depth/simulate-from-image` | 上传真实图片，用 Astra 模拟内参和合成深度帧做硬件到货前干跑 |
 
 ## 测量接口

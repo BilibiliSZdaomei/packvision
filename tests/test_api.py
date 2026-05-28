@@ -33,6 +33,15 @@ def test_deployment_support_bundle_endpoint_returns_zip():
     assert response.content.startswith(b"PK")
 
 
+def test_vendor_calibration_board_endpoint_uses_astra_reference_file():
+    client = TestClient(create_app())
+    response = client.get("/api/depth/vendor-calibration-board.pdf")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/pdf"
+    assert response.content.startswith(b"%PDF")
+
+
 @pytest.mark.skipif(not opencv_ready(), reason="OpenCV ArUco is unavailable")
 def test_demo_image_endpoint_returns_jpeg():
     client = TestClient(create_app())
@@ -361,6 +370,46 @@ def test_depth_capture_frame_endpoint_returns_captured_frame_without_hardware(mo
     assert body["frame_shape"] == {"height": 2, "width": 2}
     assert "depth_frame" not in body
     assert body["camera_id"] == "astra-pro-top-01"
+
+
+def test_depth_measure_capture_defaults_to_center_roi_without_worker_selection(monkeypatch):
+    from packvision.services.depth_capture import DepthFrameBundle
+    from packvision.services.depth_geometry import DepthIntrinsics
+
+    def fake_capture(config):
+        depth_frame = [[1000.0 for _ in range(10)] for _ in range(10)]
+        for y in range(3, 7):
+            for x in range(3, 8):
+                depth_frame[y][x] = 760.0
+        return DepthFrameBundle(
+            depth_frame=depth_frame,
+            intrinsics=DepthIntrinsics(fx=100, fy=100, cx=5, cy=5, width=10, height=10),
+            backend="openni2_primesense",
+            camera_id=config.camera_id or "astra-pro-top-01",
+            role=config.role or "top",
+            serial_number="fake-uri",
+            frame_index=8,
+        )
+
+    monkeypatch.setattr("packvision.app.capture_depth_once", fake_capture)
+    client = TestClient(create_app())
+    order_id = f"DEPTH-AUTO-{uuid4().hex[:8]}"
+    response = client.post(
+        "/api/depth/measure-capture",
+        json={"order_id": order_id, "save_to_history": True, "measurement_mode": "auto"},
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["measurement_source"] == "depth_camera_capture"
+    assert body["history_saved"] is True
+    assert body["capture_regions"]["source"] == "auto_center_default"
+    assert body["capture_regions"]["roi"] == [1, 1, 9, 9]
+    assert body["dimensions"]["height_mm"] > 0
+    assert body["camera_capture"]["frame_shape"] == {"height": 10, "width": 10}
+
+    history = client.get("/api/history", params={"order_id": order_id})
+    assert any(item["measurement_id"] == body["measurement_id"] for item in history.json()["items"])
 
 
 def test_depth_fuse_measurements_endpoint_saves_traceable_result():

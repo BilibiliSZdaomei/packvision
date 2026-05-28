@@ -46,19 +46,19 @@ PackVision 不是单纯的“拍照量尺寸 Demo”，而是给海外汽车备�
 当前验证结果：
 
 ```text
-92 passed in 7.22s
+95 passed in 6.97s
 ```
 
 最新已验证交付包：
 
 ```text
-D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_20260528_0749.zip
+D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_20260528_0842.zip
 ```
 
 大小约：
 
 ```text
-73.45 MB
+73.46 MB
 ```
 
 ## 4. 运行方式
@@ -139,7 +139,7 @@ PackVision 软件包可以复制即用，但 Astra Pro 深度相机不能完全�
 - Astra Pro Windows 驱动。
 - OrbbecViewer。
 - 原装 USB 数据线；如需延长，优先主动 USB-A 公对母延长线。
-- A4 ArUco 标定卡，100% 原比例打印。
+- 厂商棋盘格标定板，优先从 `GET /api/depth/vendor-calibration-board.pdf` 打印；A4 ArUco 只作为手机照片兜底比例尺。
 - 稳定支架、哑光工作台、稳定光照。
 - 卷尺/卡尺、标准纸箱、长条件、异形件、黑色/反光/透明样品。
 
@@ -181,7 +181,8 @@ PowerShell -ExecutionPolicy Bypass -File .\scripts\check_astra_depth_status.ps1
 | --- | --- |
 | `GET /api/health` | 运行状态。 |
 | `GET /api/demo-image.jpg` | 演示图片。 |
-| `GET /api/calibration-card.svg` | A4 ArUco 标定卡。 |
+| `GET /api/depth/vendor-calibration-board.pdf` | Astra Pro 厂商棋盘格标定板，工程复核/重标定使用。 |
+| `GET /api/calibration-card.svg` | A4 ArUco 照片兜底标定卡，不作为 Astra Pro 主标定入口。 |
 | `GET /api/deployment/readiness` | 海外仓交付和环境体检。 |
 | `GET /api/deployment/support-bundle.zip` | 现场远程排错支持包。 |
 
@@ -221,7 +222,7 @@ PowerShell -ExecutionPolicy Bypass -File .\scripts\check_astra_depth_status.ps1
 | `GET /api/depth/capture/capabilities` | 可用采集后端。 |
 | `POST /api/depth/capture/probe` | 探测当前相机是否可采集。 |
 | `POST /api/depth/capture/frame` | 采集一帧深度数据。 |
-| `POST /api/depth/measure-capture` | 采集并直接测量。 |
+| `POST /api/depth/measure-capture` | 默认工作台主流程：采集 Astra Pro 深度帧并直接测量；未传 ROI 时自动使用中心作业区。 |
 | `POST /api/depth/camera-info/normalize` | 把 ROS/OpenNI/camera_info 转成测量内参。 |
 | `POST /api/depth/measure-roi` | 用深度 ROI 测规则物体。 |
 | `POST /api/depth/measure-object` | 用 object mask 测异形件。 |

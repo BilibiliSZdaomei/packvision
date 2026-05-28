@@ -80,6 +80,36 @@ def measure_images(
     status = "needs_reference"
     confidence = 0.2
 
+    side_measurement = None
+    if side and side["pixel_per_mm"] and side["box"]:
+        side_width_px, side_height_px = side["box"]["size_px"]
+        side_major_mm = max(side_width_px, side_height_px) / side["pixel_per_mm"]
+        side_minor_mm = min(side_width_px, side_height_px) / side["pixel_per_mm"]
+        side_measurement = {
+            "major_mm": round(side_major_mm, 1),
+            "minor_mm": round(side_minor_mm, 1),
+            "height_candidate_mm": round(side_minor_mm, 1),
+            "scale_source": side["scale_source"],
+        }
+        flags.append(f"side_{side['scale_source']}_scale_used")
+        if side["box"].get("source") == "manual":
+            flags.append("manual_side_box_used")
+    elif side and side["box"] and cfg.manual_height_mm and cfg.manual_height_mm > 0:
+        side_width_px, side_height_px = side["box"]["size_px"]
+        side_minor_px = min(side_width_px, side_height_px)
+        side_major_px = max(side_width_px, side_height_px)
+        if side_minor_px > 0:
+            side_pixel_per_mm = side_minor_px / cfg.manual_height_mm
+            side_measurement = {
+                "major_mm": round(side_major_px / side_pixel_per_mm, 1),
+                "minor_mm": round(cfg.manual_height_mm, 1),
+                "height_candidate_mm": round(cfg.manual_height_mm, 1),
+                "scale_source": "manual_height_side_view",
+            }
+            flags.append("side_manual_height_scale_used")
+            if side["box"].get("source") == "manual":
+                flags.append("manual_side_box_used")
+
     if top["pixel_per_mm"] and top["box"]:
         width_px, height_px = top["box"]["size_px"]
         length_mm = max(width_px, height_px) / top["pixel_per_mm"]
@@ -96,21 +126,17 @@ def measure_images(
             flags.append("missing_aruco_reference")
         if not top["box"]:
             flags.append("package_contour_not_found")
-
-    side_measurement = None
-    if side and side["pixel_per_mm"] and side["box"]:
-        side_width_px, side_height_px = side["box"]["size_px"]
-        side_major_mm = max(side_width_px, side_height_px) / side["pixel_per_mm"]
-        side_minor_mm = min(side_width_px, side_height_px) / side["pixel_per_mm"]
-        side_measurement = {
-            "major_mm": round(side_major_mm, 1),
-            "minor_mm": round(side_minor_mm, 1),
-            "height_candidate_mm": round(side_minor_mm, 1),
-            "scale_source": side["scale_source"],
-        }
-        flags.append(f"side_{side['scale_source']}_scale_used")
-        if side["box"].get("source") == "manual":
-            flags.append("manual_side_box_used")
+        if top["box"] and side_measurement and side_measurement.get("major_mm"):
+            top_width_px, top_height_px = top["box"]["size_px"]
+            top_major_px = max(top_width_px, top_height_px)
+            top_minor_px = min(top_width_px, top_height_px)
+            if top_major_px > 0:
+                length_mm = float(side_measurement["major_mm"])
+                width_mm = length_mm * top_minor_px / top_major_px
+                dimensions["length_mm"] = round(length_mm, 1)
+                dimensions["width_mm"] = round(width_mm, 1)
+                confidence = max(confidence, 0.36)
+                flags.append("cross_view_scale_estimate")
 
     if cfg.manual_height_mm and cfg.manual_height_mm > 0:
         dimensions["height_mm"] = round(cfg.manual_height_mm, 1)
@@ -159,12 +185,12 @@ def measure_images(
         "top_view": _public_view(top),
         "side_view": _public_view(side) if side else None,
         "method": {
-            "name": "aruco_single_camera_reference",
+            "name": "depth_camera_first_with_image_fallback",
             "marker_size_mm": cfg.marker_size_mm,
             "notes": [
-                "Top-down phone photos can estimate length and width when the marker is on the same plane.",
-                "Height needs a side image, manual input, or future depth/structured-light hardware.",
-                "No-marker mode can only estimate scale when camera distance and focal length metadata are available.",
+                "Astra Pro depth capture is the preferred warehouse path.",
+                "Image upload is a fallback for no-hardware demos, barcode traceability, and manual review.",
+                "No-marker image mode needs depth, camera distance, or a side-view/manual-height estimate and remains low confidence.",
             ],
         },
     }
@@ -326,7 +352,41 @@ def _find_package_box(image: Any, markers: list[dict[str, Any]]) -> dict[str, An
         pts = np.array(marker["corners"], dtype=np.int32)
         cv2.fillConvexPoly(working, pts, (255, 255, 255))
 
-    gray = cv2.cvtColor(working, cv2.COLOR_BGR2GRAY)
+    image_area = image.shape[0] * image.shape[1]
+    candidates = []
+
+    for contour in _edge_contours(working):
+        candidate = _candidate_from_contour(contour, image.shape, "edge")
+        if candidate:
+            candidates.append(candidate)
+    for contour in _cardboard_color_contours(working):
+        candidate = _candidate_from_contour(contour, image.shape, "cardboard_color")
+        if candidate:
+            candidates.append(candidate)
+
+    if not candidates:
+        return None
+
+    best = max(candidates, key=lambda item: item["score"])
+    rect = best["rect"]
+    contour = best["contour"]
+    box_points = cv2.boxPoints(rect).astype(int)
+    width_px, height_px = rect[1]
+    area = cv2.contourArea(contour)
+    return {
+        "corners": box_points.tolist(),
+        "size_px": [round(float(width_px), 2), round(float(height_px), 2)],
+        "angle_deg": round(float(rect[2]), 2),
+        "area_ratio": round(float(area / image_area), 4),
+        "contour_points": int(len(contour)),
+        "source": "auto",
+        "candidate_kind": best["kind"],
+        "selection_score": round(float(best["score"]), 4),
+    }
+
+
+def _edge_contours(image: Any) -> list[Any]:
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     gray = cv2.GaussianBlur(gray, (7, 7), 0)
     median = float(np.median(gray))
     lower = int(max(0, 0.66 * median))
@@ -336,32 +396,66 @@ def _find_package_box(image: Any, markers: list[dict[str, Any]]) -> dict[str, An
     edges = cv2.dilate(edges, kernel, iterations=1)
     edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel, iterations=2)
     contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    return contours
 
-    image_area = image.shape[0] * image.shape[1]
-    candidates = []
-    for contour in contours:
-        area = cv2.contourArea(contour)
-        if area < image_area * 0.01 or area > image_area * 0.9:
-            continue
-        rect = cv2.minAreaRect(contour)
-        (width_px, height_px) = rect[1]
-        if width_px < 20 or height_px < 20:
-            continue
-        candidates.append((area, contour, rect))
 
-    if not candidates:
+def _cardboard_color_contours(image: Any) -> list[Any]:
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    lower = np.array([5, 70, 35], dtype=np.uint8)
+    upper = np.array([35, 220, 245], dtype=np.uint8)
+    mask = cv2.inRange(hsv, lower, upper)
+    kernel = np.ones((7, 7), np.uint8)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=1)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=3)
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    return contours
+
+
+def _candidate_from_contour(contour: Any, image_shape: tuple[int, ...], kind: str) -> dict[str, Any] | None:
+    image_height, image_width = image_shape[:2]
+    image_area = image_height * image_width
+    area = cv2.contourArea(contour)
+    if area < image_area * 0.008 or area > image_area * 0.65:
+        return None
+    rect = cv2.minAreaRect(contour)
+    width_px, height_px = rect[1]
+    if width_px < 30 or height_px < 30:
+        return None
+    rect_area = float(width_px * height_px)
+    if rect_area <= 0:
+        return None
+    aspect = max(width_px, height_px) / max(1.0, min(width_px, height_px))
+    if aspect > 7:
         return None
 
-    area, contour, rect = max(candidates, key=lambda item: item[0])
-    box_points = cv2.boxPoints(rect).astype(int)
-    width_px, height_px = rect[1]
+    box_points = cv2.boxPoints(rect)
+    border_margin = min(image_width, image_height) * 0.015
+    touches_border = bool(
+        (box_points[:, 0] <= border_margin).any()
+        or (box_points[:, 1] <= border_margin).any()
+        or (box_points[:, 0] >= image_width - border_margin).any()
+        or (box_points[:, 1] >= image_height - border_margin).any()
+    )
+    if touches_border and area > image_area * 0.45:
+        return None
+
+    center_x, center_y = rect[0]
+    dx = (center_x - image_width / 2) / (image_width / 2)
+    dy = (center_y - image_height / 2) / (image_height / 2)
+    center_distance = min(1.0, float((dx * dx + dy * dy) ** 0.5))
+    center_score = 1.0 - center_distance
+    area_ratio = rect_area / image_area
+    area_score = min(1.0, area_ratio / 0.18) if area_ratio <= 0.18 else max(0.2, 1.0 - (area_ratio - 0.18) / 0.55)
+    rectangularity = min(1.0, float(area / rect_area))
+    kind_bonus = 1.35 if kind == "cardboard_color" else 1.0
+    border_penalty = 0.52 if touches_border else 1.0
+    score = kind_bonus * border_penalty * (0.46 * center_score + 0.26 * area_score + 0.28 * rectangularity)
+
     return {
-        "corners": box_points.tolist(),
-        "size_px": [round(float(width_px), 2), round(float(height_px), 2)],
-        "angle_deg": round(float(rect[2]), 2),
-        "area_ratio": round(float(area / image_area), 4),
-        "contour_points": int(len(contour)),
-        "source": "auto",
+        "contour": contour,
+        "rect": rect,
+        "kind": kind,
+        "score": score,
     }
 
 
@@ -518,6 +612,8 @@ def _recommendations(flags: list[str]) -> list[str]:
         recommendations.append("keep_camera_top_down")
     if "camera_distance_exif_scale_used" in flag_set or "camera_distance_manual_focal_scale_used" in flag_set:
         recommendations.append("distance_mode_is_estimate")
+    if "cross_view_scale_estimate" in flag_set:
+        recommendations.append("cross_view_estimate_needs_review")
     if "lighting_overexposed" in flag_set:
         recommendations.append("retake_away_from_direct_light")
     if "lighting_underexposed" in flag_set:

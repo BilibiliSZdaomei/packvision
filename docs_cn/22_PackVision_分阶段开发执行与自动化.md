@@ -73,7 +73,7 @@ PowerShell -ExecutionPolicy Bypass -File .\scripts\dev_cycle.ps1 -BuildPackage
 - `scripts\check_astra_depth_status.ps1`
 - `scripts\build_handoff_package.ps1`
 - 海外仓开箱即用交付文档
-- 最新交付包 `73.4 MB`
+- 最新交付包 `D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_20260528_0842.zip`，大小 `73.46 MB`
 
 下一步：
 
