@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 from dataclasses import dataclass
 from typing import Any
 
@@ -39,6 +40,13 @@ class DepthObjectConfig:
     object_min_height_mm: float = 30.0
     trim_quantile: float = 0.02
     footprint_method: str = "axis_aligned"
+
+
+@dataclass(frozen=True)
+class DepthEvidenceBundle:
+    metadata: dict[str, Any]
+    point_cloud_npz: bytes
+    depth_preview_png: bytes
 
 
 class DepthMeasurementError(RuntimeError):
@@ -284,6 +292,123 @@ def measure_depth_object_mask(
     }
 
 
+def detect_depth_object_region(
+    depth_frame: Any,
+    intrinsics: DepthIntrinsics,
+    *,
+    min_valid_depth_mm: float = 50.0,
+    max_valid_depth_mm: float = 6000.0,
+    object_min_height_mm: float = 30.0,
+    padding_px: int | None = None,
+) -> dict[str, Any]:
+    depth_mm = _normalize_depth_frame(depth_frame, intrinsics.depth_scale)
+    height, width = depth_mm.shape
+    valid_mask = (
+        np.isfinite(depth_mm)
+        & (depth_mm >= min_valid_depth_mm)
+        & (depth_mm <= max_valid_depth_mm)
+    )
+    valid_values = depth_mm[valid_mask]
+    if valid_values.size < max(8, int(width * height * 0.03)):
+        return _center_region(width, height, "auto_center_default", reason="too_few_valid_depth_pixels")
+
+    border_values = depth_mm[_border_mask(width, height) & valid_mask]
+    background_values = border_values if border_values.size >= max(8, int(valid_values.size * 0.05)) else valid_values
+    table_depth_mm = float(np.quantile(background_values, 0.82))
+    threshold = table_depth_mm - max(1.0, float(object_min_height_mm))
+    object_mask = valid_mask & (depth_mm <= threshold)
+    component = _largest_component(object_mask)
+    if component is None:
+        region = _center_region(width, height, "auto_center_default", reason="no_depth_foreground_component")
+        region["table_depth_mm"] = round(float(table_depth_mm), 1)
+        return region
+
+    component_mask, component_area = component
+    if component_area < max(6, int(width * height * 0.01)):
+        region = _center_region(width, height, "auto_center_default", reason="depth_foreground_too_small")
+        region["table_depth_mm"] = round(float(table_depth_mm), 1)
+        region["foreground_pixel_count"] = int(component_area)
+        return region
+
+    ys, xs = np.nonzero(component_mask)
+    pad = padding_px if padding_px is not None else max(1, int(round(min(width, height) * 0.035)))
+    roi = [
+        max(0, int(xs.min()) - pad),
+        max(0, int(ys.min()) - pad),
+        min(width, int(xs.max()) + pad + 1),
+        min(height, int(ys.max()) + pad + 1),
+    ]
+    return {
+        "roi": roi,
+        "background_roi": _background_corner_roi(depth_mm, valid_mask, table_depth_mm),
+        "source": "auto_depth_foreground",
+        "reason": "largest_depth_foreground_component",
+        "table_depth_mm": round(float(table_depth_mm), 1),
+        "foreground_pixel_count": int(component_area),
+        "foreground_pixel_ratio": round(float(component_area / max(1, width * height)), 4),
+        "foreground_threshold_mm": round(float(threshold), 1),
+    }
+
+
+def build_depth_evidence_bundle(
+    depth_frame: Any,
+    intrinsics: DepthIntrinsics,
+    *,
+    roi: list[int],
+    table_depth_mm: float | None = None,
+    min_valid_depth_mm: float = 50.0,
+    max_valid_depth_mm: float = 6000.0,
+    object_min_height_mm: float = 30.0,
+    max_points: int = 2500,
+) -> DepthEvidenceBundle:
+    depth_mm = _normalize_depth_frame(depth_frame, intrinsics.depth_scale)
+    clipped_roi = _clip_roi(roi, intrinsics.width, intrinsics.height, "roi")
+    selection_mask = _evidence_selection_mask(
+        depth_mm,
+        clipped_roi,
+        table_depth_mm=table_depth_mm,
+        min_valid_depth_mm=min_valid_depth_mm,
+        max_valid_depth_mm=max_valid_depth_mm,
+        object_min_height_mm=object_min_height_mm,
+    )
+    ys, xs = np.nonzero(selection_mask)
+    if xs.size == 0:
+        raise DepthMeasurementError("No valid points available for depth evidence.")
+
+    z = depth_mm[ys, xs].astype(np.float32)
+    world_x = (xs.astype(np.float32) - float(intrinsics.cx)) * z / float(intrinsics.fx)
+    world_y = (ys.astype(np.float32) - float(intrinsics.cy)) * z / float(intrinsics.fy)
+    points = np.column_stack((world_x, world_y, z)).astype(np.float32)
+    sampled_points = _deterministic_point_sample(points, max_points=max_points)
+
+    buffer = io.BytesIO()
+    np.savez_compressed(
+        buffer,
+        points_mm=sampled_points,
+        roi=np.asarray(clipped_roi, dtype=np.int32),
+        intrinsics=np.asarray(
+            [intrinsics.fx, intrinsics.fy, intrinsics.cx, intrinsics.cy, intrinsics.depth_scale],
+            dtype=np.float32,
+        ),
+        table_depth_mm=np.asarray([table_depth_mm if table_depth_mm is not None else np.nan], dtype=np.float32),
+    )
+    metadata = {
+        "format": "npz",
+        "coordinate_system": "camera_mm",
+        "roi": clipped_roi,
+        "point_count": int(points.shape[0]),
+        "sampled_point_count": int(sampled_points.shape[0]),
+        "max_points": int(max_points),
+        "table_depth_mm": round(float(table_depth_mm), 1) if table_depth_mm is not None else None,
+        "contains_object_mask": table_depth_mm is not None,
+    }
+    return DepthEvidenceBundle(
+        metadata=metadata,
+        point_cloud_npz=buffer.getvalue(),
+        depth_preview_png=_render_depth_preview_png(depth_mm, clipped_roi, selection_mask),
+    )
+
+
 def _normalize_depth_frame(depth_frame: Any, depth_scale: float) -> np.ndarray:
     depth = np.asarray(depth_frame, dtype=np.float32)
     if depth.ndim != 2:
@@ -320,6 +445,137 @@ def _depth_recommendations(base_recommendations: list[str], flags: list[str]) ->
     if "small_object_mask" in flags:
         recommendations.append("expand_object_roi_or_reposition")
     return sorted(set(recommendations))
+
+
+def _center_region(width: int, height: int, source: str, *, reason: str) -> dict[str, Any]:
+    margin_x = max(1, int(width * 0.18))
+    margin_y = max(1, int(height * 0.18))
+    return {
+        "roi": [
+            margin_x,
+            margin_y,
+            max(margin_x + 1, width - margin_x),
+            max(margin_y + 1, height - margin_y),
+        ],
+        "background_roi": [
+            0,
+            0,
+            max(1, min(margin_x, width)),
+            max(1, min(margin_y, height)),
+        ],
+        "source": source,
+        "reason": reason,
+    }
+
+
+def _border_mask(width: int, height: int) -> np.ndarray:
+    border = max(1, int(round(min(width, height) * 0.1)))
+    mask = np.zeros((height, width), dtype=bool)
+    mask[:border, :] = True
+    mask[-border:, :] = True
+    mask[:, :border] = True
+    mask[:, -border:] = True
+    return mask
+
+
+def _largest_component(mask: np.ndarray) -> tuple[np.ndarray, int] | None:
+    if not np.any(mask):
+        return None
+    try:
+        import cv2
+
+        num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(mask.astype(np.uint8), connectivity=8)
+        if num_labels <= 1:
+            return None
+        areas = stats[1:, cv2.CC_STAT_AREA]
+        label = int(np.argmax(areas)) + 1
+        area = int(stats[label, cv2.CC_STAT_AREA])
+        return labels == label, area
+    except Exception:
+        ys, xs = np.nonzero(mask)
+        component = np.zeros_like(mask, dtype=bool)
+        component[ys, xs] = True
+        return component, int(xs.size)
+
+
+def _background_corner_roi(depth_mm: np.ndarray, valid_mask: np.ndarray, table_depth_mm: float) -> list[int] | None:
+    height, width = depth_mm.shape
+    corner_w = max(1, int(round(width * 0.14)))
+    corner_h = max(1, int(round(height * 0.14)))
+    candidates = [
+        [0, 0, corner_w, corner_h],
+        [max(0, width - corner_w), 0, width, corner_h],
+        [0, max(0, height - corner_h), corner_w, height],
+        [max(0, width - corner_w), max(0, height - corner_h), width, height],
+    ]
+    best_roi: list[int] | None = None
+    best_score = -1.0
+    for roi in candidates:
+        x1, y1, x2, y2 = roi
+        roi_valid = valid_mask[y1:y2, x1:x2]
+        if not np.any(roi_valid):
+            continue
+        values = depth_mm[y1:y2, x1:x2][roi_valid]
+        closeness = 1.0 / (1.0 + abs(float(np.median(values)) - float(table_depth_mm)))
+        score = float(roi_valid.mean()) + closeness
+        if score > best_score:
+            best_score = score
+            best_roi = roi
+    return best_roi
+
+
+def _evidence_selection_mask(
+    depth_mm: np.ndarray,
+    roi: list[int],
+    *,
+    table_depth_mm: float | None,
+    min_valid_depth_mm: float,
+    max_valid_depth_mm: float,
+    object_min_height_mm: float,
+) -> np.ndarray:
+    x1, y1, x2, y2 = roi
+    mask = np.zeros_like(depth_mm, dtype=bool)
+    roi_depth = depth_mm[y1:y2, x1:x2]
+    valid = (
+        np.isfinite(roi_depth)
+        & (roi_depth >= min_valid_depth_mm)
+        & (roi_depth <= max_valid_depth_mm)
+    )
+    if table_depth_mm is not None:
+        valid &= roi_depth <= (float(table_depth_mm) - float(object_min_height_mm))
+    mask[y1:y2, x1:x2] = valid
+    return mask
+
+
+def _deterministic_point_sample(points: np.ndarray, *, max_points: int) -> np.ndarray:
+    if points.shape[0] <= max_points:
+        return points
+    indexes = np.linspace(0, points.shape[0] - 1, max_points, dtype=np.int32)
+    return points[indexes]
+
+
+def _render_depth_preview_png(depth_mm: np.ndarray, roi: list[int], selection_mask: np.ndarray) -> bytes:
+    try:
+        import cv2
+    except Exception as exc:
+        raise DepthMeasurementError("OpenCV is required to render depth evidence previews.") from exc
+
+    valid = np.isfinite(depth_mm) & (depth_mm > 0)
+    if np.any(valid):
+        low = float(np.percentile(depth_mm[valid], 2))
+        high = float(np.percentile(depth_mm[valid], 98))
+    else:
+        low, high = 0.0, 1.0
+    normalized = np.clip((depth_mm - low) / max(1.0, high - low), 0.0, 1.0)
+    gray = (255 - normalized * 255).astype(np.uint8)
+    preview = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+    preview[selection_mask] = (40, 210, 80)
+    x1, y1, x2, y2 = roi
+    cv2.rectangle(preview, (x1, y1), (max(x1, x2 - 1), max(y1, y2 - 1)), (0, 180, 255), 1)
+    ok, encoded = cv2.imencode(".png", preview)
+    if not ok:
+        raise DepthMeasurementError("Failed to encode depth evidence preview.")
+    return encoded.tobytes()
 
 
 def _normalize_footprint_method(method: str) -> str:

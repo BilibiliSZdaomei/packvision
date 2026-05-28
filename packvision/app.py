@@ -30,6 +30,8 @@ from packvision.services.depth_devices import build_depth_camera_inventory
 from packvision.services.depth_extrinsics import validate_multiview_extrinsics
 from packvision.services.depth_fusion import DepthFusionError, fuse_depth_measurements
 from packvision.services.depth_geometry import (
+    build_depth_evidence_bundle,
+    detect_depth_object_region,
     DepthObjectConfig,
     DepthIntrinsics,
     DepthMeasurementConfig,
@@ -173,6 +175,7 @@ class DepthMeasureCapturePayload(DepthTraceabilityPayload):
     trim_quantile: float = 0.02
     footprint_method: str = "principal_axes"
     trim_ratio: float = 0.08
+    save_depth_evidence: bool = True
 
 
 class DepthFusionPayload(DepthTraceabilityPayload):
@@ -619,11 +622,20 @@ def create_app() -> FastAPI:
                     role=payload.role,
                 )
             )
-            roi, background_roi, region_source = _depth_capture_regions(
+            capture_regions = _depth_capture_regions(
                 bundle.depth_frame,
+                intrinsics=bundle.intrinsics,
                 roi=payload.roi,
                 background_roi=payload.background_roi,
+                min_valid_depth_mm=payload.min_valid_depth_mm,
+                max_valid_depth_mm=payload.max_valid_depth_mm,
+                object_min_height_mm=payload.object_min_height_mm,
             )
+            roi = capture_regions["roi"]
+            background_roi = capture_regions.get("background_roi")
+            table_depth_mm = payload.table_depth_mm
+            if table_depth_mm is None:
+                table_depth_mm = capture_regions.get("table_depth_mm")
             measurement_mode = str(payload.measurement_mode or "object_mask").strip().lower()
             if measurement_mode == "roi":
                 result = measure_depth_roi(
@@ -632,7 +644,7 @@ def create_app() -> FastAPI:
                     DepthMeasurementConfig(
                         roi=roi,
                         background_roi=background_roi,
-                        table_depth_mm=payload.table_depth_mm,
+                        table_depth_mm=table_depth_mm,
                         min_valid_depth_mm=payload.min_valid_depth_mm,
                         max_valid_depth_mm=payload.max_valid_depth_mm,
                         trim_ratio=payload.trim_ratio,
@@ -645,7 +657,7 @@ def create_app() -> FastAPI:
                     DepthObjectConfig(
                         roi=roi,
                         background_roi=background_roi,
-                        table_depth_mm=payload.table_depth_mm,
+                        table_depth_mm=table_depth_mm,
                         min_valid_depth_mm=payload.min_valid_depth_mm,
                         max_valid_depth_mm=payload.max_valid_depth_mm,
                         object_min_height_mm=payload.object_min_height_mm,
@@ -656,11 +668,18 @@ def create_app() -> FastAPI:
             else:
                 raise DepthCaptureError("measurement_mode must be auto, object_mask, or roi.")
             result["camera_capture"] = _depth_frame_response(bundle, include_frame=False)
-            result["capture_regions"] = {
-                "roi": roi,
-                "background_roi": background_roi,
-                "source": region_source,
-            }
+            result["capture_regions"] = capture_regions
+            if payload.save_depth_evidence:
+                _attach_depth_evidence_artifacts(
+                    result,
+                    bundle,
+                    roi=roi,
+                    table_depth_mm=table_depth_mm,
+                    min_valid_depth_mm=payload.min_valid_depth_mm,
+                    max_valid_depth_mm=payload.max_valid_depth_mm,
+                    object_min_height_mm=payload.object_min_height_mm,
+                    results_dir=dirs["results"],
+                )
             finalized = _finalize_depth_result(result, payload, measurement_source="depth_camera_capture")
             _set_usage_trace(request, finalized)
             return finalized
@@ -973,31 +992,69 @@ def _depth_frame_response(bundle: Any, *, include_frame: bool) -> dict[str, obje
 def _depth_capture_regions(
     depth_frame: list[list[float]],
     *,
+    intrinsics: DepthIntrinsics,
     roi: list[int] | None,
     background_roi: list[int] | None,
-) -> tuple[list[int], list[int] | None, str]:
+    min_valid_depth_mm: float,
+    max_valid_depth_mm: float,
+    object_min_height_mm: float,
+) -> dict[str, Any]:
     frame_height = len(depth_frame)
     frame_width = len(depth_frame[0]) if frame_height else 0
     if frame_width <= 0 or frame_height <= 0:
         raise DepthCaptureError("Captured depth frame is empty.")
     if roi:
-        return roi, background_roi, "manual"
+        return {"roi": roi, "background_roi": background_roi, "source": "manual"}
 
-    margin_x = max(1, int(frame_width * 0.18))
-    margin_y = max(1, int(frame_height * 0.18))
-    auto_roi = [
-        margin_x,
-        margin_y,
-        max(margin_x + 1, frame_width - margin_x),
-        max(margin_y + 1, frame_height - margin_y),
-    ]
-    auto_background_roi = background_roi or [
-        0,
-        0,
-        max(1, min(margin_x, frame_width)),
-        max(1, min(margin_y, frame_height)),
-    ]
-    return auto_roi, auto_background_roi, "auto_center_default"
+    regions = detect_depth_object_region(
+        depth_frame,
+        intrinsics,
+        min_valid_depth_mm=min_valid_depth_mm,
+        max_valid_depth_mm=max_valid_depth_mm,
+        object_min_height_mm=object_min_height_mm,
+    )
+    if background_roi:
+        regions["background_roi"] = background_roi
+        regions["background_roi_source"] = "manual"
+    else:
+        regions["background_roi_source"] = "auto"
+    return regions
+
+
+def _attach_depth_evidence_artifacts(
+    result: dict[str, object],
+    bundle: Any,
+    *,
+    roi: list[int],
+    table_depth_mm: float | None,
+    min_valid_depth_mm: float,
+    max_valid_depth_mm: float,
+    object_min_height_mm: float,
+    results_dir: Path,
+) -> None:
+    evidence = build_depth_evidence_bundle(
+        bundle.depth_frame,
+        bundle.intrinsics,
+        roi=roi,
+        table_depth_mm=table_depth_mm,
+        min_valid_depth_mm=min_valid_depth_mm,
+        max_valid_depth_mm=max_valid_depth_mm,
+        object_min_height_mm=object_min_height_mm,
+    )
+    point_cloud_path = write_bytes(results_dir, ".npz", evidence.point_cloud_npz)
+    preview_path = write_bytes(results_dir, ".png", evidence.depth_preview_png)
+    artifact_updates = {
+        "depth_point_cloud_url": f"/results/{point_cloud_path.name}",
+        "depth_preview_url": f"/results/{preview_path.name}",
+    }
+    artifacts = result.get("artifacts") if isinstance(result.get("artifacts"), dict) else {}
+    artifacts.update(artifact_updates)
+    result["artifacts"] = artifacts
+    result["depth_evidence"] = {
+        **evidence.metadata,
+        **artifact_updates,
+        "saved": True,
+    }
 
 
 def _depth_demo_object_result() -> dict[str, object]:
@@ -1049,7 +1106,8 @@ def _finalize_depth_result(
     }
     result["actual_weight_kg"] = actual_weight
     result["measurement_source"] = measurement_source
-    result["artifacts"] = {"depth_source": measurement_source}
+    existing_artifacts = result.get("artifacts") if isinstance(result.get("artifacts"), dict) else {}
+    result["artifacts"] = {"depth_source": measurement_source, **existing_artifacts}
     result["industry_profile"] = build_packaging_profile(
         result.get("dimensions") or {},
         part_category=result["part_category"],

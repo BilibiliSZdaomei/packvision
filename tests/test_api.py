@@ -372,7 +372,7 @@ def test_depth_capture_frame_endpoint_returns_captured_frame_without_hardware(mo
     assert body["camera_id"] == "astra-pro-top-01"
 
 
-def test_depth_measure_capture_defaults_to_center_roi_without_worker_selection(monkeypatch):
+def test_depth_measure_capture_auto_finds_foreground_without_worker_selection(monkeypatch):
     from packvision.services.depth_capture import DepthFrameBundle
     from packvision.services.depth_geometry import DepthIntrinsics
 
@@ -403,10 +403,15 @@ def test_depth_measure_capture_defaults_to_center_roi_without_worker_selection(m
     assert response.status_code == 200
     assert body["measurement_source"] == "depth_camera_capture"
     assert body["history_saved"] is True
-    assert body["capture_regions"]["source"] == "auto_center_default"
-    assert body["capture_regions"]["roi"] == [1, 1, 9, 9]
+    assert body["capture_regions"]["source"] == "auto_depth_foreground"
+    assert body["capture_regions"]["roi"] == [2, 2, 9, 8]
+    assert body["capture_regions"]["table_depth_mm"] == 1000.0
     assert body["dimensions"]["height_mm"] > 0
     assert body["camera_capture"]["frame_shape"] == {"height": 10, "width": 10}
+    assert body["depth_evidence"]["saved"] is True
+    assert body["depth_evidence"]["point_count"] == 20
+    assert body["artifacts"]["depth_point_cloud_url"].endswith(".npz")
+    assert body["artifacts"]["depth_preview_url"].endswith(".png")
 
     history = client.get("/api/history", params={"order_id": order_id})
     assert any(item["measurement_id"] == body["measurement_id"] for item in history.json()["items"])

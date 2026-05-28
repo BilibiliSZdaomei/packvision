@@ -45,7 +45,7 @@ flowchart LR
 | `GET /api/depth/astra/tutorial-playbook` | 看厂商教程二次审计后的 ROS2 控制、多相机、标定和点云适配 |
 | `POST /api/depth/capture/probe` | 探测相机能不能采集 |
 | `POST /api/depth/capture/frame` | 采集一帧深度数据 |
-| `POST /api/depth/measure-capture` | 工作台主流程：采集并直接测量；未传 ROI 时自动使用中心作业区 |
+| `POST /api/depth/measure-capture` | 工作台主流程：采集并直接测量；未传 ROI 时优先自动识别深度前景，失败时才回退中心作业区，并保存点云/深度预览证据 |
 | `POST /api/depth/simulate-from-image` | 上传真实图片，用 Astra 模拟内参和合成深度帧做硬件到货前干跑 |
 
 ## 测量接口

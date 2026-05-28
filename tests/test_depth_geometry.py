@@ -1,6 +1,8 @@
 import pytest
 
 from packvision.services.depth_geometry import (
+    build_depth_evidence_bundle,
+    detect_depth_object_region,
     DepthObjectConfig,
     DepthIntrinsics,
     DepthMeasurementConfig,
@@ -125,3 +127,45 @@ def test_measure_depth_object_mask_principal_axes_handles_diagonal_long_part():
     assert result["depth"]["footprint_method"] == "principal_axes"
     assert result["depth"]["orientation_deg"] == pytest.approx(45.0, abs=1.0)
     assert "principal_axis_extent_used" in result["quality_flags"]
+
+
+def test_detect_depth_object_region_finds_foreground_without_worker_roi():
+    import numpy as np
+
+    depth = np.full((20, 24), 1000.0, dtype=np.float32)
+    depth[7:14, 8:17] = 760.0
+
+    region = detect_depth_object_region(
+        depth,
+        DepthIntrinsics(fx=120, fy=120, cx=12, cy=10, width=24, height=20),
+        object_min_height_mm=80.0,
+    )
+
+    assert region["source"] == "auto_depth_foreground"
+    assert region["roi"] == [7, 6, 18, 15]
+    assert region["table_depth_mm"] == pytest.approx(1000.0, abs=0.1)
+    assert region["foreground_pixel_count"] == 63
+    assert region["background_roi"] is not None
+
+
+def test_build_depth_evidence_bundle_exports_point_cloud_and_preview():
+    import numpy as np
+
+    depth = np.full((16, 18), 1000.0, dtype=np.float32)
+    depth[5:12, 6:14] = 750.0
+
+    evidence = build_depth_evidence_bundle(
+        depth,
+        DepthIntrinsics(fx=90, fy=90, cx=9, cy=8, width=18, height=16),
+        roi=[5, 4, 15, 13],
+        table_depth_mm=1000.0,
+        object_min_height_mm=80.0,
+        max_points=20,
+    )
+
+    assert evidence.metadata["format"] == "npz"
+    assert evidence.metadata["point_count"] == 56
+    assert evidence.metadata["sampled_point_count"] == 20
+    assert evidence.metadata["contains_object_mask"] is True
+    assert evidence.point_cloud_npz.startswith(b"PK")
+    assert evidence.depth_preview_png.startswith(b"\x89PNG")

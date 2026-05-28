@@ -170,6 +170,7 @@ def build_review_sample(result: dict[str, Any]) -> dict[str, Any] | None:
                 or artifacts.get("side_upload"),
                 "depth_overlay": artifacts.get("simulation_overlay_url"),
                 "depth_preview": artifacts.get("depth_preview_url"),
+                "depth_point_cloud": artifacts.get("depth_point_cloud_url"),
             }.items()
             if value
         },

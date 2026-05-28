@@ -46,3 +46,13 @@ def test_usage_export_includes_measurement_traceability_fields():
     assert order_id in csv_text
     assert measurement_id in csv_text
     assert "depth_roi_api" in csv_text
+
+
+def test_usage_counts_depth_measure_capture_as_measurement_call():
+    endpoint = "/api/depth/measure-capture"
+    before = usage_summary(endpoint=endpoint)["measurement_calls"]
+
+    record_usage_event(endpoint=endpoint, method="POST", status_code=200)
+
+    after = usage_summary(endpoint=endpoint)["measurement_calls"]
+    assert after == before + 1
