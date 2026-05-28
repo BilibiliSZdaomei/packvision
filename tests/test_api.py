@@ -88,6 +88,9 @@ def test_measure_endpoint_accepts_demo_image():
     assert any(item["measurement_id"] == body["measurement_id"] for item in history.json()["items"])
     saved = next(item for item in history.json()["items"] if item["measurement_id"] == body["measurement_id"])
     assert saved["package_class"] == "standard_carton"
+    assert saved["actual_weight_kg"] == 3.2
+    assert saved["volumetric_rule_id"] == "standard_6000"
+    assert saved["volumetric_weight_kg"] is not None
     assert saved["chargeable_weight_kg"] >= 3.2
 
     export = client.get("/api/history/export.csv", params={"order_id": "SO-20260526-001"})
@@ -444,6 +447,8 @@ def test_depth_live_stream_can_confirm_stable_candidate_without_hardware():
         assert state["can_confirm"] is True
         assert state["stable_result"]["dimensions"]["length_mm"] > 0
         assert state["simulation_active"] is True
+        assert state["uptime_seconds"] >= 0
+        assert state["fps"] >= 0
 
         confirm = client.post(
             "/api/depth/live/confirm",
@@ -902,6 +907,7 @@ def test_industry_profile_endpoint_classifies_auto_parts_package():
             "part_category": "shock_absorber",
             "package_hint": "long_part",
             "actual_weight_kg": 4.1,
+            "volumetric_rule_id": "express_5000",
         },
     )
 
@@ -909,7 +915,19 @@ def test_industry_profile_endpoint_classifies_auto_parts_package():
     assert response.status_code == 200
     assert body["package_class"] == "long_part"
     assert body["recommended_capture_mode"] == "depth_roi_long_item"
+    assert body["volumetric_rule_id"] == "express_5000"
+    assert body["billing_weight_source"] == "volumetric_weight"
     assert "oversize_length" in body["handling_flags"]
+
+
+def test_volumetric_rule_endpoint_returns_default_rule_table():
+    client = TestClient(create_app())
+    response = client.get("/api/weight/volumetric-rules")
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["default_rule_id"] == "standard_6000"
+    assert {rule["rule_id"] for rule in body["rules"]} >= {"standard_6000", "express_5000", "economy_8000"}
 
 
 def test_industry_profile_endpoint_reports_abnormal_material_flow():

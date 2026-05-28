@@ -68,7 +68,11 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert 'id="depthProbeSummary"' in html
     assert 'id="liveWorkstation"' in html
     assert 'id="liveStatusGrid"' in html
+    assert 'id="liveMonitorGrid"' in html
     assert 'id="confirmLiveButton"' in html
+    assert 'id="actualWeightInput"' in html
+    assert 'id="volumetricRuleSelect"' in html
+    assert 'id="weightMonitorPanel"' in html
     assert '<details class="workflow-controls" id="workflowControls">' in html
     assert 'id="workflowAutoSummary"' in html
     assert 'id="workflowPackageSelect"' in html
@@ -80,6 +84,9 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert "/api/depth/live/start" in js
     assert "/api/depth/live/state" in js
     assert "/api/depth/live/confirm" in js
+    assert "/api/weight/volumetric-rules" in js
+    assert "renderLiveMonitor" in js
+    assert "renderWeightMonitorFromDimensions" in js
     assert "startDepthLive({ silent: true })" in js
     assert "buildDepthCapturePayload" in js
     assert "cameraPoseLabels" in js
@@ -88,6 +95,8 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert "package_class=long_part&material_class=reflective&camera_count=2" not in js
     assert ".depth-inline-card" in css
     assert ".live-workstation" in css
+    assert ".live-monitor-grid" in css
+    assert ".weight-monitor-panel" in css
     assert ".workflow-fields" in css
     assert ".workflow-controls" in css
 

@@ -353,6 +353,7 @@ input {
 .depth-inline-card,
 .live-workstation,
 .order-card,
+.billing-card,
 .parts-card,
 .mode-block {
   display: grid;
@@ -427,6 +428,34 @@ input {
   gap: 8px;
 }
 
+.live-monitor-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.monitor-tile {
+  display: grid;
+  gap: 6px;
+  min-height: 74px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface) 82%, var(--accent-soft));
+  border-left: 3px solid var(--accent);
+}
+
+.monitor-tile span,
+.weight-monitor-panel span {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.monitor-tile strong,
+.weight-monitor-panel strong {
+  overflow-wrap: anywhere;
+}
+
 .data-page {
   display: grid;
   gap: 18px;
@@ -438,11 +467,17 @@ input {
   align-items: end;
 }
 
+.billing-card {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+}
+
 .parts-card {
   display: block;
 }
 
 .order-card label,
+.billing-card label,
 .parts-fields label,
 .mode-block label {
   display: grid;
@@ -477,6 +512,24 @@ input {
 
 .order-actions {
   display: grid;
+}
+
+.weight-monitor-panel {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  min-height: 72px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent-soft) 72%, var(--surface));
+}
+
+.weight-monitor-panel div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
 }
 
 .mode-head {
@@ -1203,15 +1256,18 @@ summary:focus-visible,
   .field-grid,
   .metrics,
   .depth-status-grid,
+  .live-monitor-grid,
   .workflow-fields,
   .parts-fields,
   .usage-summary-grid,
   .usage-row,
   .industry-card,
+  .weight-monitor-panel,
   .depth-workflow-card,
   .validation-plan-card,
   .depth-demo-card,
   .order-card,
+  .billing-card,
   .parts-card,
   .history-row {
     grid-template-columns: 1fr;

@@ -36,6 +36,8 @@ PackVision 不是单纯的“拍照量尺寸 Demo”，而是给海外汽车备�
 | 单号和条码 | 已完成 | 支持手动单号、扫码枪文本、上传条码/二维码图片识别。 |
 | 历史追溯 | 已完成 | SQLite 保存时间戳、单号、尺寸、置信度、上传图、标注图。 |
 | 使用次数统计 | 已完成 | 后台记录接口调用次数、测量次数、成功/失败次数，可导出 CSV。 |
+| 实时采集监控 | 已完成 | Astra Pro 实时流持续测量，按钮只负责记录稳定结果；UI 显示 FPS、运行时长、测量次数和采集后端。 |
+| 体积重/计费重 | 已完成 | 支持手动输入实重，按体积重规则表计算体积重和计费重，并保存计费来源。 |
 | 现场支持包 | 已完成 | 一键导出环境体检、日志、历史、用量、复核样本和真值模板，默认不包含现场图片。 |
 | 异形件/长条件 | 已有深度算法基础 | 支持深度 ROI、object mask、长条件主轴测量。 |
 | Astra Pro 适配 | 已完成无硬件开发底座 | 驱动/上位机/OpenNI 状态检查、内参归一化、采集探测、模拟干跑。 |
@@ -46,7 +48,7 @@ PackVision 不是单纯的“拍照量尺寸 Demo”，而是给海外汽车备�
 当前验证结果：
 
 ```text
-95 passed in 6.97s
+103 passed in 8.35s
 ```
 
 最新已验证交付包：
@@ -223,12 +225,23 @@ PowerShell -ExecutionPolicy Bypass -File .\scripts\check_astra_depth_status.ps1
 | `POST /api/depth/capture/probe` | 探测当前相机是否可采集。 |
 | `POST /api/depth/capture/frame` | 采集一帧深度数据。 |
 | `POST /api/depth/measure-capture` | 默认工作台主流程：采集 Astra Pro 深度帧并直接测量；未传 ROI 时自动使用中心作业区。 |
+| `POST /api/depth/live/start` | 启动实时深度采集流。 |
+| `GET /api/depth/live/state` | 获取实时状态、FPS、运行时长、稳定帧和当前尺寸候选。 |
+| `POST /api/depth/live/confirm` | 保存当前稳定测量结果。 |
+| `POST /api/depth/live/stop` | 暂停实时采集流。 |
 | `POST /api/depth/camera-info/normalize` | 把 ROS/OpenNI/camera_info 转成测量内参。 |
 | `POST /api/depth/measure-roi` | 用深度 ROI 测规则物体。 |
 | `POST /api/depth/measure-object` | 用 object mask 测异形件。 |
 | `POST /api/depth/quality` | 深度质量门控。 |
 | `POST /api/depth/fuse-measurements` | 多视角结果保守融合。 |
 | `POST /api/depth/extrinsics/validate` | 两台/三台相机外参、角色、序列号和视角冲突验收。 |
+
+### 重量和计费
+
+| 接口 | 用途 |
+| --- | --- |
+| `GET /api/weight/volumetric-rules` | 返回体积重规则表，例如 5000、6000、8000。 |
+| `POST /api/industry/profile` | 根据尺寸、包装、材质、实重和体积重规则计算行业摘要、体积重和计费重。 |
 
 ### 现场验证
 

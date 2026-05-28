@@ -16,6 +16,10 @@ EXTRA_COLUMNS = {
     "material_hint": "TEXT",
     "package_class": "TEXT",
     "recommended_capture_mode": "TEXT",
+    "actual_weight_kg": "REAL",
+    "volumetric_weight_kg": "REAL",
+    "volumetric_rule_id": "TEXT",
+    "billing_weight_source": "TEXT",
     "chargeable_weight_kg": "REAL",
     "measurement_method": "TEXT",
 }
@@ -37,6 +41,10 @@ HISTORY_COLUMNS = (
     "width_mm",
     "height_mm",
     "volume_l",
+    "actual_weight_kg",
+    "volumetric_weight_kg",
+    "volumetric_rule_id",
+    "billing_weight_source",
     "chargeable_weight_kg",
     "top_result_url",
     "side_result_url",
@@ -93,9 +101,11 @@ def save_measurement(result: dict[str, Any]) -> None:
                 measurement_id, created_at, order_id, barcode_text, status, confidence,
                 length_mm, width_mm, height_mm, volume_l, top_upload, side_upload,
                 top_result_url, side_result_url, result_json, part_category, package_hint,
-                material_hint, package_class, recommended_capture_mode, chargeable_weight_kg, measurement_method
+                material_hint, package_class, recommended_capture_mode, actual_weight_kg,
+                volumetric_weight_kg, volumetric_rule_id, billing_weight_source,
+                chargeable_weight_kg, measurement_method
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 result["measurement_id"],
@@ -118,6 +128,10 @@ def save_measurement(result: dict[str, Any]) -> None:
                 result.get("material_hint"),
                 industry_profile.get("package_class"),
                 industry_profile.get("recommended_capture_mode"),
+                result.get("actual_weight_kg") or industry_profile.get("actual_weight_kg"),
+                industry_profile.get("volumetric_weight_kg"),
+                industry_profile.get("volumetric_rule_id"),
+                industry_profile.get("billing_weight_source"),
                 industry_profile.get("chargeable_weight_kg"),
                 method.get("name") or result.get("measurement_method"),
             ),
@@ -130,7 +144,8 @@ def list_measurements(limit: int = 50, order_id: str | None = None) -> list[dict
     query = """
         SELECT measurement_id, created_at, order_id, barcode_text, status, confidence,
                part_category, package_hint, material_hint, package_class, recommended_capture_mode,
-               length_mm, width_mm, height_mm, volume_l, chargeable_weight_kg,
+               length_mm, width_mm, height_mm, volume_l, actual_weight_kg,
+               volumetric_weight_kg, volumetric_rule_id, billing_weight_source, chargeable_weight_kg,
                measurement_method,
                top_result_url, side_result_url
         FROM measurements

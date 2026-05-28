@@ -5,7 +5,64 @@ from typing import Any
 
 LONG_PART_THRESHOLD_MM = 1200.0
 STANDARD_RATIO_LIMIT = 4.0
+DEFAULT_VOLUMETRIC_RULE_ID = "standard_6000"
 VOLUMETRIC_DIVISOR_L_PER_KG = 6.0
+VOLUMETRIC_RULES = (
+    {
+        "rule_id": "express_5000",
+        "name_zh": "快递/空运 5000",
+        "name_en": "Express / air 5000",
+        "name_uk": "Експрес / авіа 5000",
+        "divisor_cm3_per_kg": 5000,
+        "divisor_l_per_kg": 5.0,
+        "scenario": "express_air",
+    },
+    {
+        "rule_id": DEFAULT_VOLUMETRIC_RULE_ID,
+        "name_zh": "标准仓配 6000",
+        "name_en": "Standard warehouse 6000",
+        "name_uk": "Стандарт склад 6000",
+        "divisor_cm3_per_kg": 6000,
+        "divisor_l_per_kg": VOLUMETRIC_DIVISOR_L_PER_KG,
+        "scenario": "warehouse_default",
+    },
+    {
+        "rule_id": "economy_8000",
+        "name_zh": "经济陆运 8000",
+        "name_en": "Economy ground 8000",
+        "name_uk": "Економ наземний 8000",
+        "divisor_cm3_per_kg": 8000,
+        "divisor_l_per_kg": 8.0,
+        "scenario": "ground_economy",
+    },
+)
+
+
+def list_volumetric_rules() -> list[dict[str, Any]]:
+    return [dict(rule) for rule in VOLUMETRIC_RULES]
+
+
+def resolve_volumetric_rule(
+    rule_id: str | None = None,
+    divisor_l_per_kg: float | None = None,
+) -> dict[str, Any]:
+    custom_divisor = _number(divisor_l_per_kg)
+    if custom_divisor:
+        return {
+            "rule_id": "custom",
+            "name_zh": f"自定义 {int(custom_divisor * 1000)}",
+            "name_en": f"Custom {int(custom_divisor * 1000)}",
+            "name_uk": f"Власний {int(custom_divisor * 1000)}",
+            "divisor_cm3_per_kg": int(round(custom_divisor * 1000)),
+            "divisor_l_per_kg": round(custom_divisor, 3),
+            "scenario": "custom",
+        }
+
+    normalized = (rule_id or DEFAULT_VOLUMETRIC_RULE_ID).strip().lower()
+    for rule in VOLUMETRIC_RULES:
+        if rule["rule_id"] == normalized:
+            return dict(rule)
+    return dict(next(rule for rule in VOLUMETRIC_RULES if rule["rule_id"] == DEFAULT_VOLUMETRIC_RULE_ID))
 
 
 def infer_material_hint_from_capture_quality(
@@ -59,6 +116,8 @@ def build_packaging_profile(
     package_hint: str | None = None,
     material_hint: str | None = None,
     actual_weight_kg: float | None = None,
+    volumetric_rule_id: str | None = None,
+    volumetric_divisor_l_per_kg: float | None = None,
 ) -> dict[str, Any]:
     length = _number(dimensions.get("length_mm"))
     width = _number(dimensions.get("width_mm"))
@@ -93,8 +152,17 @@ def build_packaging_profile(
     if material_risk["risk_level"] in {"medium", "high"}:
         handling_flags.append("manual_review_recommended")
 
-    volumetric_weight_kg = _volumetric_weight(volume_l, length, width, height)
+    volumetric_rule = resolve_volumetric_rule(volumetric_rule_id, volumetric_divisor_l_per_kg)
+    volumetric_weight_kg = _volumetric_weight(
+        volume_l,
+        length,
+        width,
+        height,
+        divisor_l_per_kg=volumetric_rule["divisor_l_per_kg"],
+    )
     chargeable_weight = _chargeable_weight(actual_weight_kg, volumetric_weight_kg)
+    billing_source = _billing_weight_source(actual_weight_kg, volumetric_weight_kg, chargeable_weight)
+    weight_delta = _weight_delta(actual_weight_kg, volumetric_weight_kg)
 
     return {
         "package_class": package_class,
@@ -115,6 +183,12 @@ def build_packaging_profile(
         "actual_weight_kg": _round(actual_weight_kg, 3),
         "volumetric_weight_kg": _round(volumetric_weight_kg, 3),
         "chargeable_weight_kg": _round(chargeable_weight, 3),
+        "billing_weight_source": billing_source,
+        "weight_delta_kg": _round(weight_delta, 3),
+        "volumetric_rule": volumetric_rule,
+        "volumetric_rule_id": volumetric_rule["rule_id"],
+        "volumetric_divisor_l_per_kg": volumetric_rule["divisor_l_per_kg"],
+        "volumetric_divisor_cm3_per_kg": volumetric_rule["divisor_cm3_per_kg"],
         "handling_flags": sorted(set(handling_flags)),
         "workflow": _workflow_for(package_class, material),
     }
@@ -222,17 +296,40 @@ def _volumetric_weight(
     length: float | None,
     width: float | None,
     height: float | None,
+    *,
+    divisor_l_per_kg: float = VOLUMETRIC_DIVISOR_L_PER_KG,
 ) -> float | None:
     if volume_l is None and length and width and height:
         volume_l = length * width * height / 1_000_000
     if volume_l is None:
         return None
-    return volume_l / VOLUMETRIC_DIVISOR_L_PER_KG
+    divisor = _number(divisor_l_per_kg) or VOLUMETRIC_DIVISOR_L_PER_KG
+    return volume_l / divisor
 
 
 def _chargeable_weight(actual_weight_kg: float | None, volumetric_weight_kg: float | None) -> float | None:
     values = [value for value in [_number(actual_weight_kg), volumetric_weight_kg] if value is not None]
     return max(values) if values else None
+
+
+def _billing_weight_source(
+    actual_weight_kg: float | None,
+    volumetric_weight_kg: float | None,
+    chargeable_weight_kg: float | None,
+) -> str | None:
+    if chargeable_weight_kg is None:
+        return None
+    actual = _number(actual_weight_kg)
+    if actual is not None and actual >= (volumetric_weight_kg or 0):
+        return "actual_weight"
+    return "volumetric_weight"
+
+
+def _weight_delta(actual_weight_kg: float | None, volumetric_weight_kg: float | None) -> float | None:
+    actual = _number(actual_weight_kg)
+    if actual is None or volumetric_weight_kg is None:
+        return None
+    return abs(actual - volumetric_weight_kg)
 
 
 def _capture_quality_views(capture_quality: dict[str, Any] | None) -> list[dict[str, Any]]:

@@ -67,6 +67,7 @@ class DepthLiveManager:
         self._status = "stopped"
         self._started_at: str | None = None
         self._updated_at: str | None = None
+        self._started_monotonic: float | None = None
 
     def start(self, config: DepthLiveConfig | None = None) -> dict[str, Any]:
         config = config or DepthLiveConfig()
@@ -87,6 +88,7 @@ class DepthLiveManager:
             self._simulation_fallback_reason = None
             self._status = "starting"
             self._started_at = _now()
+            self._started_monotonic = time.monotonic()
             self._updated_at = self._started_at
             self._thread = threading.Thread(target=self._run, name="packvision-depth-live", daemon=True)
             self._thread.start()
@@ -108,11 +110,15 @@ class DepthLiveManager:
 
     def state(self) -> dict[str, Any]:
         with self._lock:
+            uptime_seconds = _uptime_seconds(self._started_monotonic)
+            fps = _average_fps(self._frame_count, uptime_seconds)
             return {
                 "running": bool(self._thread and self._thread.is_alive() and not self._stop_event.is_set()),
                 "status": self._status,
                 "frame_count": self._frame_count,
                 "measurement_count": self._measurement_count,
+                "uptime_seconds": uptime_seconds,
+                "fps": fps,
                 "stable_frame_count": self._stable_frame_count,
                 "stable_required_frames": self._config.stable_required_frames,
                 "simulation_active": self._simulation_active,
@@ -388,6 +394,18 @@ def _config_summary(config: DepthLiveConfig) -> dict[str, Any]:
         "measurement_mode": config.measurement_mode,
         "stable_required_frames": config.stable_required_frames,
     }
+
+
+def _uptime_seconds(started_monotonic: float | None) -> float:
+    if started_monotonic is None:
+        return 0.0
+    return round(max(0.0, time.monotonic() - started_monotonic), 1)
+
+
+def _average_fps(frame_count: int, uptime_seconds: float) -> float:
+    if not frame_count or uptime_seconds <= 0:
+        return 0.0
+    return round(frame_count / uptime_seconds, 2)
 
 
 def _now() -> str:

@@ -1,4 +1,4 @@
-from packvision.services.industry import build_packaging_profile, infer_material_hint_from_capture_quality
+from packvision.services.industry import build_packaging_profile, infer_material_hint_from_capture_quality, list_volumetric_rules
 
 
 def test_standard_carton_profile():
@@ -50,6 +50,27 @@ def test_bulky_irregular_profile_when_sides_are_unbalanced():
     assert profile["package_class"] == "bulky_irregular"
     assert profile["chargeable_weight_kg"] > 2.5
     assert "manual_review_recommended" in profile["handling_flags"]
+
+
+def test_volumetric_weight_rule_table_controls_chargeable_weight():
+    profile = build_packaging_profile(
+        {"length_mm": 500, "width_mm": 400, "height_mm": 300},
+        actual_weight_kg=8.0,
+        volumetric_rule_id="express_5000",
+    )
+
+    assert profile["volumetric_rule_id"] == "express_5000"
+    assert profile["volumetric_divisor_cm3_per_kg"] == 5000
+    assert profile["volumetric_weight_kg"] == 12.0
+    assert profile["chargeable_weight_kg"] == 12.0
+    assert profile["billing_weight_source"] == "volumetric_weight"
+    assert profile["weight_delta_kg"] == 4.0
+
+
+def test_volumetric_rules_are_available_for_ui_selection():
+    rules = list_volumetric_rules()
+
+    assert {rule["rule_id"] for rule in rules} >= {"standard_6000", "express_5000", "economy_8000"}
 
 
 def test_reflective_material_profile_adds_surface_check_flow():

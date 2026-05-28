@@ -49,6 +49,22 @@ const translations = {
     darkMaterial: "深黑吸光",
     deformableMaterial: "易变形软材",
     actualWeight: "实重，kg",
+    volumetricRule: "体积重规则",
+    standard6000: "标准仓配 6000",
+    express5000: "快递/空运 5000",
+    economy8000: "经济陆运 8000",
+    weightMonitor: "重量监控",
+    weightMonitorWaiting: "等待尺寸数据",
+    volumetricWeight: "体积重量",
+    billingSource: "计费来源",
+    weightDelta: "重量差",
+    actualWeightSource: "实重计费",
+    volumetricWeightSource: "体积重计费",
+    liveMonitor: "采集监控",
+    liveFps: "FPS",
+    liveUptime: "运行时长",
+    liveMeasurements: "测量次数",
+    liveBackend: "采集后端",
     decoding: "识别中",
     barcodeFound: "已识别单号",
     barcodeNotFound: "未识别到条码",
@@ -229,6 +245,22 @@ const translations = {
     darkMaterial: "Dark absorbing",
     deformableMaterial: "Deformable",
     actualWeight: "Weight, kg",
+    volumetricRule: "Volumetric rule",
+    standard6000: "Standard warehouse 6000",
+    express5000: "Express / air 5000",
+    economy8000: "Economy ground 8000",
+    weightMonitor: "Weight monitor",
+    weightMonitorWaiting: "Waiting for dimensions",
+    volumetricWeight: "Volumetric weight",
+    billingSource: "Billing source",
+    weightDelta: "Weight delta",
+    actualWeightSource: "Actual weight",
+    volumetricWeightSource: "Volumetric weight",
+    liveMonitor: "Capture monitor",
+    liveFps: "FPS",
+    liveUptime: "Uptime",
+    liveMeasurements: "Measurements",
+    liveBackend: "Capture backend",
     decoding: "Decoding",
     barcodeFound: "Order detected",
     barcodeNotFound: "No barcode detected",
@@ -409,6 +441,22 @@ const translations = {
     darkMaterial: "Темний поглинаючий",
     deformableMaterial: "Деформівний",
     actualWeight: "Вага, кг",
+    volumetricRule: "Правило об'ємної ваги",
+    standard6000: "Стандарт склад 6000",
+    express5000: "Експрес / авіа 5000",
+    economy8000: "Економ наземний 8000",
+    weightMonitor: "Монітор ваги",
+    weightMonitorWaiting: "Очікування розмірів",
+    volumetricWeight: "Об'ємна вага",
+    billingSource: "Джерело тарифу",
+    weightDelta: "Різниця ваги",
+    actualWeightSource: "Фактична вага",
+    volumetricWeightSource: "Об'ємна вага",
+    liveMonitor: "Монітор збору",
+    liveFps: "FPS",
+    liveUptime: "Час роботи",
+    liveMeasurements: "Вимірювання",
+    liveBackend: "Бекенд збору",
     decoding: "Зчитування",
     barcodeFound: "Номер знайдено",
     barcodeNotFound: "Штрихкод не знайдено",
@@ -1074,6 +1122,7 @@ const state = {
   depthWorkflow: null,
   depthLive: null,
   depthLiveTimer: null,
+  volumetricRules: [],
   validationPlan: null,
   aiPlugins: null,
   usageSummary: null,
@@ -1096,6 +1145,9 @@ const measureButton = document.querySelector("#measureButton");
 const demoButton = document.querySelector("#demoButton");
 const orderIdInput = document.querySelector("#orderId");
 const barcodeTextInput = document.querySelector("#barcodeText");
+const actualWeightInput = document.querySelector("#actualWeightInput");
+const volumetricRuleSelect = document.querySelector("#volumetricRuleSelect");
+const weightMonitorPanel = document.querySelector("#weightMonitorPanel");
 const orderImage = document.querySelector("#orderImage");
 const decodeBarcodeButton = document.querySelector("#decodeBarcodeButton");
 const topBoxJson = document.querySelector("#topBoxJson");
@@ -1120,6 +1172,7 @@ const depthStatusGrid = document.querySelector("#depthStatusGrid");
 const refreshDepthStatusButton = document.querySelector("#refreshDepthStatusButton");
 const probeDepthCaptureButton = document.querySelector("#probeDepthCaptureButton");
 const liveStatusGrid = document.querySelector("#liveStatusGrid");
+const liveMonitorGrid = document.querySelector("#liveMonitorGrid");
 const liveStateSummary = document.querySelector("#liveStateSummary");
 const startLiveButton = document.querySelector("#startLiveButton");
 const stopLiveButton = document.querySelector("#stopLiveButton");
@@ -1177,6 +1230,7 @@ function applyLanguage() {
   document.querySelectorAll("[data-i18n]").forEach((node) => {
     node.textContent = t(node.dataset.i18n);
   });
+  renderVolumetricRuleOptions(volumetricRuleSelect?.value || "standard_6000");
   localStorage.setItem("packvision.lang", state.lang);
   setFileName(topImage, topFileName, "noFile");
   setFileName(sideImage, sideFileName, "optional");
@@ -1194,6 +1248,8 @@ function applyLanguage() {
   }
   if (state.depthLive) {
     renderDepthLive(state.depthLive);
+  } else if (state.lastResult?.dimensions) {
+    renderWeightMonitorFromDimensions(state.lastResult.dimensions, state.lastResult.industry_profile);
   }
   if (state.depthWorkflow) {
     renderDepthWorkflow(state.depthWorkflow);
@@ -1247,6 +1303,16 @@ function formatDate(value) {
   });
 }
 
+function formatDuration(seconds) {
+  const total = Math.max(0, Math.round(Number(seconds) || 0));
+  const minutes = Math.floor(total / 60);
+  const remainingSeconds = total % 60;
+  if (minutes <= 0) {
+    return `${remainingSeconds}s`;
+  }
+  return `${minutes}m ${String(remainingSeconds).padStart(2, "0")}s`;
+}
+
 function setFileName(input, target, fallbackKey) {
   target.textContent = input.files?.[0]?.name || t(fallbackKey);
 }
@@ -1261,6 +1327,67 @@ function setInputFile(input, file) {
   const transfer = new DataTransfer();
   transfer.items.add(file);
   input.files = transfer.files;
+}
+
+async function loadVolumetricRules() {
+  if (!volumetricRuleSelect) {
+    return;
+  }
+  try {
+    const response = await fetch("/api/weight/volumetric-rules");
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.detail || response.statusText);
+    }
+    state.volumetricRules = data.rules || [];
+    renderVolumetricRuleOptions(data.default_rule_id);
+    renderWeightMonitorFromCurrentState();
+  } catch {
+    state.volumetricRules = [];
+    renderWeightMonitorFromCurrentState();
+  }
+}
+
+function renderVolumetricRuleOptions(defaultRuleId) {
+  if (!volumetricRuleSelect || !state.volumetricRules.length) {
+    return;
+  }
+  const current = volumetricRuleSelect.value || defaultRuleId;
+  volumetricRuleSelect.innerHTML = "";
+  for (const rule of state.volumetricRules) {
+    const option = document.createElement("option");
+    option.value = rule.rule_id;
+    option.textContent = localizedVolumetricRuleName(rule);
+    volumetricRuleSelect.appendChild(option);
+  }
+  volumetricRuleSelect.value = state.volumetricRules.some((rule) => rule.rule_id === current)
+    ? current
+    : defaultRuleId || state.volumetricRules[0].rule_id;
+}
+
+function localizedVolumetricRuleName(rule) {
+  return rule[`name_${state.lang}`] || rule.name_en || rule.name_zh || rule.rule_id;
+}
+
+function currentVolumetricRule() {
+  const selected = volumetricRuleSelect?.value || "standard_6000";
+  return (
+    state.volumetricRules.find((rule) => rule.rule_id === selected) ||
+    state.volumetricRules.find((rule) => rule.rule_id === "standard_6000") ||
+    { rule_id: selected, divisor_l_per_kg: selected === "express_5000" ? 5 : selected === "economy_8000" ? 8 : 6 }
+  );
+}
+
+function applyWeightInputsToPayload(payload) {
+  const actualWeight = Number(form.elements.actual_weight_kg?.value);
+  if (Number.isFinite(actualWeight) && actualWeight > 0) {
+    payload.actual_weight_kg = actualWeight;
+  }
+  const ruleId = String(form.elements.volumetric_rule_id?.value || "").trim();
+  if (ruleId) {
+    payload.volumetric_rule_id = ruleId;
+  }
+  return payload;
 }
 
 function updatePreview(kind, input, image, fallbackKey) {
@@ -1304,6 +1431,7 @@ function cleanPayload(payload) {
     "package_hint",
     "material_hint",
     "actual_weight_kg",
+    "volumetric_rule_id",
   ]) {
     if (!payload.get(key)) {
       payload.delete(key);
@@ -1378,11 +1506,7 @@ function buildDepthCapturePayload() {
   if (!payload.order_id && payload.barcode_text) {
     payload.order_id = payload.barcode_text;
   }
-  const actualWeight = Number(form.elements.actual_weight_kg?.value);
-  if (Number.isFinite(actualWeight) && actualWeight > 0) {
-    payload.actual_weight_kg = actualWeight;
-  }
-  return payload;
+  return applyWeightInputsToPayload(payload);
 }
 
 async function loadDemoImage() {
@@ -1450,6 +1574,7 @@ function renderResult(data, options = {}) {
   renderStageImage();
   renderSideSummary(data);
   renderIndustrySummary(data.industry_profile, { autoLoadWorkflow: !options.keepView });
+  renderWeightMonitorFromDimensions(data.dimensions, data.industry_profile);
   renderFlags(data);
 }
 
@@ -1497,8 +1622,93 @@ function renderIndustrySummary(profile, options = {}) {
   appendSummaryCell(card, t("packageClass"), labelFrom(packageClassLabels, profile.package_class));
   appendSummaryCell(card, t("materialClass"), labelFrom(materialClassLabels, profile.material_class) || "--");
   appendSummaryCell(card, t("captureMode"), labelFrom(captureModeLabels, profile.recommended_capture_mode));
+  appendSummaryCell(card, t("actualWeight"), formatKg(profile.actual_weight_kg));
+  appendSummaryCell(card, t("volumetricWeight"), formatKg(profile.volumetric_weight_kg));
   appendSummaryCell(card, t("chargeableWeight"), formatKg(profile.chargeable_weight_kg));
+  appendSummaryCell(card, t("volumetricRule"), localizedVolumetricRuleName(profile.volumetric_rule || currentVolumetricRule()));
+  appendSummaryCell(card, t("billingSource"), billingSourceLabel(profile.billing_weight_source));
   industrySummary.appendChild(card);
+}
+
+function renderLiveMonitor(data) {
+  if (!liveMonitorGrid) {
+    return;
+  }
+  liveMonitorGrid.innerHTML = "";
+  appendMonitorTile(liveMonitorGrid, t("liveFps"), Number(data.fps || 0).toFixed(2));
+  appendMonitorTile(liveMonitorGrid, t("liveUptime"), formatDuration(data.uptime_seconds));
+  appendMonitorTile(liveMonitorGrid, t("liveMeasurements"), String(data.measurement_count || 0));
+  appendMonitorTile(liveMonitorGrid, t("liveBackend"), data.config?.backend || "--");
+}
+
+function appendMonitorTile(parent, label, value) {
+  const item = document.createElement("div");
+  item.className = "monitor-tile";
+  const labelEl = document.createElement("span");
+  const valueEl = document.createElement("strong");
+  labelEl.textContent = label;
+  valueEl.textContent = value || "--";
+  item.append(labelEl, valueEl);
+  parent.appendChild(item);
+}
+
+function renderWeightMonitorFromCurrentState() {
+  const result = state.depthLive?.stable_result || state.depthLive?.latest_result || state.lastResult;
+  renderWeightMonitorFromDimensions(result?.dimensions, state.lastResult?.industry_profile);
+}
+
+function renderWeightMonitorFromDimensions(dimensions, profile = null) {
+  if (!weightMonitorPanel) {
+    return;
+  }
+  weightMonitorPanel.innerHTML = "";
+  const volume = volumeFromDimensions(dimensions);
+  if (!volume) {
+    const label = document.createElement("span");
+    const value = document.createElement("strong");
+    label.textContent = t("weightMonitor");
+    value.textContent = t("weightMonitorWaiting");
+    weightMonitorPanel.append(label, value);
+    return;
+  }
+  const rule = profile?.volumetric_rule || currentVolumetricRule();
+  const divisor = Number(profile?.volumetric_divisor_l_per_kg || rule.divisor_l_per_kg || 6);
+  const actualInput = Number(actualWeightInput?.value);
+  const actual = Number.isFinite(actualInput) && actualInput > 0 ? actualInput : profile?.actual_weight_kg;
+  const volumetric = Number(profile?.volumetric_weight_kg) || volume / divisor;
+  const chargeable = Math.max(Number(actual) || 0, volumetric);
+  const source = actual && actual >= volumetric ? "actual_weight" : "volumetric_weight";
+  appendSummaryCell(weightMonitorPanel, t("volumetricRule"), localizedVolumetricRuleName(rule));
+  appendSummaryCell(weightMonitorPanel, t("actualWeight"), formatKg(actual));
+  appendSummaryCell(weightMonitorPanel, t("volumetricWeight"), formatKg(volumetric));
+  appendSummaryCell(weightMonitorPanel, t("chargeableWeight"), `${formatKg(chargeable)} · ${billingSourceLabel(source)}`);
+}
+
+function volumeFromDimensions(dimensions) {
+  if (!dimensions) {
+    return null;
+  }
+  const volume = Number(dimensions.volume_l);
+  if (Number.isFinite(volume) && volume > 0) {
+    return volume;
+  }
+  const length = Number(dimensions.length_mm);
+  const width = Number(dimensions.width_mm);
+  const height = Number(dimensions.height_mm);
+  if ([length, width, height].every((value) => Number.isFinite(value) && value > 0)) {
+    return (length * width * height) / 1_000_000;
+  }
+  return null;
+}
+
+function billingSourceLabel(source) {
+  if (source === "actual_weight") {
+    return t("actualWeightSource");
+  }
+  if (source === "volumetric_weight") {
+    return t("volumetricWeightSource");
+  }
+  return "--";
 }
 
 function appendSummaryCell(parent, label, value) {
@@ -1792,6 +2002,7 @@ function renderDepthLive(data) {
     Boolean(data.can_confirm),
   );
   appendDepthPill(liveStatusGrid, t("liveSimulation"), data.simulation_active ? t("ready") : t("missing"), !data.simulation_active);
+  renderLiveMonitor(data);
 
   startLiveButton.disabled = Boolean(data.running);
   stopLiveButton.disabled = !data.running;
@@ -1807,11 +2018,14 @@ function renderDepthLive(data) {
     appendSummaryCell(card, t("width"), formatMm(result.dimensions.width_mm));
     appendSummaryCell(card, t("height"), formatMm(result.dimensions.height_mm));
     liveStateSummary.appendChild(card);
+    renderWeightMonitorFromDimensions(result.dimensions);
   } else if (data.last_error) {
     const item = document.createElement("div");
     item.className = "recommendation";
     item.textContent = data.last_error;
     liveStateSummary.appendChild(item);
+  } else {
+    renderWeightMonitorFromDimensions(null);
   }
 
   if (data.stable_result?.dimensions && !state.drawing.active) {
@@ -1824,6 +2038,9 @@ function renderDepthLiveError(error) {
     return;
   }
   liveStatusGrid.innerHTML = "";
+  if (liveMonitorGrid) {
+    liveMonitorGrid.innerHTML = "";
+  }
   appendDepthPill(liveStatusGrid, t("liveState"), t("live_error"), false);
   liveStateSummary.innerHTML = "";
   const item = document.createElement("div");
@@ -1866,11 +2083,7 @@ function buildLiveConfirmPayload() {
   if (!payload.order_id && payload.barcode_text) {
     payload.order_id = payload.barcode_text;
   }
-  const actualWeight = Number(form.elements.actual_weight_kg?.value);
-  if (Number.isFinite(actualWeight) && actualWeight > 0) {
-    payload.actual_weight_kg = actualWeight;
-  }
-  return payload;
+  return applyWeightInputsToPayload(payload);
 }
 
 async function loadDepthWorkflow(options = {}) {
@@ -2144,14 +2357,13 @@ async function saveDepthDemo() {
 }
 
 function currentTraceabilityPayload() {
-  return {
+  return applyWeightInputsToPayload({
     order_id: orderIdInput.value || `DEPTH-${Date.now().toString().slice(-6)}`,
     barcode_text: barcodeTextInput.value || orderIdInput.value || "",
     part_category: form.elements.part_category?.value || "",
     package_hint: form.elements.package_hint?.value || "irregular",
     material_hint: form.elements.material_hint?.value || "",
-    actual_weight_kg: Number(form.elements.actual_weight_kg?.value || 0) || null,
-  };
+  });
 }
 
 function renderDepthDemo(data) {
@@ -2350,6 +2562,7 @@ function renderHistory(items) {
     appendHistoryCell(row, formatMm(item.length_mm), t("length"), false);
     appendHistoryCell(row, formatMm(item.width_mm), t("width"), false);
     appendHistoryCell(row, formatMm(item.height_mm), t("height"), false);
+    appendHistoryCell(row, formatKg(item.volumetric_weight_kg), t("volumetricWeight"), false);
     appendHistoryCell(row, formatKg(item.chargeable_weight_kg), t("chargeableWeight"), false);
     historyList.appendChild(row);
   }
@@ -2548,6 +2761,8 @@ demoButton.addEventListener("click", loadDemoImage);
 copyJsonButton.addEventListener("click", copyResultJson);
 decodeBarcodeButton.addEventListener("click", () => orderImage.click());
 orderImage.addEventListener("change", decodeBarcodeImage);
+actualWeightInput?.addEventListener("input", renderWeightMonitorFromCurrentState);
+volumetricRuleSelect?.addEventListener("change", renderWeightMonitorFromCurrentState);
 refreshHistoryButton.addEventListener("click", loadHistory);
 refreshReviewButton.addEventListener("click", loadReviewSamples);
 refreshUsageButton.addEventListener("click", loadUsageSummary);
@@ -2624,6 +2839,7 @@ annotationCanvas.addEventListener("pointercancel", () => stopDrawing());
 
 applyLanguage();
 applyTheme();
+loadVolumetricRules();
 loadDepthStatus();
 startDepthLive({ silent: true });
 loadHistory();

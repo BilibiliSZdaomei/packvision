@@ -55,7 +55,12 @@ from packvision.services.history import (
     list_measurements,
     save_measurement,
 )
-from packvision.services.industry import build_packaging_profile, infer_material_hint_from_capture_quality
+from packvision.services.industry import (
+    DEFAULT_VOLUMETRIC_RULE_ID,
+    build_packaging_profile,
+    infer_material_hint_from_capture_quality,
+    list_volumetric_rules,
+)
 from packvision.services.measurement import (
     MeasurementConfig,
     MeasurementError,
@@ -113,6 +118,8 @@ class DepthTraceabilityPayload(BaseModel):
     package_hint: str | None = None
     material_hint: str | None = None
     actual_weight_kg: float | None = None
+    volumetric_rule_id: str | None = None
+    volumetric_divisor_l_per_kg: float | None = None
     save_to_history: bool = False
 
 
@@ -228,6 +235,8 @@ class IndustryProfilePayload(BaseModel):
     package_hint: str | None = None
     material_hint: str | None = None
     actual_weight_kg: float | None = None
+    volumetric_rule_id: str | None = None
+    volumetric_divisor_l_per_kg: float | None = None
 
 
 class TrialRunEvaluationPayload(BaseModel):
@@ -354,6 +363,8 @@ def create_app() -> FastAPI:
         package_hint: Annotated[str | None, Form()] = None,
         material_hint: Annotated[str | None, Form()] = None,
         actual_weight_kg: Annotated[float | None, Form()] = None,
+        volumetric_rule_id: Annotated[str | None, Form()] = None,
+        volumetric_divisor_l_per_kg: Annotated[float | None, Form()] = None,
     ) -> dict[str, object]:
         if marker_size_mm <= 0:
             raise HTTPException(status_code=422, detail="marker_size_mm must be positive.")
@@ -424,7 +435,13 @@ def create_app() -> FastAPI:
             package_hint=result["package_hint"],
             material_hint=result["material_hint"],
             actual_weight_kg=result["actual_weight_kg"],
+            volumetric_rule_id=volumetric_rule_id,
+            volumetric_divisor_l_per_kg=volumetric_divisor_l_per_kg,
         )
+        result["volumetric_rule_id"] = result["industry_profile"].get("volumetric_rule_id")
+        result["volumetric_weight_kg"] = result["industry_profile"].get("volumetric_weight_kg")
+        result["chargeable_weight_kg"] = result["industry_profile"].get("chargeable_weight_kg")
+        result["billing_weight_source"] = result["industry_profile"].get("billing_weight_source")
         result["industry_profile"]["material_hint_source"] = result["material_hint_source"]
         result["industry_profile"]["auto_material_signal"] = auto_material_signal
         result["artifacts"] = {
@@ -833,6 +850,8 @@ def create_app() -> FastAPI:
                 package_hint=payload.package_hint or "irregular",
                 material_hint=payload.material_hint,
                 actual_weight_kg=payload.actual_weight_kg or 4.6,
+                volumetric_rule_id=payload.volumetric_rule_id,
+                volumetric_divisor_l_per_kg=payload.volumetric_divisor_l_per_kg,
                 save_to_history=True,
             ),
             measurement_source="depth_demo_object",
@@ -851,6 +870,8 @@ def create_app() -> FastAPI:
         package_hint: Annotated[str | None, Form()] = None,
         material_hint: Annotated[str | None, Form()] = None,
         actual_weight_kg: Annotated[float | None, Form()] = None,
+        volumetric_rule_id: Annotated[str | None, Form()] = None,
+        volumetric_divisor_l_per_kg: Annotated[float | None, Form()] = None,
         roi_json: Annotated[str | None, Form()] = None,
         table_depth_mm: Annotated[float, Form()] = 1200.0,
         object_depth_mm: Annotated[float, Form()] = 850.0,
@@ -886,6 +907,8 @@ def create_app() -> FastAPI:
             package_hint=package_hint,
             material_hint=material_hint,
             actual_weight_kg=actual_weight_kg,
+            volumetric_rule_id=volumetric_rule_id,
+            volumetric_divisor_l_per_kg=volumetric_divisor_l_per_kg,
             save_to_history=False,
         )
         result = _finalize_depth_result(
@@ -959,7 +982,16 @@ def create_app() -> FastAPI:
             package_hint=payload.package_hint,
             material_hint=payload.material_hint,
             actual_weight_kg=payload.actual_weight_kg,
+            volumetric_rule_id=payload.volumetric_rule_id,
+            volumetric_divisor_l_per_kg=payload.volumetric_divisor_l_per_kg,
         )
+
+    @app.get("/api/weight/volumetric-rules")
+    def volumetric_rules() -> dict[str, object]:
+        return {
+            "default_rule_id": DEFAULT_VOLUMETRIC_RULE_ID,
+            "rules": list_volumetric_rules(),
+        }
 
     @app.get("/api/validation/trial-plan")
     def validation_trial_plan() -> dict[str, object]:
@@ -1197,7 +1229,13 @@ def _finalize_depth_result(
         package_hint=result["package_hint"],
         material_hint=result["material_hint"],
         actual_weight_kg=actual_weight,
+        volumetric_rule_id=payload.volumetric_rule_id,
+        volumetric_divisor_l_per_kg=payload.volumetric_divisor_l_per_kg,
     )
+    result["volumetric_rule_id"] = result["industry_profile"].get("volumetric_rule_id")
+    result["volumetric_weight_kg"] = result["industry_profile"].get("volumetric_weight_kg")
+    result["chargeable_weight_kg"] = result["industry_profile"].get("chargeable_weight_kg")
+    result["billing_weight_source"] = result["industry_profile"].get("billing_weight_source")
     result["industry_profile"]["material_hint_source"] = result["material_hint_source"]
     result["industry_profile"]["auto_material_signal"] = result["auto_material_signal"]
     should_save = payload.save_to_history if save_to_history is None else save_to_history
@@ -1222,6 +1260,8 @@ def _set_usage_trace(
             "history_saved": result.get("history_saved"),
             "package_class": industry_profile.get("package_class"),
             "part_category": result.get("part_category"),
+            "volumetric_rule_id": industry_profile.get("volumetric_rule_id"),
+            "chargeable_weight_kg": industry_profile.get("chargeable_weight_kg"),
         },
     }
 

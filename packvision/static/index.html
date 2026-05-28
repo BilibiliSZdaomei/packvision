@@ -88,6 +88,7 @@
                 </div>
               </div>
               <div class="depth-status-grid live-status-grid" id="liveStatusGrid"></div>
+              <div class="live-monitor-grid" id="liveMonitorGrid"></div>
               <div class="live-state-summary" id="liveStateSummary"></div>
             </div>
 
@@ -103,6 +104,25 @@
               <div class="order-actions">
                 <input id="orderImage" type="file" accept="image/*" hidden />
                 <button class="secondary-action compact" type="button" id="decodeBarcodeButton" data-i18n="decodeBarcode">识别条码图片</button>
+              </div>
+            </div>
+
+            <div class="billing-card">
+              <label>
+                <span data-i18n="actualWeight">实重，kg</span>
+                <input id="actualWeightInput" name="actual_weight_kg" type="number" min="0" step="0.01" placeholder="0" />
+              </label>
+              <label>
+                <span data-i18n="volumetricRule">体积重规则</span>
+                <select id="volumetricRuleSelect" name="volumetric_rule_id">
+                  <option value="standard_6000" data-i18n="standard6000">标准仓配 6000</option>
+                  <option value="express_5000" data-i18n="express5000">快递/空运 5000</option>
+                  <option value="economy_8000" data-i18n="economy8000">经济陆运 8000</option>
+                </select>
+              </label>
+              <div class="weight-monitor-panel" id="weightMonitorPanel">
+                <span data-i18n="weightMonitor">重量监控</span>
+                <strong data-i18n="weightMonitorWaiting">等待尺寸数据</strong>
               </div>
             </div>
 
@@ -125,10 +145,6 @@
                     <option value="irregular" data-i18n="irregular">异形件</option>
                     <option value="soft" data-i18n="softPack">软包</option>
                   </select>
-                </label>
-                <label>
-                  <span data-i18n="actualWeight">实重，kg</span>
-                  <input name="actual_weight_kg" type="number" min="0" step="0.01" placeholder="0" />
                 </label>
                 <label>
                   <span data-i18n="materialHint">材质/表面</span>
