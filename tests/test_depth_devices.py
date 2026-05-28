@@ -2,8 +2,13 @@ from packvision.services import depth_devices
 from packvision.services.depth_devices import (
     astra_depth_intrinsics_from_fov,
     build_depth_camera_inventory,
+    enumerate_openni_devices,
     load_depth_camera_config,
 )
+import importlib.machinery
+import sys
+import time
+import types
 
 
 def test_default_depth_camera_config_is_single_astra_top_camera(tmp_path, monkeypatch):
@@ -66,3 +71,41 @@ def test_depth_camera_inventory_marks_future_three_view_roles(tmp_path, monkeypa
     assert inventory["configured_camera_count"] == 3
     assert inventory["ready_for_three_view_fusion"] is True
     assert inventory["missing_three_view_roles"] == []
+
+
+def test_openni_device_enumeration_times_out_without_blocking_api(tmp_path, monkeypatch):
+    class HangingOpenNI:
+        class Device:
+            @staticmethod
+            def enumerate_uris():
+                return []
+
+        @staticmethod
+        def initialize(runtime_dir):
+            time.sleep(0.3)
+
+        @staticmethod
+        def unload():
+            return None
+
+    fake_primesense = types.ModuleType("primesense")
+    fake_primesense.openni2 = HangingOpenNI
+    monkeypatch.setitem(sys.modules, "primesense", fake_primesense)
+
+    original_find_spec = importlib.machinery.PathFinder.find_spec
+
+    def fake_find_spec(name, *args, **kwargs):
+        if name == "primesense":
+            return importlib.machinery.ModuleSpec(name, loader=None)
+        return original_find_spec(name, *args, **kwargs)
+
+    monkeypatch.setattr(depth_devices.importlib.util, "find_spec", fake_find_spec)
+
+    started = time.perf_counter()
+    result = enumerate_openni_devices(tmp_path, timeout_seconds=0.02)
+    elapsed = time.perf_counter() - started
+
+    assert elapsed < 0.2
+    assert result["device_count"] == 0
+    assert result["runtime_initialized"] is False
+    assert "timed out" in result["error"]

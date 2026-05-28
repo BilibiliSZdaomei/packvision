@@ -87,4 +87,6 @@ PackVision 已经接入：
 - `/api/device/watchdog`：设备守护和恢复动作。
 - `/api/depth/capture/probe`：相机采集后端探测。
 
+OpenNI 设备枚举现在有超时保护。即使厂商运行库在未插相机、USB 异常或设备占用时短暂卡住，PackVision 的 `/api/health`、工作台刷新和现场验收报告也应该继续返回，不再整站无响应。
+
 下一步现场验证时，先用 OrbbecViewer 证明硬件可用，再用 PackVision 证明测量、记录、体积重、历史和导出可用。

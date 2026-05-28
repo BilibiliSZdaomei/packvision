@@ -52,19 +52,19 @@ PackVision 不是单纯的“拍照量尺寸 Demo”，而是给海外汽车备�
 当前验证结果：
 
 ```text
-128 passed in 9.56s
+132 passed in 9.77s
 ```
 
 最新已验证交付包：
 
 ```text
-D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_*.zip
+D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_20260528_1837.zip
 ```
 
 大小约：
 
 ```text
-73.62 MB
+73.63 MB
 ```
 
 ## 4. 运行方式
@@ -151,6 +151,8 @@ PackVision 软件包可以复制即用，但 Astra Pro 深度相机不能完全�
 
 当前电脑已检测到 `SensorDriver V4.3.0.17` 和 Orbbec DriverStore 条目；`OrbbecViewer` 已整理到 `D:\app\orbbec-astra-pro\viewer\OrbbecViewer.exe`。上位机用于到货验机和排错，日常测量仍在 PackVision 里完成。详细说明见 `D:\Documents\包装尺寸检测\docs_cn\35_Astra_Pro_驱动与上位机说明.md`。
 
+OpenNI 设备枚举已加超时保护：即使未插相机或厂商运行库短暂卡住，`/api/health`、工作台和现场验收报告也不能被拖死。
+
 ## 7. 体检接口和现场脚本
 
 开箱即用体检接口：
@@ -220,6 +222,16 @@ PowerShell -ExecutionPolicy Bypass -File .\scripts\check_astra_depth_status.ps1
 | `GET /api/usage/summary` | 使用次数和测量次数汇总。 |
 | `GET /api/usage/events` | 接口调用日志。 |
 | `GET /api/usage/export.csv` | 导出使用日志 CSV。 |
+
+### 现场验收和部署
+
+| 接口 | 用途 |
+| --- | --- |
+| `GET /api/deployment/readiness` | 查看完整开箱即用体检。 |
+| `GET /api/deployment/readiness-summary` | 查看 UI 用的简化体检摘要。 |
+| `GET /api/deployment/field-trial-report` | 汇总本机 readiness、实时工位、历史、复核、统计、电子秤和 WMS 队列，形成现场试运行证据。 |
+| `GET /api/deployment/field-trial-report.md` | 导出 Markdown 现场试运行报告，方便发给老板或贴进 Obsidian。 |
+| `GET /api/deployment/support-bundle.zip` | 导出现场支持包，用于远程排错。 |
 
 ### WMS/TMS 本地集成队列
 

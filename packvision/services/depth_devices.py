@@ -4,6 +4,7 @@ import importlib.util
 import json
 import math
 import os
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +16,7 @@ DEFAULT_INSTALL_ROOT = Path(r"D:\app\orbbec-astra-pro")
 DEFAULT_CAMERA_CONFIG_PATH = DEFAULT_INSTALL_ROOT / "packvision-depth-cameras.json"
 CAMERA_ROLES = ("top", "front", "left", "right", "back", "aux")
 THREE_VIEW_ROLES = ("top", "front", "left")
+OPENNI_ENUMERATION_TIMEOUT_SECONDS = 1.0
 
 
 class DepthDeviceError(RuntimeError):
@@ -173,7 +175,11 @@ def build_depth_camera_inventory(config_path: str | Path | None = None) -> dict[
     }
 
 
-def enumerate_openni_devices(runtime_dir: str | Path | None = None) -> dict[str, Any]:
+def enumerate_openni_devices(
+    runtime_dir: str | Path | None = None,
+    *,
+    timeout_seconds: float = OPENNI_ENUMERATION_TIMEOUT_SECONDS,
+) -> dict[str, Any]:
     runtime = Path(runtime_dir) if runtime_dir else default_openni_runtime_dir()
     result: dict[str, Any] = {
         "backend": "openni2_primesense",
@@ -192,6 +198,29 @@ def enumerate_openni_devices(runtime_dir: str | Path | None = None) -> dict[str,
         result["error"] = f"OpenNI runtime directory does not exist: {runtime}"
         return result
 
+    worker_result: dict[str, Any] = {}
+    worker = threading.Thread(
+        target=lambda: worker_result.update(_enumerate_openni_devices_blocking(runtime)),
+        name="packvision-openni-enumerate",
+        daemon=True,
+    )
+    worker.start()
+    timeout = max(0.05, float(timeout_seconds))
+    worker.join(timeout=timeout)
+    if worker.is_alive():
+        result["error"] = f"OpenNI device enumeration timed out after {timeout:.2f} seconds."
+        return result
+    result.update(worker_result)
+    return result
+
+
+def _enumerate_openni_devices_blocking(runtime: Path) -> dict[str, Any]:
+    result: dict[str, Any] = {
+        "runtime_initialized": False,
+        "device_count": 0,
+        "devices": [],
+        "error": None,
+    }
     try:
         from primesense import openni2  # type: ignore[import-not-found]
 

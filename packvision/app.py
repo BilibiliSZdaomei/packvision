@@ -57,6 +57,7 @@ from packvision.services.history import (
     list_measurements,
     save_measurement,
 )
+from packvision.services.field_report import build_field_trial_report, field_trial_report_markdown
 from packvision.services.integrations import (
     dispatch_outbox_events,
     enqueue_measurement_event,
@@ -365,6 +366,19 @@ def create_app() -> FastAPI:
             filename=bundle_path.name,
         )
 
+    @app.get("/api/deployment/field-trial-report")
+    def deployment_field_trial_report() -> dict[str, object]:
+        return field_trial_report_snapshot()
+
+    @app.get("/api/deployment/field-trial-report.md")
+    def deployment_field_trial_report_markdown() -> Response:
+        report = field_trial_report_snapshot()
+        return Response(
+            content=field_trial_report_markdown(report),
+            media_type="text/markdown; charset=utf-8",
+            headers={"Content-Disposition": 'attachment; filename="packvision-field-trial-report.md"'},
+        )
+
     @app.get("/api/station/snapshot")
     def station_snapshot() -> dict[str, object]:
         live_state = depth_live_manager.state()
@@ -375,6 +389,26 @@ def create_app() -> FastAPI:
             scale_status=build_scale_status(),
             integration_outbox=outbox_summary(),
             device_watchdog=device_watchdog_snapshot(live_state),
+        )
+
+    def field_trial_report_snapshot() -> dict[str, object]:
+        live_state = depth_live_manager.state()
+        station = build_station_snapshot(
+            live_state=live_state,
+            latest_measurements=list_measurements(limit=1),
+            usage=usage_summary(),
+            scale_status=build_scale_status(),
+            integration_outbox=outbox_summary(),
+            device_watchdog=device_watchdog_snapshot(live_state),
+        )
+        return build_field_trial_report(
+            readiness=build_deployment_readiness_summary(),
+            station=station,
+            history_items=list_measurements(limit=20),
+            review=list_review_samples(limit=50),
+            usage=usage_summary(),
+            scale=build_scale_status(),
+            integration=outbox_summary(),
         )
 
     @app.get("/api/device/watchdog")

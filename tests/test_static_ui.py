@@ -24,12 +24,19 @@ def test_static_ui_exposes_review_sample_pool_workspace():
     assert 'id="review"' in html
     assert 'id="reviewSummaryGrid"' in html
     assert 'id="reviewList"' in html
+    assert 'id="fieldTrialReport"' in html
+    assert 'id="fieldReportSummaryGrid"' in html
+    assert 'id="fieldReportScorecard"' in html
+    assert 'id="refreshFieldReportButton"' in html
     assert 'id="refreshReviewButton"' in html
     assert 'id="exportReviewLink"' in html
     assert 'id="exportReviewTruthLink"' in html
     assert "/api/review/samples" in js
     assert "/api/review/truth-template.csv" in js
+    assert "/api/deployment/field-trial-report" in js
+    assert "/api/deployment/field-trial-report.md" in js
     assert "loadReviewSamples()" in js
+    assert "loadFieldTrialReport()" in js
     assert ".review-priority-high" in css
 
 

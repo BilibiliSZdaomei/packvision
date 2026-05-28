@@ -67,6 +67,8 @@ POST /api/depth/vendor-viewer/open
 
 如果 OrbbecViewer 有画面但 PackVision 没画面，再查 PackVision 的 OpenNI 采集后端。
 
+OpenNI 设备枚举已经加超时保护：未插相机、USB 异常或厂商运行库短暂卡住时，PackVision 的 `/api/health`、工作台刷新和现场验收报告不应该被拖死。
+
 ## 到货后流程
 
 1. 直连电脑 USB 口。

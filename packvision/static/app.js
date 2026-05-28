@@ -5,6 +5,13 @@ const translations = {
     workbench: "工作台",
     dataCenter: "数据中心",
     dataCenterTitle: "历史、复核和使用统计",
+    fieldTrialReport: "验收报告",
+    fieldTrialTitle: "现场试运行证据链",
+    refreshFieldReport: "刷新报告",
+    exportFieldReport: "导出 Markdown",
+    reportVerdict: "报告结论",
+    reportScore: "证据得分",
+    reportNextAction: "下一步",
     engineering: "工程设置",
     depth: "深度",
     history: "历史",
@@ -256,6 +263,13 @@ const translations = {
     workbench: "Workbench",
     dataCenter: "Data center",
     dataCenterTitle: "History, review, and usage",
+    fieldTrialReport: "Trial report",
+    fieldTrialTitle: "Field-trial evidence chain",
+    refreshFieldReport: "Refresh report",
+    exportFieldReport: "Export Markdown",
+    reportVerdict: "Verdict",
+    reportScore: "Evidence score",
+    reportNextAction: "Next action",
     engineering: "Engineering",
     depth: "Depth",
     history: "History",
@@ -507,6 +521,13 @@ const translations = {
     workbench: "Станція",
     dataCenter: "Дані",
     dataCenterTitle: "Історія, перевірка і статистика",
+    fieldTrialReport: "Звіт приймання",
+    fieldTrialTitle: "Ланцюг доказів випробування",
+    refreshFieldReport: "Оновити звіт",
+    exportFieldReport: "Експорт Markdown",
+    reportVerdict: "Висновок",
+    reportScore: "Оцінка доказів",
+    reportNextAction: "Наступний крок",
     engineering: "Інженерія",
     depth: "Глибина",
     history: "Історія",
@@ -1459,6 +1480,7 @@ const state = {
   reviewSamples: null,
   integrationOutbox: null,
   integrationDispatch: null,
+  fieldTrialReport: null,
   stationSnapshot: null,
   deploymentReadiness: null,
   deviceWatchdog: null,
@@ -1561,6 +1583,10 @@ const reviewList = document.querySelector("#reviewList");
 const refreshReviewButton = document.querySelector("#refreshReviewButton");
 const exportReviewLink = document.querySelector("#exportReviewLink");
 const exportReviewTruthLink = document.querySelector("#exportReviewTruthLink");
+const fieldReportSummaryGrid = document.querySelector("#fieldReportSummaryGrid");
+const fieldReportScorecard = document.querySelector("#fieldReportScorecard");
+const refreshFieldReportButton = document.querySelector("#refreshFieldReportButton");
+const exportFieldReportLink = document.querySelector("#exportFieldReportLink");
 const usageSummaryGrid = document.querySelector("#usageSummaryGrid");
 const usageEndpointList = document.querySelector("#usageEndpointList");
 const refreshUsageButton = document.querySelector("#refreshUsageButton");
@@ -3495,6 +3521,62 @@ async function refreshStationHealth() {
   await loadDeploymentReadiness();
 }
 
+async function loadFieldTrialReport() {
+  if (!fieldReportSummaryGrid || !fieldReportScorecard) {
+    return;
+  }
+  const response = await fetch("/api/deployment/field-trial-report");
+  if (!response.ok) {
+    return;
+  }
+  const data = await response.json();
+  state.fieldTrialReport = data;
+  renderFieldTrialReport(data);
+}
+
+function renderFieldTrialReport(data) {
+  fieldReportSummaryGrid.innerHTML = "";
+  fieldReportScorecard.innerHTML = "";
+  const verdict = data.verdict || {};
+  const summary = data.summary || {};
+  appendFieldReportCard(t("reportVerdict"), verdict.label || verdict.status || "--", verdict.message || "");
+  appendFieldReportCard(t("reportScore"), `${summary.score_percent ?? "--"}%`, data.generated_at ? formatDate(data.generated_at) : "");
+  appendFieldReportCard(t("history"), summary.history_records || 0, `${t("reviewSamples")} ${summary.review_samples || 0}`);
+  appendFieldReportCard(t("measurementCalls"), summary.measurement_calls || 0, `${t("failedCalls")} ${summary.failed_calls || 0}`);
+
+  if (exportFieldReportLink) {
+    exportFieldReportLink.href = "/api/deployment/field-trial-report.md";
+  }
+
+  for (const item of data.scorecard || []) {
+    const row = document.createElement("div");
+    row.className = "usage-row";
+    appendSummaryCell(row, item.label || item.id, item.status || "--");
+    appendSummaryCell(row, t("confidence"), item.evidence || "--");
+    fieldReportScorecard.appendChild(row);
+  }
+  for (const action of (data.next_actions || []).slice(0, 4)) {
+    const row = document.createElement("div");
+    row.className = "usage-row";
+    appendSummaryCell(row, t("reportNextAction"), action.label || action.id || "--");
+    appendSummaryCell(row, t("nextAction"), action.detail || "--");
+    fieldReportScorecard.appendChild(row);
+  }
+}
+
+function appendFieldReportCard(label, value, sub) {
+  const card = document.createElement("div");
+  card.className = "usage-card";
+  const labelEl = document.createElement("span");
+  const valueEl = document.createElement("strong");
+  const subEl = document.createElement("small");
+  labelEl.textContent = label;
+  valueEl.textContent = String(value ?? "--");
+  subEl.textContent = sub || "";
+  card.append(labelEl, valueEl, subEl);
+  fieldReportSummaryGrid.appendChild(card);
+}
+
 function renderUsageSummary(data) {
   usageSummaryGrid.innerHTML = "";
   usageEndpointList.innerHTML = "";
@@ -3926,6 +4008,7 @@ volumetricRuleSelect?.addEventListener("change", renderWeightMonitorFromCurrentS
 readScaleButton?.addEventListener("click", readScaleWeight);
 refreshHistoryButton.addEventListener("click", loadHistory);
 refreshReviewButton.addEventListener("click", loadReviewSamples);
+refreshFieldReportButton?.addEventListener("click", loadFieldTrialReport);
 refreshUsageButton.addEventListener("click", loadUsageSummary);
 refreshIntegrationButton?.addEventListener("click", loadIntegrationOutbox);
 dispatchIntegrationButton?.addEventListener("click", dispatchIntegrationOutbox);
@@ -4014,5 +4097,6 @@ refreshStationHealth();
 startDepthLive({ silent: true });
 loadHistory();
 loadReviewSamples();
+loadFieldTrialReport();
 loadUsageSummary();
 loadIntegrationOutbox();

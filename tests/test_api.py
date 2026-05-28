@@ -34,6 +34,21 @@ def test_deployment_support_bundle_endpoint_returns_zip():
     assert response.content.startswith(b"PK")
 
 
+def test_field_trial_report_endpoints_return_evidence_summary():
+    client = TestClient(create_app())
+    response = client.get("/api/deployment/field-trial-report")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["report_type"] == "packvision_field_trial_report"
+    assert "verdict" in body
+    assert any(item["id"] == "local_app" for item in body["scorecard"])
+
+    markdown = client.get("/api/deployment/field-trial-report.md")
+    assert markdown.status_code == 200
+    assert "PackVision 现场试运行报告" in markdown.text
+
+
 def test_vendor_calibration_board_endpoint_uses_astra_reference_file():
     client = TestClient(create_app())
     response = client.get("/api/depth/vendor-calibration-board.pdf")
