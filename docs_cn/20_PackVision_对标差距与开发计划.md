@@ -12,6 +12,8 @@
 
 > 2026-05-28 到货验收增量：`/api/depth/capture/probe` 已增加 `field_diagnosis`，把后端状态转换成现场可执行动作，例如插 USB、打开 OrbbecViewer、重新探测、采集深度帧；UI 会显示诊断和照片兜底提示。
 
+> 2026-05-28 工位评分增量：`/api/station/snapshot` 的 `professional_score` 已从单纯“模块能力分”升级为“能力覆盖 + 现场闸口扣分”。硬件未验证、电子秤未接入、单号绑定缺口、WMS 未配置、设备 watchdog 异常都会扣分，避免把模拟实时流误说成工业级可生产。
+
 ## 1. 我给自己的目标模式
 
 PackVision 后续开发按这个模式推进：
@@ -45,6 +47,7 @@ PackVision 后续开发按这个模式推进：
 | Astra Pro 深度相机分支 | 已完成无硬件开发底座 | 已有深度状态检查、教程适配、内参归一化、深度 ROI、异形件 mask、长条件主轴、深度质量门控、模拟干跑。 |
 | 多相机冗余 | 已有验收接口 | 已支持相机配置、角色预留、三视图融合、视角差异告警和 `/api/depth/extrinsics/validate` 外参验收。 |
 | 到货验收 | 已有文档和接口 | 已有试运行计划、真值 CSV 模板、误差评估接口；采集探测已输出现场诊断和可执行动作。 |
+| 工位成熟度评分 | 已升级 | `professional_score.capability_percent` 表示模块覆盖，`professional_score.percent` 表示扣除现场闸口后的真实成熟度，`gate_penalties` 会列出扣分原因。 |
 
 ## 3. 还没做到或还不够强的地方
 

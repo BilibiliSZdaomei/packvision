@@ -30,7 +30,8 @@ def build_station_snapshot(
     outbox = integration_outbox or {}
     watchdog = device_watchdog or {}
     capabilities = _capability_statuses(live, latest, usage_summary, scale, outbox, watchdog)
-    score = _professional_score(capabilities)
+    gaps = _production_gaps(live, latest, capabilities, scale, outbox, watchdog)
+    score = _professional_score(capabilities, gaps)
 
     return {
         "snapshot_at": datetime.now(timezone.utc).isoformat(),
@@ -55,7 +56,7 @@ def build_station_snapshot(
         "scale_status": _scale_summary(scale),
         "integration_outbox": _outbox_summary(outbox),
         "device_watchdog": _watchdog_summary(watchdog),
-        "production_gaps": _production_gaps(live, latest, capabilities, scale, outbox, watchdog),
+        "production_gaps": gaps,
         "next_upgrade_tracks": [
             "scale_adapter_usb_rs232_hid",
             "wms_tms_push_and_retry_queue",
@@ -132,7 +133,7 @@ def _capability_statuses(
     ]
 
 
-def _professional_score(capabilities: list[dict[str, Any]]) -> dict[str, Any]:
+def _professional_score(capabilities: list[dict[str, Any]], gaps: list[dict[str, str]]) -> dict[str, Any]:
     strong_statuses = {
         "ready",
         "auto_ready",
@@ -147,14 +148,49 @@ def _professional_score(capabilities: list[dict[str, Any]]) -> dict[str, Any]:
     }
     ready_count = sum(1 for item in capabilities if item["status"] in strong_statuses)
     total = max(1, len(capabilities))
-    percent = round(ready_count / total * 100)
-    level = "industrial_pilot_ready" if percent >= 80 else "prototype_to_pilot"
+    capability_percent = round(ready_count / total * 100)
+    gate_penalties = _gate_penalties(gaps)
+    penalty_points = sum(item["points"] for item in gate_penalties)
+    percent = max(0, capability_percent - penalty_points)
+    gap_codes = {item.get("code") for item in gaps}
+    if "hardware_watchdog_attention" in gap_codes:
+        level = "field_attention_required"
+    elif "hardware_validation_pending" in gap_codes:
+        level = "pre_hardware_ready"
+    elif percent >= 85 and not gap_codes:
+        level = "industrial_pilot_ready"
+    elif percent >= 70:
+        level = "field_trial_limited"
+    else:
+        level = "prototype_to_pilot"
     return {
         "ready_count": ready_count,
         "total": total,
+        "capability_percent": capability_percent,
         "percent": percent,
+        "penalty_points": penalty_points,
+        "gate_penalties": gate_penalties,
         "level": level,
     }
+
+
+def _gate_penalties(gaps: list[dict[str, str]]) -> list[dict[str, Any]]:
+    penalty_by_code = {
+        "hardware_validation_pending": 25,
+        "hardware_watchdog_attention": 20,
+        "scale_adapter_pending": 10,
+        "wms_order_binding_pending": 10,
+        "operator_exception_flow_pending": 8,
+        "wms_connector_pending": 8,
+        "wms_push_retry_attention": 6,
+    }
+    penalties: list[dict[str, Any]] = []
+    for gap in gaps:
+        code = gap.get("code")
+        points = penalty_by_code.get(str(code), 0)
+        if points:
+            penalties.append({"code": code, "points": points, "message": gap.get("message")})
+    return penalties
 
 
 def _current_candidate(live: dict[str, Any]) -> dict[str, Any]:
@@ -252,7 +288,9 @@ def _production_gaps(
         gaps.append(_gap("wms_connector_pending", "Local WMS/TMS outbox is ready; add the target warehouse connector URL and credentials."))
     elif int(outbox.get("failed") or 0) > 0 or int(outbox.get("due_for_retry") or 0) > 0:
         gaps.append(_gap("wms_push_retry_attention", "WMS/TMS push is configured, but failed or retry-due events need attention."))
-    if watchdog.get("severity") in {"warning", "critical"}:
+    watchdog_severity = watchdog.get("severity")
+    watchdog_status = watchdog.get("status")
+    if watchdog_severity == "critical" or (watchdog_severity == "warning" and watchdog_status != "simulation_fallback"):
         gaps.append(_gap("hardware_watchdog_attention", "Device watchdog found camera/runtime conditions that need field recovery."))
     return gaps
 

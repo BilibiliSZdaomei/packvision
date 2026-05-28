@@ -1203,15 +1203,24 @@ const stationStatusLabels = {
 
 const professionalLevelLabels = {
   zh: {
-    industrial_pilot_ready: "试点可用",
+    industrial_pilot_ready: "可试运行",
+    pre_hardware_ready: "相机到货前就绪",
+    field_trial_limited: "有限试运行",
+    field_attention_required: "需现场处理",
     prototype_to_pilot: "待完善",
   },
   en: {
     industrial_pilot_ready: "Pilot-ready",
+    pre_hardware_ready: "Pre-hardware ready",
+    field_trial_limited: "Limited trial",
+    field_attention_required: "Field attention",
     prototype_to_pilot: "Needs work",
   },
   uk: {
     industrial_pilot_ready: "Готово до пілоту",
+    pre_hardware_ready: "Готово до камери",
+    field_trial_limited: "Обмежений пілот",
+    field_attention_required: "Потрібна увага",
     prototype_to_pilot: "Потрібне доопрацювання",
   },
 };

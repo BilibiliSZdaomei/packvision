@@ -40,7 +40,7 @@ PackVision 不是单纯的“拍照量尺寸 Demo”，而是给海外汽车备�
 | 实时采集监控 | 已完成并升级 | Astra Pro 实时流持续测量，按钮只负责记录稳定结果；UI 显示顶部/正面/侧面多相机监控矩阵、FPS、运行时长、测量次数和采集后端。 |
 | 体积重/计费重 | 已完成 | 支持手动输入实重，按体积重规则表计算体积重和计费重，并保存计费来源。 |
 | 电子秤适配接口 | 已完成轻量底座 | 基础包保留手动实重兜底，支持 mock 和 RS232 串口电子秤，USB HID 作为后续插件。 |
-| DWS 工位 UI | 持续强化 | 首屏常驻工位状态、当前单号、计费重、质检结论、工位编排成熟度、到货验收状态和深度证据面板。 |
+| DWS 工位 UI | 持续强化 | 首屏常驻工位状态、当前单号、计费重、质检结论、工位编排成熟度、到货验收状态和深度证据面板；成熟度现在按能力覆盖和现场闸口扣分，避免把模拟流误判为生产可用。 |
 | 现场支持包 | 已完成 | 一键导出环境体检、日志、历史、用量、复核样本和真值模板，默认不包含现场图片。 |
 | 异形件/长条件 | 已有深度算法基础 | 支持深度 ROI、object mask、长条件主轴测量。 |
 | Astra Pro 适配 | 已完成无硬件开发底座 | 驱动安装状态/上位机/OpenNI 状态检查、内参归一化、采集探测、模拟干跑。 |
@@ -52,13 +52,13 @@ PackVision 不是单纯的“拍照量尺寸 Demo”，而是给海外汽车备�
 当前验证结果：
 
 ```text
-135 passed in 7.95s
+136 passed in 7.38s
 ```
 
 最新已验证交付包：
 
 ```text
-D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_20260528_1924.zip
+D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_20260528_1945.zip
 ```
 
 大小约：
@@ -195,7 +195,7 @@ PowerShell -ExecutionPolicy Bypass -File .\scripts\check_astra_depth_status.ps1
 | `GET /api/calibration-card.svg` | A4 ArUco 照片兜底标定卡，不作为 Astra Pro 主标定入口。 |
 | `GET /api/deployment/readiness` | 海外仓交付和环境体检。 |
 | `GET /api/deployment/support-bundle.zip` | 现场远程排错支持包。 |
-| `GET /api/station/snapshot` | DWS 工位编排快照，汇总尺寸、称重、扫码、证据、接口状态和工业级缺口。 |
+| `GET /api/station/snapshot` | DWS 工位编排快照，汇总尺寸、称重、扫码、证据、接口状态和工业级缺口；`professional_score` 同时返回能力覆盖分、现场闸口扣分和最终成熟度。 |
 | `GET /api/device/watchdog` | 设备守护状态，汇总相机枚举、实时流是否卡住、模拟兜底和现场恢复步骤。 |
 
 ### 图片测量
