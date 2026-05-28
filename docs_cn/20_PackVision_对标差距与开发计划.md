@@ -14,6 +14,8 @@
 
 > 2026-05-28 工位评分增量：`/api/station/snapshot` 的 `professional_score` 已从单纯“模块能力分”升级为“能力覆盖 + 现场闸口扣分”。硬件未验证、电子秤未接入、单号绑定缺口、WMS 未配置、设备 watchdog 异常都会扣分，避免把模拟实时流误说成工业级可生产。
 
+> 2026-05-28 支持包增量：`/api/deployment/support-bundle.zip` 已加入 `depth_capture_probe.json` 和 `field_summary.json`。远程排错时不用只看 readiness，可以直接看到采集探测状态、现场诊断等级和下一步动作。
+
 ## 1. 我给自己的目标模式
 
 PackVision 后续开发按这个模式推进：
@@ -38,7 +40,7 @@ PackVision 后续开发按这个模式推进：
 | 单号与条码 | 已支持 | 支持手动单号、扫码枪文本、上传条码/二维码图片识别。 |
 | 历史追溯 | 已支持 | SQLite 保存测量记录、单号、时间戳、尺寸、标注图、CSV 导出。 |
 | 使用次数统计 | 已支持 | `/api/usage/summary`、`/api/usage/events`、`/api/usage/export.csv` 可统计调用次数和测量次数。 |
-| 现场支持包 | 已支持 | `/api/deployment/support-bundle.zip` 可打包体检、日志、历史、使用统计、复核样本和真值模板，默认不包含现场图片。 |
+| 现场支持包 | 已支持 | `/api/deployment/support-bundle.zip` 可打包体检、采集探测现场诊断、日志、历史、使用统计、复核样本和真值模板，默认不包含现场图片。 |
 | 现场试运行报告 | 已支持 | `/api/deployment/field-trial-report` 和 `.md` 汇总 readiness、实时工位、历史、复核、统计、电子秤和 WMS/TMS 队列，避免把模拟流误当真实硬件验收。 |
 | 复核样本池 | 已支持真值模板闭环 | `/api/review/samples`、`/api/review/export.csv`、`/api/review/truth-template.csv` 会自动沉淀复核样本并导出 WPS/Excel 真值填写模板。 |
 | AI 插件接口 | 已支持协议层 | `/api/ai/plugins` 可发现插件、检查依赖和模型文件；基础包不内置重模型。 |
@@ -200,7 +202,7 @@ PackVision 后续开发按这个模式推进：
 ## 8. 下一批我应该优先做的具体任务
 
 1. **部署体检与开箱即用文档**：新增“普通电脑能不能跑、需要装什么、缺什么怎么提示”的完整清单；现场试运行报告已能导出当前证据链。
-2. **相机到货验收脚本强化**：`/api/depth/capture/probe` 已有现场诊断；下一步把同一套诊断写进现场支持包和检查脚本摘要。
+2. **相机到货验收脚本强化**：`/api/depth/capture/probe` 已有现场诊断，并已写进现场支持包和检查脚本摘要；下一步到货后验证真实相机返回 `ready_for_capture`。
 3. **UI 再降复杂度**：把选择项继续收进高级面板，默认自动测量。
 4. **真值样本模板增强**：让 WPS/Excel 模板可以直接记录纸箱、长条件、异形件、异常材质。
 5. **失败样本池设计**：基础接口、UI 和真值模板已完成，下一步优化现场复核填写体验和样本资产导出格式。

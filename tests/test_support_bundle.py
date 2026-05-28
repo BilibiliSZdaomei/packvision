@@ -16,6 +16,8 @@ def test_support_bundle_collects_field_diagnostics_without_images():
         assert "manifest.json" in names
         assert "deployment_readiness.json" in names
         assert "depth_status.json" in names
+        assert "depth_capture_probe.json" in names
+        assert "field_summary.json" in names
         assert "usage_summary.json" in names
         assert "history_latest.csv" in names
         assert "usage_events.csv" in names
@@ -26,3 +28,11 @@ def test_support_bundle_collects_field_diagnostics_without_images():
         assert manifest["app"] == "PackVision"
         assert manifest["privacy"]["include_upload_images_by_default"] is False
         assert manifest["privacy"]["include_result_images_by_default"] is False
+
+        probe = json.loads(archive.read("depth_capture_probe.json").decode("utf-8"))
+        assert "field_diagnosis" in probe
+
+        field_summary = json.loads(archive.read("field_summary.json").decode("utf-8"))
+        assert "capture_status" in field_summary
+        assert "capture_severity" in field_summary
+        assert "primary_actions" in field_summary

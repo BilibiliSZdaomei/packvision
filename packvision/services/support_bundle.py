@@ -10,7 +10,7 @@ from typing import Any, Callable
 from packvision import __version__
 from packvision.services.ai_plugins import build_ai_plugin_inventory
 from packvision.services.depth_camera import depth_camera_status
-from packvision.services.depth_capture import depth_capture_capabilities
+from packvision.services.depth_capture import DepthCaptureConfig, depth_capture_capabilities, probe_depth_capture
 from packvision.services.depth_devices import build_depth_camera_inventory
 from packvision.services.device_watchdog import build_device_watchdog
 from packvision.services.deployment import build_deployment_readiness
@@ -34,12 +34,16 @@ def build_support_bundle() -> Path:
     support_dir.mkdir(parents=True, exist_ok=True)
     generated_at = datetime.now(timezone.utc)
     bundle_path = support_dir / f"packvision-support-{generated_at.strftime('%Y%m%d-%H%M%S')}.zip"
+    readiness = _safe_call(build_deployment_readiness)
+    capture_probe = _safe_call(probe_depth_capture, DepthCaptureConfig(backend="auto"))
 
     with zipfile.ZipFile(bundle_path, mode="w", compression=zipfile.ZIP_DEFLATED) as archive:
         _write_json(archive, "manifest.json", _manifest(generated_at, bundle_path))
-        _write_json(archive, "deployment_readiness.json", _safe_call(build_deployment_readiness))
+        _write_json(archive, "deployment_readiness.json", readiness)
         _write_json(archive, "depth_status.json", _safe_call(depth_camera_status))
         _write_json(archive, "depth_capture_capabilities.json", _safe_call(depth_capture_capabilities))
+        _write_json(archive, "depth_capture_probe.json", capture_probe)
+        _write_json(archive, "field_summary.json", _field_summary(readiness, capture_probe))
         _write_json(archive, "depth_cameras.json", _safe_call(build_depth_camera_inventory))
         _write_json(archive, "device_watchdog.json", _safe_call(build_device_watchdog))
         _write_json(archive, "ai_plugins.json", _safe_call(build_ai_plugin_inventory))
@@ -93,6 +97,8 @@ def _manifest(generated_at: datetime, bundle_path: Path) -> dict[str, Any]:
             "deployment_readiness.json",
             "depth_status.json",
             "depth_capture_capabilities.json",
+            "depth_capture_probe.json",
+            "field_summary.json",
             "depth_cameras.json",
             "device_watchdog.json",
             "ai_plugins.json",
@@ -103,6 +109,23 @@ def _manifest(generated_at: datetime, bundle_path: Path) -> dict[str, Any]:
             "review_truth_template.csv",
             "logs/PackVision.log",
         ],
+    }
+
+
+def _field_summary(readiness: Any, capture_probe: Any) -> dict[str, Any]:
+    readiness_payload = readiness if isinstance(readiness, dict) else {}
+    probe_payload = capture_probe if isinstance(capture_probe, dict) else {}
+    diagnosis = probe_payload.get("field_diagnosis") if isinstance(probe_payload.get("field_diagnosis"), dict) else {}
+    return {
+        "readiness_status": readiness_payload.get("status"),
+        "capture_status": probe_payload.get("status"),
+        "capture_ready": bool(probe_payload.get("ready")),
+        "capture_severity": diagnosis.get("severity"),
+        "operator_summary": diagnosis.get("operator_summary"),
+        "operator_detail": diagnosis.get("operator_detail"),
+        "can_continue_photo_fallback": bool(diagnosis.get("can_continue_photo_fallback")),
+        "primary_actions": diagnosis.get("primary_actions") or [],
+        "evidence": diagnosis.get("evidence") or {},
     }
 
 

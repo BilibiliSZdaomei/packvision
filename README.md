@@ -52,13 +52,13 @@ PackVision 不是单纯的“拍照量尺寸 Demo”，而是给海外汽车备�
 当前验证结果：
 
 ```text
-136 passed in 7.38s
+136 passed in 7.81s
 ```
 
 最新已验证交付包：
 
 ```text
-D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_20260528_1945.zip
+D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_20260528_1952.zip
 ```
 
 大小约：
@@ -172,7 +172,7 @@ GET /api/deployment/support-bundle.zip
 - 海外仓到货前需要准备哪些物理物品。
 - 到现场后的操作顺序。
 
-现场支持包会生成一个 zip，包含体检结果、深度相机状态、采集后端状态、AI 插件状态、历史 CSV、使用日志 CSV、复核样本、真值模板和 `PackVision.log`。默认不包含上传照片和标注图片，便于控制文件大小和现场隐私。
+现场支持包会生成一个 zip，包含体检结果、深度相机状态、采集后端状态、采集探测现场诊断、现场摘要、AI 插件状态、历史 CSV、使用日志 CSV、复核样本、真值模板和 `PackVision.log`。默认不包含上传照片和标注图片，便于控制文件大小和现场隐私。
 
 现场脚本：
 
