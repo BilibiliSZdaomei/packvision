@@ -261,7 +261,7 @@ input {
 
 .station-strip {
   display: grid;
-  grid-template-columns: minmax(170px, 1.1fr) minmax(160px, 1fr) minmax(160px, 0.9fr) minmax(160px, 1fr);
+  grid-template-columns: minmax(150px, 1.1fr) minmax(130px, 0.9fr) minmax(130px, 0.9fr) minmax(130px, 0.9fr) minmax(150px, 1fr) minmax(150px, 1fr);
   gap: 12px;
 }
 

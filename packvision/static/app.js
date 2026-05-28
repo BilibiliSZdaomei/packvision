@@ -53,6 +53,8 @@ const translations = {
     stationOrder: "当前单号",
     stationBilling: "计费重",
     stationReview: "质检结论",
+    stationOrchestration: "工位编排",
+    stationReadiness: "到货验收",
     reviewPass: "自动通过",
     reviewPending: "等待结果",
     reviewRequired: "需要复核",
@@ -274,6 +276,8 @@ const translations = {
     stationOrder: "Current order",
     stationBilling: "Chargeable",
     stationReview: "QA result",
+    stationOrchestration: "Station orchestration",
+    stationReadiness: "Arrival readiness",
     reviewPass: "Auto pass",
     reviewPending: "Waiting",
     reviewRequired: "Review needed",
@@ -495,6 +499,8 @@ const translations = {
     stationOrder: "Поточний номер",
     stationBilling: "Платна вага",
     stationReview: "QA результат",
+    stationOrchestration: "Оркестрація станції",
+    stationReadiness: "Готовність",
     reviewPass: "Авто пройдено",
     reviewPending: "Очікування",
     reviewRequired: "Потрібна перевірка",
@@ -1033,6 +1039,69 @@ const liveStatusLabels = {
   },
 };
 
+const stationStatusLabels = {
+  zh: {
+    ready_to_record: "稳定可记录",
+    waiting_for_object: "等待放件",
+    measuring: "实时检测中",
+    needs_review: "需复核",
+    paused: "已暂停",
+    error: "实时异常",
+  },
+  en: {
+    ready_to_record: "Ready to record",
+    waiting_for_object: "Waiting for item",
+    measuring: "Live measuring",
+    needs_review: "Needs review",
+    paused: "Paused",
+    error: "Live error",
+  },
+  uk: {
+    ready_to_record: "Готово записати",
+    waiting_for_object: "Очікує деталь",
+    measuring: "Живе вимірювання",
+    needs_review: "На перевірку",
+    paused: "Пауза",
+    error: "Помилка live",
+  },
+};
+
+const professionalLevelLabels = {
+  zh: {
+    industrial_pilot_ready: "试点可用",
+    prototype_to_pilot: "待完善",
+  },
+  en: {
+    industrial_pilot_ready: "Pilot-ready",
+    prototype_to_pilot: "Needs work",
+  },
+  uk: {
+    industrial_pilot_ready: "Готово до пілоту",
+    prototype_to_pilot: "Потрібне доопрацювання",
+  },
+};
+
+const readinessStatusLabels = {
+  zh: {
+    camera_trial_ready: "硬件可试运行",
+    depth_preinstall_ready: "驱动预装就绪",
+    image_only_ready: "照片兜底可用",
+    needs_attention: "需处理",
+  },
+  en: {
+    camera_trial_ready: "Hardware trial ready",
+    depth_preinstall_ready: "Driver preinstall ready",
+    image_only_ready: "Photo fallback ready",
+    needs_attention: "Needs attention",
+  },
+  uk: {
+    camera_trial_ready: "Готово до тесту камери",
+    depth_preinstall_ready: "Драйвер готовий",
+    image_only_ready: "Фото-резерв готовий",
+    needs_attention: "Потрібна увага",
+  },
+};
+
 const probeActionLabels = {
   zh: {
     connect_camera_driver: "连接 Astra Pro，并确认 Windows 驱动已安装。",
@@ -1202,6 +1271,8 @@ const state = {
   aiPlugins: null,
   usageSummary: null,
   reviewSamples: null,
+  stationSnapshot: null,
+  deploymentReadiness: null,
   lastDepthDemo: null,
   activeView: "top",
   previewUrls: { top: null, side: null },
@@ -1224,6 +1295,8 @@ const stationLiveStatus = document.querySelector("#stationLiveStatus");
 const stationOrderValue = document.querySelector("#stationOrderValue");
 const stationChargeableValue = document.querySelector("#stationChargeableValue");
 const stationReviewValue = document.querySelector("#stationReviewValue");
+const stationOrchestrationValue = document.querySelector("#stationOrchestrationValue");
+const stationReadinessValue = document.querySelector("#stationReadinessValue");
 const actualWeightInput = document.querySelector("#actualWeightInput");
 const volumetricRuleSelect = document.querySelector("#volumetricRuleSelect");
 const weightMonitorPanel = document.querySelector("#weightMonitorPanel");
@@ -1360,6 +1433,9 @@ function applyLanguage() {
   }
   if (state.usageSummary) {
     renderUsageSummary(state.usageSummary);
+  }
+  if (state.stationSnapshot || state.deploymentReadiness) {
+    renderStationStrip();
   }
   if (state.lastDepthDemo) {
     renderDepthDemo(state.lastDepthDemo);
@@ -2219,11 +2295,27 @@ function renderStationStrip(options = {}) {
   if (!stationLiveStatus || !stationOrderValue || !stationChargeableValue || !stationReviewValue) {
     return;
   }
+  const snapshot = state.stationSnapshot || {};
+  const latestRecord = snapshot.latest_record || {};
   const liveStatus = options.error
     ? t("live_error")
-    : labelFrom(liveStatusLabels, state.depthLive?.status || (state.lastResult ? "stable_ready" : "stopped"));
-  const order = String(orderIdInput?.value || barcodeTextInput?.value || state.lastResult?.order_id || state.lastResult?.barcode_text || "").trim();
-  const chargeable = previewChargeableWeight();
+    : labelFrom(
+        stationStatusLabels,
+        snapshot.station_status ||
+          (state.depthLive?.status === "stable_ready" && state.depthLive?.can_confirm ? "ready_to_record" : null) ||
+          state.depthLive?.status ||
+          (state.lastResult ? "ready_to_record" : "paused"),
+      );
+  const order = String(
+    orderIdInput?.value ||
+      barcodeTextInput?.value ||
+      state.lastResult?.order_id ||
+      state.lastResult?.barcode_text ||
+      latestRecord.order_id ||
+      latestRecord.barcode_text ||
+      "",
+  ).trim();
+  const chargeable = previewChargeableWeight() || Number(latestRecord.chargeable_weight_kg);
   const confidence = Number(state.lastResult?.confidence || 0);
   const needsReview =
     options.error ||
@@ -2235,6 +2327,35 @@ function renderStationStrip(options = {}) {
   stationOrderValue.textContent = order || "--";
   stationChargeableValue.textContent = formatKg(chargeable);
   stationReviewValue.textContent = state.lastResult ? (needsReview ? t("reviewRequired") : t("reviewPass")) : t("reviewPending");
+  if (stationOrchestrationValue) {
+    stationOrchestrationValue.textContent = stationOrchestrationText(snapshot);
+  }
+  if (stationReadinessValue) {
+    stationReadinessValue.textContent = deploymentReadinessText(state.deploymentReadiness);
+  }
+}
+
+function stationOrchestrationText(snapshot) {
+  const score = snapshot?.professional_score || {};
+  if (!Number.isFinite(Number(score.percent))) {
+    return "--";
+  }
+  const level = labelFrom(professionalLevelLabels, score.level);
+  return `${Number(score.percent).toFixed(0)}% · ${level}`;
+}
+
+function deploymentReadinessText(readiness) {
+  const summary = readiness?.summary || {};
+  if (summary.camera_trial_ready) {
+    return labelFrom(readinessStatusLabels, "camera_trial_ready");
+  }
+  if (summary.depth_preinstall_ready) {
+    return labelFrom(readinessStatusLabels, "depth_preinstall_ready");
+  }
+  if (summary.image_only_ready) {
+    return labelFrom(readinessStatusLabels, "image_only_ready");
+  }
+  return readiness ? labelFrom(readinessStatusLabels, "needs_attention") : "--";
 }
 
 function volumeFromDimensions(dimensions) {
@@ -2491,6 +2612,7 @@ async function startDepthLive(options = {}) {
     }
     state.depthLive = data;
     renderDepthLive(data);
+    void loadStationSnapshot();
     scheduleDepthLivePolling();
   } catch (error) {
     renderDepthLiveError(error);
@@ -2509,6 +2631,7 @@ async function stopDepthLive() {
     const data = await response.json();
     state.depthLive = data;
     renderDepthLive(data);
+    void loadStationSnapshot();
     clearDepthLivePolling();
   } finally {
     stopLiveButton.disabled = false;
@@ -2536,8 +2659,11 @@ async function loadDepthLiveState() {
     return;
   }
   const data = await response.json();
-  state.depthLive = data;
-  renderDepthLive(data);
+    state.depthLive = data;
+    renderDepthLive(data);
+    if (data.can_confirm || !data.running) {
+      void loadStationSnapshot();
+    }
   if (!data.running) {
     clearDepthLivePolling();
   }
@@ -2621,6 +2747,7 @@ async function confirmLiveResult() {
     await loadHistory();
     await loadReviewSamples();
     await loadUsageSummary();
+    await loadStationSnapshot();
   } catch (error) {
     showError(error);
   } finally {
@@ -2944,6 +3071,28 @@ async function loadUsageSummary() {
   const data = await response.json();
   state.usageSummary = data;
   renderUsageSummary(data);
+}
+
+async function loadStationSnapshot() {
+  const response = await fetch("/api/station/snapshot");
+  if (!response.ok) {
+    return;
+  }
+  state.stationSnapshot = await response.json();
+  renderStationStrip();
+}
+
+async function loadDeploymentReadiness() {
+  const response = await fetch("/api/deployment/readiness");
+  if (!response.ok) {
+    return;
+  }
+  state.deploymentReadiness = await response.json();
+  renderStationStrip();
+}
+
+async function refreshStationHealth() {
+  await Promise.allSettled([loadDepthStatus(), loadStationSnapshot(), loadDeploymentReadiness()]);
 }
 
 function renderUsageSummary(data) {
@@ -3322,7 +3471,7 @@ volumetricRuleSelect?.addEventListener("change", renderWeightMonitorFromCurrentS
 refreshHistoryButton.addEventListener("click", loadHistory);
 refreshReviewButton.addEventListener("click", loadReviewSamples);
 refreshUsageButton.addEventListener("click", loadUsageSummary);
-refreshDepthStatusButton.addEventListener("click", loadDepthStatus);
+refreshDepthStatusButton.addEventListener("click", refreshStationHealth);
 probeDepthCaptureButton.addEventListener("click", probeDepthCapture);
 startLiveButton.addEventListener("click", () => startDepthLive());
 stopLiveButton.addEventListener("click", stopDepthLive);
@@ -3401,7 +3550,7 @@ applyLanguage();
 applyTheme();
 renderCameraMonitor({ status: "stopped" });
 loadVolumetricRules();
-loadDepthStatus();
+refreshStationHealth();
 startDepthLive({ silent: true });
 loadHistory();
 loadReviewSamples();

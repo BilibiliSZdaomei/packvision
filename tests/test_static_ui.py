@@ -81,6 +81,8 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert 'class="station-strip"' in html
     assert 'id="stationLiveStatus"' in html
     assert 'id="stationChargeableValue"' in html
+    assert 'id="stationOrchestrationValue"' in html
+    assert 'id="stationReadinessValue"' in html
     assert 'id="actualWeightInput"' in html
     assert 'id="volumetricRuleSelect"' in html
     assert 'id="weightMonitorPanel"' in html
@@ -96,10 +98,15 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert "/api/depth/live/state" in js
     assert "/api/depth/live/confirm" in js
     assert "/api/weight/volumetric-rules" in js
+    assert "/api/station/snapshot" in js
+    assert "/api/deployment/readiness" in js
     assert "renderLiveMonitor" in js
     assert "renderCameraMonitor" in js
     assert "collectCameraMonitorResults" in js
     assert "normalizeCameraRole" in js
+    assert "loadStationSnapshot" in js
+    assert "loadDeploymentReadiness" in js
+    assert "refreshStationHealth" in js
     assert "renderWeightMonitorFromDimensions" in js
     assert "renderStationStrip" in js
     assert "renderDepthEvidenceStage" in js
