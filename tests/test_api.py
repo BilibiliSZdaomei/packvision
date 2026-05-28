@@ -463,6 +463,24 @@ def test_depth_live_stream_can_confirm_stable_candidate_without_hardware():
 
         history = client.get("/api/history", params={"order_id": order_id})
         assert any(item["measurement_id"] == body["measurement_id"] for item in history.json()["items"])
+
+        outbox = client.get("/api/integrations/outbox", params={"order_id": order_id})
+        assert outbox.status_code == 200
+        event = next(item for item in outbox.json()["items"] if item["measurement_id"] == body["measurement_id"])
+        assert event["status"] == "pending"
+        assert event["target"] == "wms_tms"
+        assert event["payload"]["billing"]["chargeable_weight_kg"] == body["chargeable_weight_kg"]
+
+        marked = client.post(
+            f"/api/integrations/outbox/{event['event_id']}",
+            json={"status": "failed", "error": "WMS test endpoint unavailable", "retry_after_seconds": 60},
+        )
+        assert marked.status_code == 200
+        assert marked.json()["retry_count"] == 1
+
+        exported = client.get("/api/integrations/outbox/export.csv")
+        assert exported.status_code == 200
+        assert "event_id,created_at,updated_at,next_attempt_at" in exported.text
     finally:
         client.post("/api/depth/live/stop")
 

@@ -35,6 +35,7 @@ PackVision 服务汽车备件仓库的实际作业流程：
 | 单号/条码 | 已完成 |
 | 历史记录 | 已完成 |
 | 后台统计 | 已完成 |
+| WMS/TMS 本地集成队列 | 已完成底座 |
 | 实时多相机监控 | 已完成第一版 |
 | 工位编排状态 | 已接入 UI |
 | 电子秤适配接口 | 已完成轻量底座 |
@@ -47,19 +48,19 @@ PackVision 服务汽车备件仓库的实际作业流程：
 ## 验证结果
 
 ```text
-109 passed in 8.02s
+111 passed in 9.15s
 ```
 
 最新交付包：
 
 ```text
-D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_20260528_0842.zip
+D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_*.zip
 ```
 
 大小：
 
 ```text
-73.46 MB
+73.53 MB
 ```
 
 ## 开箱即用边界

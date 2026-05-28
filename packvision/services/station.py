@@ -19,12 +19,14 @@ def build_station_snapshot(
     latest_measurements: list[dict[str, Any]] | None = None,
     usage: dict[str, Any] | None = None,
     scale_status: dict[str, Any] | None = None,
+    integration_outbox: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     live = live_state or {}
     latest = (latest_measurements or [{}])[0] if latest_measurements else {}
     usage_summary = usage or {}
     scale = scale_status or {}
-    capabilities = _capability_statuses(live, latest, usage_summary, scale)
+    outbox = integration_outbox or {}
+    capabilities = _capability_statuses(live, latest, usage_summary, scale, outbox)
     score = _professional_score(capabilities)
 
     return {
@@ -48,7 +50,8 @@ def build_station_snapshot(
         "current_candidate": _current_candidate(live),
         "latest_record": _latest_record(latest),
         "scale_status": _scale_summary(scale),
-        "production_gaps": _production_gaps(live, latest, capabilities, scale),
+        "integration_outbox": _outbox_summary(outbox),
+        "production_gaps": _production_gaps(live, latest, capabilities, scale, outbox),
         "next_upgrade_tracks": [
             "scale_adapter_usb_rs232_hid",
             "wms_tms_push_and_retry_queue",
@@ -75,6 +78,7 @@ def _capability_statuses(
     latest: dict[str, Any],
     usage: dict[str, Any],
     scale: dict[str, Any],
+    outbox: dict[str, Any],
 ) -> list[dict[str, Any]]:
     live_dims = ((live.get("stable_result") or live.get("latest_result") or {}).get("dimensions") or {})
     latest_has_dims = any(_positive(latest.get(key)) for key in ("length_mm", "width_mm", "height_mm", "volume_l"))
@@ -111,14 +115,14 @@ def _capability_statuses(
         {
             "id": "integration",
             "label": "Integration",
-            "status": "local_ready" if usage.get("total_calls", 0) >= 0 else "unknown",
-            "source": "local_api_sqlite_csv",
+            "status": "outbox_ready" if outbox.get("delivery_mode") == "local_outbox" else "local_ready",
+            "source": "local_api_sqlite_csv_outbox",
         },
     ]
 
 
 def _professional_score(capabilities: list[dict[str, Any]]) -> dict[str, Any]:
-    strong_statuses = {"ready", "auto_ready", "manual_ready", "manual_or_image_ready", "local_ready"}
+    strong_statuses = {"ready", "auto_ready", "manual_ready", "manual_or_image_ready", "local_ready", "outbox_ready"}
     ready_count = sum(1 for item in capabilities if item["status"] in strong_statuses)
     total = max(1, len(capabilities))
     percent = round(ready_count / total * 100)
@@ -167,11 +171,22 @@ def _scale_summary(scale: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _outbox_summary(outbox: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "delivery_mode": outbox.get("delivery_mode") or "local_outbox",
+        "total": int(outbox.get("total") or 0),
+        "pending": int(outbox.get("pending") or 0),
+        "failed": int(outbox.get("failed") or 0),
+        "due_for_retry": int(outbox.get("due_for_retry") or 0),
+    }
+
+
 def _production_gaps(
     live: dict[str, Any],
     latest: dict[str, Any],
     capabilities: list[dict[str, Any]],
     scale: dict[str, Any],
+    outbox: dict[str, Any],
 ) -> list[dict[str, str]]:
     gaps: list[dict[str, str]] = []
     if live.get("simulation_active"):
@@ -182,7 +197,10 @@ def _production_gaps(
         gaps.append(_gap("wms_order_binding_pending", "Order binding should be driven by scanner or WMS lookup."))
     if any(item["status"].endswith("pending") for item in capabilities):
         gaps.append(_gap("operator_exception_flow_pending", "Pending states need clear operator recovery prompts."))
-    gaps.append(_gap("wms_push_retry_pending", "Industrial deployment needs WMS/TMS push with retry queue."))
+    if outbox.get("delivery_mode") == "local_outbox":
+        gaps.append(_gap("wms_connector_pending", "Local WMS/TMS outbox is ready; add the target warehouse connector URL and credentials."))
+    else:
+        gaps.append(_gap("wms_push_retry_pending", "Industrial deployment needs WMS/TMS push with retry queue."))
     return gaps
 
 

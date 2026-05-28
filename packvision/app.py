@@ -55,6 +55,14 @@ from packvision.services.history import (
     list_measurements,
     save_measurement,
 )
+from packvision.services.integrations import (
+    enqueue_measurement_event,
+    export_outbox_csv,
+    init_integration_db,
+    list_outbox_events,
+    outbox_summary,
+    update_outbox_event,
+)
 from packvision.services.industry import (
     DEFAULT_VOLUMETRIC_RULE_ID,
     build_packaging_profile,
@@ -245,11 +253,19 @@ class TrialRunEvaluationPayload(BaseModel):
     samples: list[dict[str, Any]]
 
 
+class OutboxUpdatePayload(BaseModel):
+    status: str
+    response: str | None = None
+    error: str | None = None
+    retry_after_seconds: int | None = None
+
+
 def create_app() -> FastAPI:
     app = FastAPI(title="PackVision Local", version=__version__)
     dirs = ensure_data_dirs()
     init_db()
     init_usage_db()
+    init_integration_db()
     depth_live_manager = DepthLiveManager(capture_depth_once)
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
     app.mount("/results", StaticFiles(directory=dirs["results"]), name="results")
@@ -328,6 +344,7 @@ def create_app() -> FastAPI:
             latest_measurements=list_measurements(limit=1),
             usage=usage_summary(),
             scale_status=build_scale_status(),
+            integration_outbox=outbox_summary(),
         )
 
     @app.get("/api/ai/plugins")
@@ -464,7 +481,7 @@ def create_app() -> FastAPI:
             "side_upload": str(side_path) if side_path else None,
         }
         _set_usage_trace(request, result, measurement_source="image_measure_api")
-        save_measurement(result)
+        _persist_measurement(result)
         return result
 
     @app.get("/api/history")
@@ -486,6 +503,42 @@ def create_app() -> FastAPI:
         if not result:
             raise HTTPException(status_code=404, detail="Measurement not found.")
         return result
+
+    @app.get("/api/integrations/outbox")
+    def integration_outbox(
+        limit: int = 100,
+        status: str | None = None,
+        order_id: str | None = None,
+    ) -> dict[str, object]:
+        return list_outbox_events(limit=limit, status=_clean_text(status), order_id=_clean_text(order_id))
+
+    @app.get("/api/integrations/outbox/summary")
+    def integration_outbox_summary() -> dict[str, object]:
+        return outbox_summary()
+
+    @app.get("/api/integrations/outbox/export.csv")
+    def integration_outbox_export(limit: int = 500, status: str | None = None) -> Response:
+        csv_text = export_outbox_csv(limit=limit, status=_clean_text(status))
+        return Response(
+            content=csv_text,
+            media_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": 'attachment; filename="packvision-integration-outbox.csv"'},
+        )
+
+    @app.post("/api/integrations/outbox/{event_id}")
+    def integration_outbox_update(event_id: str, payload: OutboxUpdatePayload) -> dict[str, object]:
+        try:
+            return update_outbox_event(
+                event_id,
+                status=payload.status,
+                response=payload.response,
+                error=payload.error,
+                retry_after_seconds=payload.retry_after_seconds,
+            )
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail="Outbox event not found.") from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     @app.get("/api/review/samples")
     def review_samples(limit: int = 50, order_id: str | None = None) -> dict[str, object]:
@@ -941,7 +994,7 @@ def create_app() -> FastAPI:
         )
         if save_to_history:
             result["history_saved"] = True
-            save_measurement(result)
+            _persist_measurement(result)
         _set_usage_trace(request, result)
         return result
 
@@ -1264,8 +1317,19 @@ def _finalize_depth_result(
     should_save = payload.save_to_history if save_to_history is None else save_to_history
     result["history_saved"] = bool(should_save)
     if should_save:
-        save_measurement(result)
+        _persist_measurement(result)
     return result
+
+
+def _persist_measurement(result: dict[str, Any]) -> None:
+    save_measurement(result)
+    outbox_event = enqueue_measurement_event(result)
+    result["integration_outbox"] = {
+        "event_id": outbox_event.get("event_id"),
+        "target": outbox_event.get("target"),
+        "status": outbox_event.get("status"),
+        "delivery_mode": "local_outbox",
+    }
 
 
 def _set_usage_trace(

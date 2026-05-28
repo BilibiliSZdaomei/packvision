@@ -36,6 +36,7 @@ PackVision 不是单纯的“拍照量尺寸 Demo”，而是给海外汽车备�
 | 单号和条码 | 已完成 | 支持手动单号、扫码枪文本、上传条码/二维码图片识别。 |
 | 历史追溯 | 已完成 | SQLite 保存时间戳、单号、尺寸、置信度、上传图、标注图。 |
 | 使用次数统计 | 已完成 | 后台记录接口调用次数、测量次数、成功/失败次数，可导出 CSV。 |
+| WMS/TMS 本地集成队列 | 已完成底座 | 每次保存测量记录时同步写入本地 outbox，WMS/TMS 不在线也不影响现场继续测量；数据中心可查看和导出 CSV。 |
 | 实时采集监控 | 已完成并升级 | Astra Pro 实时流持续测量，按钮只负责记录稳定结果；UI 显示顶部/正面/侧面多相机监控矩阵、FPS、运行时长、测量次数和采集后端。 |
 | 体积重/计费重 | 已完成 | 支持手动输入实重，按体积重规则表计算体积重和计费重，并保存计费来源。 |
 | 电子秤适配接口 | 已完成轻量底座 | 基础包保留手动实重兜底，预留 mock、USB HID、RS232 adapter。 |
@@ -50,19 +51,19 @@ PackVision 不是单纯的“拍照量尺寸 Demo”，而是给海外汽车备�
 当前验证结果：
 
 ```text
-109 passed in 8.02s
+111 passed in 9.15s
 ```
 
 最新已验证交付包：
 
 ```text
-D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_20260528_0842.zip
+D:\Documents\包装尺寸检测\release\PackVision_Field_Kit_*.zip
 ```
 
 大小约：
 
 ```text
-73.46 MB
+73.53 MB
 ```
 
 ## 4. 运行方式
@@ -215,6 +216,15 @@ PowerShell -ExecutionPolicy Bypass -File .\scripts\check_astra_depth_status.ps1
 | `GET /api/usage/summary` | 使用次数和测量次数汇总。 |
 | `GET /api/usage/events` | 接口调用日志。 |
 | `GET /api/usage/export.csv` | 导出使用日志 CSV。 |
+
+### WMS/TMS 本地集成队列
+
+| 接口 | 用途 |
+| --- | --- |
+| `GET /api/integrations/outbox` | 查看待推送、失败、已推送的本地集成事件。 |
+| `GET /api/integrations/outbox/summary` | 查看本地 outbox 汇总、最新事件和重试状态。 |
+| `GET /api/integrations/outbox/export.csv` | 导出本地集成队列 CSV，方便先交给 WMS/TMS 或 Excel 对账。 |
+| `POST /api/integrations/outbox/{event_id}` | 更新事件状态，为后续真实连接器和重试 worker 预留。 |
 
 ### Astra Pro 深度相机
 

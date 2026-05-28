@@ -455,6 +455,21 @@
           <div class="usage-summary-grid" id="usageSummaryGrid"></div>
           <div class="usage-endpoints" id="usageEndpointList"></div>
         </section>
+
+        <section id="integrationOutbox" class="usage-panel">
+          <div class="panel-head">
+            <div>
+              <p class="section-label" data-i18n="integrationOutbox">集成队列</p>
+              <h3 data-i18n="integrationTitle">WMS/TMS 本地待推送记录</h3>
+            </div>
+            <div class="history-tools">
+              <button class="tool-button" type="button" id="refreshIntegrationButton" data-i18n="refreshIntegration">刷新队列</button>
+              <a class="tool-button" id="exportIntegrationLink" href="/api/integrations/outbox/export.csv" target="_blank" rel="noopener" data-i18n="exportIntegration">导出队列 CSV</a>
+            </div>
+          </div>
+          <div class="usage-summary-grid" id="integrationSummaryGrid"></div>
+          <div class="usage-endpoints" id="integrationOutboxList"></div>
+        </section>
         </section>
 
         <section class="api-panel">

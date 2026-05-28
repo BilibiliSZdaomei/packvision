@@ -10,6 +10,17 @@ const translations = {
     history: "历史",
     review: "复核",
     usage: "统计",
+    integrationOutbox: "集成队列",
+    integrationTitle: "WMS/TMS 本地待推送记录",
+    refreshIntegration: "刷新队列",
+    exportIntegration: "导出队列 CSV",
+    pendingEvents: "待推送",
+    failedEvents: "失败",
+    sentEvents: "已推送",
+    retryDue: "可重试",
+    noIntegrationEvents: "暂无待推送记录",
+    eventStatus: "状态",
+    targetSystem: "目标系统",
     calibration: "校准卡",
     vendorCalibrationBoard: "厂商标定板",
     fallbackArUcoCard: "照片兜底 ArUco",
@@ -238,6 +249,17 @@ const translations = {
     history: "History",
     review: "Review",
     usage: "Usage",
+    integrationOutbox: "Integration queue",
+    integrationTitle: "Local WMS/TMS outbox",
+    refreshIntegration: "Refresh queue",
+    exportIntegration: "Export queue CSV",
+    pendingEvents: "Pending",
+    failedEvents: "Failed",
+    sentEvents: "Sent",
+    retryDue: "Retry due",
+    noIntegrationEvents: "No integration events yet",
+    eventStatus: "Status",
+    targetSystem: "Target",
     calibration: "Calibration",
     vendorCalibrationBoard: "Vendor board",
     fallbackArUcoCard: "Fallback ArUco",
@@ -466,6 +488,17 @@ const translations = {
     history: "Історія",
     review: "Перевірка",
     usage: "Статистика",
+    integrationOutbox: "Черга інтеграції",
+    integrationTitle: "Локальна черга WMS/TMS",
+    refreshIntegration: "Оновити чергу",
+    exportIntegration: "Експорт CSV",
+    pendingEvents: "Очікує",
+    failedEvents: "Помилки",
+    sentEvents: "Надіслано",
+    retryDue: "Повтор",
+    noIntegrationEvents: "Подій інтеграції ще немає",
+    eventStatus: "Статус",
+    targetSystem: "Ціль",
     calibration: "Калібрування",
     vendorCalibrationBoard: "Дошка виробника",
     fallbackArUcoCard: "Резерв ArUco",
@@ -1304,6 +1337,7 @@ const state = {
   aiPlugins: null,
   usageSummary: null,
   reviewSamples: null,
+  integrationOutbox: null,
   stationSnapshot: null,
   deploymentReadiness: null,
   scaleStatus: null,
@@ -1404,6 +1438,10 @@ const usageSummaryGrid = document.querySelector("#usageSummaryGrid");
 const usageEndpointList = document.querySelector("#usageEndpointList");
 const refreshUsageButton = document.querySelector("#refreshUsageButton");
 const exportUsageLink = document.querySelector("#exportUsageLink");
+const integrationSummaryGrid = document.querySelector("#integrationSummaryGrid");
+const integrationOutboxList = document.querySelector("#integrationOutboxList");
+const refreshIntegrationButton = document.querySelector("#refreshIntegrationButton");
+const exportIntegrationLink = document.querySelector("#exportIntegrationLink");
 
 const metricEls = {
   length_mm: document.querySelector("#lengthValue"),
@@ -1468,6 +1506,9 @@ function applyLanguage() {
   }
   if (state.usageSummary) {
     renderUsageSummary(state.usageSummary);
+  }
+  if (state.integrationOutbox) {
+    renderIntegrationOutbox(state.integrationOutbox);
   }
   if (state.scaleStatus) {
     renderScaleStatus(state.scaleStatus);
@@ -3136,6 +3177,19 @@ async function loadUsageSummary() {
   renderUsageSummary(data);
 }
 
+async function loadIntegrationOutbox() {
+  if (!integrationSummaryGrid || !integrationOutboxList) {
+    return;
+  }
+  const response = await fetch("/api/integrations/outbox?limit=50");
+  if (!response.ok) {
+    return;
+  }
+  const data = await response.json();
+  state.integrationOutbox = data;
+  renderIntegrationOutbox(data);
+}
+
 async function loadStationSnapshot() {
   const response = await fetch("/api/station/snapshot");
   if (!response.ok) {
@@ -3206,6 +3260,51 @@ function appendUsageCard(label, value, sub) {
   subEl.textContent = sub || "";
   card.append(labelEl, valueEl, subEl);
   usageSummaryGrid.appendChild(card);
+}
+
+function renderIntegrationOutbox(data) {
+  integrationSummaryGrid.innerHTML = "";
+  integrationOutboxList.innerHTML = "";
+  const summary = data.summary || {};
+  appendIntegrationCard(t("pendingEvents"), summary.pending || 0, t("targetSystem"));
+  appendIntegrationCard(t("failedEvents"), summary.failed || 0, t("retryDue") + ` ${summary.due_for_retry || 0}`);
+  appendIntegrationCard(t("sentEvents"), summary.sent || 0, summary.delivery_mode || "local_outbox");
+  appendIntegrationCard(t("retryDue"), summary.due_for_retry || 0, t("eventStatus"));
+  if (exportIntegrationLink) {
+    exportIntegrationLink.href = "/api/integrations/outbox/export.csv?limit=500";
+  }
+
+  const items = data.items || [];
+  if (!items.length) {
+    const empty = document.createElement("div");
+    empty.className = "history-empty";
+    empty.textContent = t("noIntegrationEvents");
+    integrationOutboxList.appendChild(empty);
+    return;
+  }
+
+  for (const item of items.slice(0, 8)) {
+    const row = document.createElement("div");
+    row.className = "usage-row";
+    appendSummaryCell(row, item.order_id || item.barcode_text || item.measurement_id || "--", item.event_type || "--");
+    appendSummaryCell(row, t("eventStatus"), item.status || "--");
+    appendSummaryCell(row, t("targetSystem"), item.target || "--");
+    appendSummaryCell(row, t("retryDue"), String(item.retry_count || 0));
+    integrationOutboxList.appendChild(row);
+  }
+}
+
+function appendIntegrationCard(label, value, sub) {
+  const card = document.createElement("div");
+  card.className = "usage-card";
+  const labelEl = document.createElement("span");
+  const valueEl = document.createElement("strong");
+  const subEl = document.createElement("small");
+  labelEl.textContent = label;
+  valueEl.textContent = String(value ?? "--");
+  subEl.textContent = sub || "";
+  card.append(labelEl, valueEl, subEl);
+  integrationSummaryGrid.appendChild(card);
 }
 
 async function loadReviewSamples() {
@@ -3534,6 +3633,7 @@ volumetricRuleSelect?.addEventListener("change", renderWeightMonitorFromCurrentS
 refreshHistoryButton.addEventListener("click", loadHistory);
 refreshReviewButton.addEventListener("click", loadReviewSamples);
 refreshUsageButton.addEventListener("click", loadUsageSummary);
+refreshIntegrationButton?.addEventListener("click", loadIntegrationOutbox);
 refreshDepthStatusButton.addEventListener("click", refreshStationHealth);
 probeDepthCaptureButton.addEventListener("click", probeDepthCapture);
 startLiveButton.addEventListener("click", () => startDepthLive());
@@ -3619,3 +3719,4 @@ startDepthLive({ silent: true });
 loadHistory();
 loadReviewSamples();
 loadUsageSummary();
+loadIntegrationOutbox();

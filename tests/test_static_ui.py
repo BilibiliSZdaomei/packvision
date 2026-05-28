@@ -87,6 +87,9 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert 'id="volumetricRuleSelect"' in html
     assert 'id="weightMonitorPanel"' in html
     assert 'id="scaleStatusPanel"' in html
+    assert 'id="integrationOutbox"' in html
+    assert 'id="integrationSummaryGrid"' in html
+    assert 'id="integrationOutboxList"' in html
     assert '<details class="workflow-controls" id="workflowControls">' in html
     assert 'id="workflowAutoSummary"' in html
     assert 'id="workflowPackageSelect"' in html
@@ -101,6 +104,7 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert "/api/weight/volumetric-rules" in js
     assert "/api/scale/status" in js
     assert "/api/station/snapshot" in js
+    assert "/api/integrations/outbox" in js
     assert "/api/deployment/readiness" in js
     assert "renderLiveMonitor" in js
     assert "renderCameraMonitor" in js
@@ -112,6 +116,8 @@ def test_depth_workflow_ui_defaults_to_automatic_detection():
     assert "renderWeightMonitorFromDimensions" in js
     assert "loadScaleStatus" in js
     assert "renderScaleStatus" in js
+    assert "loadIntegrationOutbox" in js
+    assert "renderIntegrationOutbox" in js
     assert "renderStationStrip" in js
     assert "renderDepthEvidenceStage" in js
     assert "startDepthLive({ silent: true })" in js

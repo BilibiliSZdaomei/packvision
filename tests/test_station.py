@@ -25,6 +25,7 @@ def test_station_snapshot_scores_professional_dws_capabilities():
         ],
         usage={"total_calls": 10},
         scale_status={"status": "auto_weight_ready", "source": "mock", "weight_kg": 6.4, "stable": True},
+        integration_outbox={"delivery_mode": "local_outbox", "pending": 1, "failed": 0, "due_for_retry": 1, "total": 1},
     )
 
     assert snapshot["station_status"] == "ready_to_record"
@@ -34,7 +35,9 @@ def test_station_snapshot_scores_professional_dws_capabilities():
     assert snapshot["current_candidate"]["can_confirm"] is True
     assert snapshot["latest_record"]["order_id"] == "SO-1"
     assert snapshot["scale_status"]["source"] == "mock"
+    assert snapshot["integration_outbox"]["pending"] == 1
     assert next(item for item in snapshot["dws_capabilities"] if item["id"] == "weighing")["status"] == "auto_ready"
+    assert next(item for item in snapshot["dws_capabilities"] if item["id"] == "integration")["status"] == "outbox_ready"
     assert {item["id"] for item in snapshot["dws_capabilities"]} == {
         "dimensioning",
         "weighing",
@@ -43,6 +46,7 @@ def test_station_snapshot_scores_professional_dws_capabilities():
         "integration",
     }
     assert any(gap["code"] == "hardware_validation_pending" for gap in snapshot["production_gaps"])
+    assert any(gap["code"] == "wms_connector_pending" for gap in snapshot["production_gaps"])
 
 
 def test_station_snapshot_reports_pilot_gaps_when_no_record_exists():
